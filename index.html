@@ -1953,7 +1953,14 @@ setRoute();
   const bar = document.getElementById('tabbar');
   const blob = document.createElement('div');
   blob.className = 'lg-blob'; blob.setAttribute('aria-hidden', 'true');
+  // Lens: displacement map with red = x and green = y ramps; a negative scale pulls pixels toward the centre (magnify).
+  const map = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="r"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#f00"/></linearGradient><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#0f0"/></linearGradient></defs><rect width="100" height="100" fill="url(#r)"/><rect width="100" height="100" fill="url(#g)" style="mix-blend-mode:screen"/></svg>');
+  document.body.insertAdjacentHTML('beforeend', `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lg-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage id="lg-map" href="${map}" x="0" y="0" width="64" height="54" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="-22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`);
+  const lensMap = document.getElementById('lg-map');
+  // shortcut: only Chromium renders SVG filters in backdrop-filter; Safari/Firefox get the blur-only lens. Drop the check if they add support.
+  if (navigator.userAgentData) bar.classList.add('refract');
   let target = null, down = false, firstPlace = true, relax = 0;
+  const lift = on => blob.classList.toggle('lift', on);
   const items = () => [...bar.querySelectorAll('a')];
   const current = () => bar.querySelector('a[aria-current="page"]');
   const squish = (sx, sy) => { blob.style.setProperty('--sx', sx); blob.style.setProperty('--sy', sy); clearTimeout(relax); relax = setTimeout(() => place(target || current(), 0, down), 140); };
