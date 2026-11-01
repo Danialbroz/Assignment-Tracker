@@ -2,8 +2,12 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F4F1EA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ledger">
 <title>Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -491,6 +495,38 @@ dialog::backdrop { background: rgba(20, 20, 18, .32); }
   .keys { grid-template-columns: 1fr; }
   .course-head { grid-template-columns: 1fr; }
 }
+/* Welcome card + bottom tab bar (app-like nav on phones) */
+.welcome { border: 1px solid var(--ink); padding: 16px 18px; margin-bottom: 30px; background: var(--paper-2); }
+.welcome h2 { margin: 0 0 4px; font-weight: 500; font-size: 24px; }
+.welcome p { margin: 4px 0; } .welcome ol { margin: 10px 0; padding-left: 20px; } .welcome li { margin: 4px 0; }
+.welcome-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.tabbar { display: none; }
+@media (max-width: 760px) {
+  html { -webkit-tap-highlight-color: transparent; }
+  body { overscroll-behavior-y: none; -webkit-user-select: none; user-select: none; }
+  input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+  input, select, textarea, .quick-input { font-size: 16px !important; } /* stops iOS zoom-on-focus */
+  .btn, .link-btn, .icon-btn, .tabs button { min-height: 44px; }
+  .btn { padding: 8px 14px; } .icon-btn { min-width: 44px; }
+  input[type="checkbox"] { width: 22px; height: 22px; }
+  .ledger td.cb { width: 40px; }
+  .ledger tr.row td { padding-top: 12px; padding-bottom: 12px; }
+  .rail { position: static; max-height: none; padding-top: env(safe-area-inset-top); }
+  .rail-actions [data-action="new"], kbd, .nav a .mono { display: none; }
+  .rail.open { position: fixed; inset: 0; overflow-y: auto; z-index: 50; padding-bottom: 80px; }
+  .rail-foot .link-btn, .courses a, .nav a { min-height: 44px; }
+  main { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .tabbar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--paper);
+    border-top: 1px solid var(--ink); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar a { flex: 1; min-height: 56px; display: grid; place-content: center; text-decoration: none; font: 500 12px var(--mono); color: var(--muted); }
+  .tabbar a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 2px 0 var(--accent); }
+  .tab-new { flex: none; width: 56px; height: 56px; margin-top: -16px; border-radius: 50%; border: 0; background: var(--accent-btn); color: var(--on-accent); font-size: 32px; line-height: 1; cursor: pointer; }
+  .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .drawer, dialog { padding-bottom: env(safe-area-inset-bottom); }
+}
+@media (max-width: 760px) and (display-mode: standalone) { .rail { padding-top: max(env(safe-area-inset-top), 8px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
@@ -530,6 +566,7 @@ dialog::backdrop { background: rgba(20, 20, 18, .32); }
 
   <main id="main" tabindex="-1"></main>
 </div>
+<nav class="tabbar" id="tabbar" aria-label="Main"></nav>
 
 <div class="quick" id="quick" role="dialog" aria-label="New assignment" aria-modal="false"></div>
 <aside class="drawer" id="drawer" aria-label="Assignment details" inert></aside>
@@ -848,6 +885,10 @@ function renderRail() {
   $('#term').textContent = `${termName()} · Week ${Math.min(Math.max(weekOfSem(now), 1), semWeeks())} of ${semWeeks()}`;
   const nav = [['today', 'Today', 'G T'], ['week', 'Week', 'G W'], ['semester', 'Semester', 'G S'], ['archive', 'Archive', 'G A']];
   const rem = reminders(now);
+  const tabs = [['today', 'Today'], ['week', 'Week'], ['new', 'New'], ['semester', 'Term'], ['archive', 'Past']];
+  $('#tabbar').innerHTML = tabs.map(([k, l]) => k === 'new'
+    ? `<button class="tab-new" data-action="new" aria-label="New assignment">+</button>`
+    : `<a href="#/${k}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}>${l}</a>`).join('');
   $('#rail-dyn').innerHTML = `
     <nav class="rail-sec" aria-label="Views"><ul class="nav">
       ${nav.map(([k, l, s]) => `<li><a href="#/${k}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><span>${l}</span><span class="mono">${s}</span></a></li>`).join('')}
@@ -974,12 +1015,28 @@ function viewToday() {
   const max = Math.max(cap * 1.5, ...days.map(d => d.load));
   const recent = S.assignments.filter(a => isDone(a) && new Date(a.dueAt) > addDays(now, -21) ).sort((a, b) => byDue(b, a)).slice(0, 5);
 
+  const welcome = S.settings.welcomed ? '' : `
+  <aside class="welcome" aria-label="Welcome">
+    <h2 class="serif">Welcome to Ledger</h2>
+    <p>Track assignments and see what to work on first.</p>
+    <ol>
+      <li>Tap <b>+</b> and type like <i>“Lab report chem fri 11:59pm 15% 3h”</i> to add one.</li>
+      <li>Tap an assignment to edit it, add steps or notes. Tick the box when it’s handed in.</li>
+      <li><b>Week</b> shows your workload, <b>Term</b> the whole semester, and <b>Menu</b> your courses and settings.</li>
+    </ol>
+    <p class="muted">The courses and assignments below are sample data.</p>
+    <div class="welcome-acts">
+      <button class="btn primary" data-action="welcome-dismiss">Got it</button>
+      <button class="btn quiet" data-action="clear-sample">Clear sample data &amp; start fresh</button>
+    </div>
+  </aside>`;
   return `
   <header class="page-head">
     <p class="eyebrow mono">${termName()} · Week ${Math.min(Math.max(wk, 1), semWeeks())} of ${semWeeks()}</p>
     <h1 class="display">${fmtLong(now)}</h1>
     <p class="meta mono">${open.length} open · ${within48} due within 48h · ~${fmtH(weekHrs)} of work in the next 7 days${overdue.length ? ` · <span class="accent">${overdue.length} overdue</span>` : ''}</p>
   </header>
+  ${welcome}
   <div class="today-grid">
     <div>
       <section aria-labelledby="h-now">
@@ -1563,6 +1620,11 @@ document.addEventListener('click', e => {
     case 'new': closeDrawer(); openQuick(); break;
     case 'new-for-course': openQuick({ courseId: ui.courseId }); break;
     case 'menu': { const r = $('#rail'); const o = !r.classList.contains('open'); r.classList.toggle('open', o); t.setAttribute('aria-expanded', o); break; }
+    case 'welcome-dismiss': S.settings.welcomed = true; save(); renderMain(); break;
+    case 'clear-sample':
+      if (!confirm('Remove all sample courses and assignments? This cannot be undone.')) break;
+      S.courses = []; S.assignments = []; S.archive = []; S.settings.welcomed = true; save();
+      renderRail(); $('[data-action="add-course"]').click(); break; // quick-add needs at least one course
     case 'open': e.preventDefault(); openDrawer(id); break;
     case 'toggle': break; // handled on change
     case 'toggle-btn': toggleSubmitted(id); break;
