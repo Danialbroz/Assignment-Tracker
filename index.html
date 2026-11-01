@@ -1698,8 +1698,16 @@ function setRoute() {
   if (ui.route === 'course' && !course(ui.courseId)) ui.route = 'today';
   if (ui.search) { ui.search = ''; $('#search').value = ''; }
   $('#rail').classList.remove('open'); $('.menu-btn').setAttribute('aria-expanded', 'false');
+  const order = ['today', 'week', 'semester', 'archive', 'course'];
+  const back = prevRoute != null && order.indexOf(ui.route) < order.indexOf(prevRoute);
   renderRail(); renderMain(); window.scrollTo(0, 0);
+  if (prevRoute !== ui.route || ui.route === 'course') {
+    const pg = $('#main .page');
+    if (pg) pg.classList.add('page-in', ...(back ? ['from-left'] : []));
+  }
+  prevRoute = ui.route;
 }
+let prevRoute = null;
 function setTheme(t) {
   S.settings.theme = t; document.documentElement.setAttribute('data-theme', t); save(); renderRail();
 }
