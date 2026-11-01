@@ -535,10 +535,12 @@ body {
 }
 /* Primary: lift + soft glow on hover instead of the old black hover (line ~111) */
 .btn.primary, .tab-new { transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease, filter .2s ease; }
-.btn.primary:hover, .tab-new:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-btn) 78%, white), var(--accent-btn));
-  border-color: rgba(255,255,255,.55); color: var(--on-accent); filter: brightness(1.06); transform: translateY(-2px) scale(1.04);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent), 0 10px 32px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.6);
+.btn.primary:hover, .tab-new:hover { background: linear-gradient(180deg, color-mix(in srgb, var(--accent-btn) 78%, white), var(--accent-btn)); border-color: rgba(255,255,255,.55); color: var(--on-accent); }
+@media (hover: hover) { /* touch screens keep :hover after a tap, so only lift for real cursors */
+  .btn.primary:hover, .tab-new:hover {
+    filter: brightness(1.06); transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 14%, transparent), 0 10px 32px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.6);
+  }
 }
 .btn.primary:active, .tab-new:active { transform: translateY(0) scale(.97); filter: brightness(.98); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent), 0 4px 16px color-mix(in srgb, var(--accent) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.5); }
 .btn.primary:focus-visible, .tab-new:focus-visible { outline-color: var(--accent); }
