@@ -1,1 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<script>
+  // Apply saved theme before paint
+  try {
+    var s = JSON.parse(localStorage.getItem('ledger.v1') || 'null');
+    var t = s && s.settings && s.settings.theme;
+    if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+</script>
+<style>
+/* =========================================================
+   DESIGN TOKENS
+   ========================================================= */
+:root {
+  --paper: #F4F1EA;
+  --paper-2: #ECE8DE;
+  --ink: #1B1B18;
+  --ink-2: #45423B;
+  --muted: #6B675E;
+  --rule: #D9D4C7;
+  --rule-strong: #B9B3A4;
+  --accent: #D8431F;        /* markers, bars */
+  --accent-ink: #B5341A;    /* accent text (AA on paper) */
+  --accent-btn: #C73D1C;    /* primary action fill (AA with white) */
+  --on-accent: #FFFFFF;
+  --c-ochre: #B08A3E;
+  --c-sage: #7F9171;
+  --c-slate: #5D7189;
+  --c-clay: #B06A50;
+  --c-plum: #7E5A72;
+  --c-teal: #3F7C78;
+  --hatch: repeating-linear-gradient(135deg, rgba(27,27,24,.13) 0 1px, transparent 1px 6px);
+  --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --radius: 2px;
+  --rail: 240px;
+  --ease: 120ms ease;
+}
+[data-theme="dark"] {
+  --paper: #181816;
+  --paper-2: #21211E;
+  --ink: #E8E4DA;
+  --ink-2: #C9C4B8;
+  --muted: #A29D91;
+  --rule: #34332F;
+  --rule-strong: #4C4A44;
+  --accent: #E8603D;
+  --accent-ink: #EF7856;
+  --accent-btn: #E8603D;
+  --on-accent: #181816;
+  --c-ochre: #C49F55;
+  --c-sage: #93A585;
+  --c-slate: #7A8EA6;
+  --c-clay: #C47F64;
+  --c-plum: #9C7690;
+  --c-teal: #5A9894;
+  --hatch: repeating-linear-gradient(135deg, rgba(232,228,218,.12) 0 1px, transparent 1px 6px);
+}
 
+/* =========================================================
+   BASE
+   ========================================================= */
+* { box-sizing: border-box; }
+html { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 14px/1.5 var(--sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--ease), color var(--ease);
+}
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.serif { font-family: var(--serif); }
+.muted { color: var(--muted); }
+.accent { color: var(--accent-ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skip { position: absolute; left: 8px; top: -40px; background: var(--ink); color: var(--paper); padding: 6px 10px; z-index: 100; }
+.skip:focus { top: 8px; }
+.sq { display: inline-block; width: 8px; height: 8px; background: var(--c, var(--muted)); flex: none; }
+kbd { font-family: var(--mono); font-size: 10.5px; border: 1px solid currentColor; border-radius: var(--radius); padding: 0 4px; line-height: 16px; opacity: .75; }
+svg.i { width: 15px; height: 15px; stroke: currentColor; stroke-width: 1.25; fill: none; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--ink); background: transparent;
+  padding: 5px 10px; border-radius: var(--radius); cursor: pointer;
+  font-size: 13px; font-weight: 500; line-height: 1.3;
+  transition: background var(--ease), color var(--ease), border-color var(--ease);
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn.primary { background: var(--accent-btn); border-color: var(--accent-btn); color: var(--on-accent); }
+.btn.primary:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn.quiet { border-color: var(--rule-strong); }
+.btn.quiet:hover { border-color: var(--ink); }
+.btn.small { padding: 2px 8px; font-size: 12px; }
+.btn[disabled] { opacity: .4; cursor: default; pointer-events: none; }
+.link-btn {
+  background: none; border: 0; padding: 0; cursor: pointer; text-align: left;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule-strong);
+  transition: text-decoration-color var(--ease);
+}
+.link-btn:hover { text-decoration-color: currentColor; }
+.danger { color: var(--accent-ink); }
+
+input[type="text"], input[type="number"], input[type="search"], input[type="url"],
+input[type="date"], input[type="datetime-local"], select, textarea {
+  background: transparent; border: 1px solid var(--rule-strong); border-radius: var(--radius);
+  padding: 5px 7px; transition: border-color var(--ease); min-width: 0;
+}
+input:hover, select:hover, textarea:hover { border-color: var(--ink-2); }
+select option { background: var(--paper); color: var(--ink); }
+input[type="number"] { font-family: var(--mono); font-size: 12.5px; }
+input[type="date"], input[type="datetime-local"] { font-family: var(--mono); font-size: 12.5px; }
+
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; margin: 0;
+  width: 14px; height: 14px; border: 1px solid var(--ink); border-radius: var(--radius);
+  display: inline-grid; place-content: center; cursor: pointer; background: transparent;
+  transition: background var(--ease); vertical-align: -2px;
+}
+input[type="checkbox"]::before {
+  content: ""; width: 8px; height: 8px; transform: scale(0);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background: var(--paper); transition: transform var(--ease);
+}
+input[type="checkbox"]:checked { background: var(--ink); }
+input[type="checkbox"]:checked::before { transform: scale(1); }
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.app { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); min-height: 100vh; }
+.rail {
+  border-right: 1px solid var(--rule); position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; display: flex; flex-direction: column; background: var(--paper);
+}
+.rail-top { padding: 22px 18px 14px; border-bottom: 1px solid var(--rule); }
+.rail-brand { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.wordmark { font-family: var(--serif); font-size: 28px; font-weight: 500; letter-spacing: -.015em; margin: 0; line-height: 1; }
+.term { color: var(--muted); margin: 6px 0 14px; }
+.rail-actions { display: flex; gap: 8px; align-items: center; }
+.menu-btn { display: none; }
+.rail-body { padding: 0 18px 24px; flex: 1; }
+.search-wrap { position: relative; margin: 14px 0 6px; }
+.search-wrap input { width: 100%; padding-right: 28px; }
+.search-wrap kbd { position: absolute; right: 7px; top: 7px; pointer-events: none; }
+.rail-sec { padding-top: 18px; }
+.rail-h { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; }
+.nav, .courses, .reminders { list-style: none; margin: 0; padding: 0; }
+.nav a, .courses a {
+  display: flex; align-items: center; gap: 8px; padding: 4px 0; text-decoration: none;
+  border-bottom: 1px solid transparent; transition: color var(--ease);
+}
+.nav a { justify-content: space-between; font-size: 14px; }
+.nav a .mono { color: var(--muted); font-size: 10.5px; }
+.nav a[aria-current="page"] { font-weight: 600; }
+.nav a, .courses a { position: relative; }
+.nav a[aria-current="page"]::before, .courses a[aria-current="page"]::before { content: ""; position: absolute; left: -12px; top: 50%; width: 7px; height: 1px; background: var(--accent); }
+.nav a:hover, .courses a:hover { color: var(--ink-2); }
+.courses a { font-size: 13.5px; }
+.courses .code { font-size: 11.5px; flex: none; }
+.courses .cname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.courses .cnt { color: var(--muted); font-size: 11.5px; }
+.reminders li { padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 13px; line-height: 1.35; }
+.reminders li:last-child { border-bottom: 0; }
+.reminders .mono { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.rail-foot { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; }
+.rail-foot .link-btn { color: var(--ink-2); }
+
+main { padding: 34px 48px 120px; min-width: 0; outline: none; }
+.page { max-width: 1120px; }
+.page-head { border-bottom: 1px solid var(--ink); padding-bottom: 16px; margin-bottom: 30px; }
+.eyebrow { margin: 0 0 8px; color: var(--muted); }
+.display { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.2vw, 58px); line-height: 1.02; letter-spacing: -.02em; margin: 0; }
+.meta { margin: 12px 0 0; color: var(--ink-2); }
+.head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.section-h { font-family: var(--serif); font-size: 21px; font-weight: 500; margin: 0 0 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; letter-spacing: -.005em; }
+.section-h .mono { color: var(--muted); font-weight: 400; }
+section + section { margin-top: 44px; }
+.empty { padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); color: var(--ink-2); }
+
+/* =========================================================
+   TODAY
+   ========================================================= */
+.today-grid { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: 56px; align-items: start; }
+.now-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ink); }
+.now-item {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 2px 14px;
+  padding: 14px 0 13px; border-bottom: 1px solid var(--rule); align-items: baseline;
+}
+.now-item:focus-visible { outline-offset: -2px; }
+.rank { font-family: var(--serif); font-size: 30px; line-height: .9; grid-row: span 2; }
+.now-title { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.now-title .title-link { font-size: 17px; font-weight: 500; }
+.now-title .mono { color: var(--muted); }
+.reason { color: var(--ink-2); margin: 0; }
+.reason.late { color: var(--accent-ink); }
+.title-link { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; text-decoration: none; }
+.title-link:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }
+
+.side-block + .side-block { margin-top: 34px; }
+.side-h { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--ink); }
+.load-mini { list-style: none; margin: 0; padding: 0; }
+.load-mini li { display: grid; grid-template-columns: 70px 1fr 38px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.load-mini .track { height: 6px; position: relative; }
+.load-mini .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-2); }
+.load-mini .fill.over { background: var(--accent); }
+.load-mini .capmark { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--ink); }
+.load-mini .h { text-align: right; }
+.load-mini li.is-today .mono:first-child { color: var(--accent-ink); }
+.done-list { list-style: none; margin: 0; padding: 0; }
+.done-list li { display: flex; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.done-list li span.t { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule-strong); flex: 1; min-width: 0; }
+
+/* Ledger tables */
+table { border-collapse: collapse; width: 100%; }
+.ledger th, .ledger td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: baseline; }
+.ledger th:last-child, .ledger td:last-child { padding-right: 0; }
+.ledger thead th { font: 400 10.5px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--ink); padding-top: 0; white-space: nowrap; }
+.ledger .group th { padding-top: 22px; padding-bottom: 6px; font-family: var(--serif); font-size: 16px; font-weight: 500; border-bottom: 1px solid var(--rule-strong); }
+.ledger .group th .mono { color: var(--muted); font-weight: 400; margin-left: 10px; }
+.ledger .group.late th { color: var(--accent-ink); }
+.ledger .num { text-align: right; font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.ledger td.due { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.ledger td.cb { width: 26px; }
+.ledger td.course-cell { white-space: nowrap; width: 1%; }
+.ledger td.course-cell .code { margin-left: 7px; color: var(--ink-2); font-size: 11.5px; }
+.ledger tr.row { transition: background var(--ease); }
+.ledger tr.row:hover { background: var(--paper-2); }
+.ledger tr.row:focus-visible { outline-offset: -2px; }
+.ledger tr.overdue td, .ledger tr.overdue .title-link { color: var(--accent-ink); }
+.ledger tr.done .title-link { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
+.ledger tr.leaving td { opacity: 0; padding-top: 0; padding-bottom: 0; line-height: 0; font-size: 0; transition: all 180ms ease; }
+.ledger tr.leaving td * { font-size: 0; height: 0; }
+.ledger .tot td { border-top: 1px solid var(--ink); border-bottom: 0; font-weight: 600; }
+.sort-btn { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+.sort-btn:hover { color: var(--ink); }
+th[aria-sort] .sort-btn { color: var(--ink); }
+
+/* =========================================================
+   WEEK
+   ========================================================= */
+.week-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.week-tools label { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--ink-2); font-size: 13px; }
+.week-tools input[type="number"] { width: 58px; }
+.strip-wrap { margin-bottom: 4px; }
+.strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); height: 120px; position: relative; border-bottom: 1px solid var(--ink); }
+.strip-col { position: relative; display: flex; align-items: flex-end; justify-content: center; border-right: 1px solid var(--rule); }
+.strip-col:last-child { border-right: 0; }
+.strip-bar { width: 34%; min-height: 0; background: var(--ink-2); transition: height var(--ease); }
+.strip-bar.over { background: var(--accent); }
+.cap-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ink); pointer-events: none; }
+.cap-line span { position: absolute; right: 0; top: -17px; font: 10.5px var(--mono); color: var(--ink-2); background: var(--paper); padding-left: 4px; }
+.strip-labels { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.strip-labels div { text-align: center; padding: 4px 0; font: 11.5px var(--mono); color: var(--ink-2); }
+.strip-labels div.over { color: var(--accent-ink); font-weight: 500; }
+.suggest { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--rule); margin: 6px 0 22px; }
+.suggest p { margin: 0; }
+.suggest::before { content: ""; width: 8px; height: 8px; background: var(--accent); flex: none; }
+.week-cols { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-left: 1px solid var(--rule); }
+.w-col { border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); min-height: 300px; padding: 0 0 10px; transition: background var(--ease); }
+.w-col.drop { background: var(--paper-2); }
+.w-head { padding: 8px 10px 8px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: baseline; }
+.w-head .d { font-family: var(--serif); font-size: 22px; line-height: 1; }
+.w-head .wd { font: 10.5px var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.w-col.is-today .w-head { box-shadow: inset 0 2px 0 var(--accent); }
+.w-col.is-today .w-head .wd { color: var(--accent-ink); }
+.w-col.past { background: transparent; }
+.w-col.past .w-head .d { color: var(--muted); }
+.w-entry {
+  margin: 8px 8px 0; padding: 5px 0 6px 8px; border-left: 3px solid var(--c);
+  border-bottom: 1px solid var(--rule); cursor: grab; font-size: 13px; line-height: 1.3;
+  transition: background var(--ease);
+}
+.w-entry:hover { background: var(--paper-2); }
+.w-entry:active { cursor: grabbing; }
+.w-entry .mono { display: block; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+.w-entry .t { display: block; overflow-wrap: anywhere; }
+.w-entry.done .t { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--rule-strong); }
+.w-entry.overdue .t, .w-entry.overdue .mono { color: var(--accent-ink); }
+.w-entry.dragging { opacity: .4; }
+.w-empty { padding: 10px; color: var(--muted); font-size: 12px; }
+
+/* =========================================================
+   SEMESTER TIMELINE
+   ========================================================= */
+.sem-tools { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.sem-tools label { display: inline-flex; gap: 6px; align-items: center; }
+.tl-scroll { overflow-x: auto; border-top: 1px solid var(--ink); }
+.tl { min-width: 860px; }
+.tl-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); border-bottom: 1px solid var(--rule); }
+.tl-label { padding: 10px 12px 10px 0; display: flex; gap: 8px; align-items: center; font-size: 13px; min-width: 0; }
+.tl-label a { text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tl-label a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tl-label .code { font-size: 11.5px; }
+.tl-track { position: relative; height: 72px; }
+.tl-head .tl-track { height: 56px; }
+.tl-head .tl-label { color: var(--muted); }
+.tl-wk { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule); }
+.tl-wk-label { position: absolute; top: 6px; font: 10.5px/1.3 var(--mono); color: var(--muted); padding-left: 5px; white-space: nowrap; }
+.tl-wk-label b { display: block; color: var(--ink); font-weight: 500; }
+.tl-band { position: absolute; top: 0; bottom: 0; background-image: var(--hatch); }
+.tl-today { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px solid var(--accent); z-index: 2; }
+.tl-head .tl-today::after { content: "Today"; position: absolute; bottom: 2px; left: 4px; font: 10px var(--mono); color: var(--accent-ink); }
+.tick {
+  position: absolute; bottom: 14px; width: 5px; margin-left: -2px; padding: 0;
+  background: var(--c); border: 0; border-radius: 0; cursor: pointer; z-index: 3;
+  transition: opacity var(--ease), transform var(--ease);
+}
+.tick:hover { transform: scaleX(1.6); }
+.tick.done { opacity: .38; }
+.tick.overdue { outline: 1px solid var(--accent); outline-offset: 1px; }
+.tl-legend { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; color: var(--ink-2); font-size: 12.5px; }
+.tl-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.swatch-hatch { width: 18px; height: 12px; background-image: var(--hatch); border: 1px solid var(--rule-strong); }
+.swatch-tick { width: 4px; height: 12px; background: var(--ink-2); }
+
+/* =========================================================
+   COURSE PAGE
+   ========================================================= */
+.course-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: end; }
+.plain-input { border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; padding: 0 !important; background: transparent; width: 100%; }
+.plain-input:hover { border-bottom-color: var(--rule-strong) !important; }
+.plain-input:focus { border-bottom-color: var(--ink) !important; outline: none; }
+.plain-input.display { font-size: clamp(32px, 4.6vw, 52px); }
+.course-meta { display: flex; gap: 18px; align-items: center; margin-top: 10px; flex-wrap: wrap; color: var(--ink-2); }
+.course-meta .plain-input { width: auto; min-width: 80px; }
+.course-meta .code-in { font-family: var(--mono); font-size: 13px; width: 90px; }
+.course-meta .inst-in { width: 220px; }
+.colour-pick { display: flex; gap: 6px; }
+.colour-pick button { width: 16px; height: 16px; border: 1px solid transparent; padding: 0; background: var(--c); cursor: pointer; border-radius: 0; }
+.colour-pick button[aria-pressed="true"] { outline: 1px solid var(--ink); outline-offset: 2px; }
+.course-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 56px; align-items: start; }
+.wt-table input[type="text"] { width: 100%; border-color: transparent; padding-left: 0; }
+.wt-table input[type="text"]:hover, .wt-table input[type="text"]:focus { border-color: var(--rule-strong); padding-left: 7px; }
+.wt-table input[type="number"] { width: 64px; text-align: right; }
+.grade-figure { font-family: var(--serif); font-size: 64px; line-height: 1; letter-spacing: -.02em; margin: 4px 0 6px; }
+.grade-figure small { font-size: 26px; color: var(--muted); }
+.calc { border-top: 1px solid var(--rule); margin-top: 18px; padding-top: 14px; }
+.calc label { display: inline-flex; align-items: center; gap: 8px; }
+.calc input { width: 70px; }
+.calc p { margin: 10px 0 0; font-size: 15px; }
+.calc .note { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.status-tag { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); white-space: nowrap; }
+
+/* =========================================================
+   DRAWER
+   ========================================================= */
+.drawer {
+  position: fixed; top: 0; right: 0; width: 480px; max-width: 100vw; height: 100vh; height: 100dvh;
+  background: var(--paper); border-left: 1px solid var(--ink); z-index: 40; overflow-y: auto;
+  transform: translateX(100%); visibility: hidden;
+  transition: transform 160ms ease, visibility 0s linear 160ms;
+}
+.drawer.open { transform: none; visibility: visible; transition: transform 160ms ease, visibility 0s; }
+.d-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--paper); z-index: 2; }
+.d-head .left { display: flex; gap: 8px; align-items: center; }
+.d-body { padding: 18px 24px 40px; }
+.d-title { font-family: var(--serif); font-size: 28px; line-height: 1.15; letter-spacing: -.01em; width: 100%; border: 0 !important; border-bottom: 1px solid transparent !important; border-radius: 0 !important; padding: 0 0 4px !important; background: transparent; resize: none; overflow: hidden; }
+.d-title:focus { border-bottom-color: var(--ink) !important; outline: none; }
+.d-status { margin: 6px 0 18px; }
+.fields { display: grid; grid-template-columns: 110px minmax(0, 1fr); border-top: 1px solid var(--ink); }
+.fields > label, .fields > .lab { padding: 9px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font: 10.5px/22px var(--mono); text-transform: uppercase; letter-spacing: .07em; }
+.fields > .val { padding: 6px 0; border-bottom: 1px solid var(--rule); display: flex; gap: 8px; align-items: center; min-width: 0; }
+.fields .val input[type="number"] { width: 80px; }
+.fields .val select, .fields .val input[type="datetime-local"] { max-width: 100%; }
+.d-sec { margin-top: 26px; }
+.d-sec h3 { font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--ink); display: flex; justify-content: space-between; }
+.sub-list { list-style: none; margin: 0; padding: 0; }
+.sub-list li { display: grid; grid-template-columns: 18px minmax(0, 1fr) 132px 22px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.sub-list input[type="text"] { border-color: transparent; padding-left: 0; }
+.sub-list input[type="text"]:hover, .sub-list input[type="text"]:focus { border-color: var(--rule-strong); padding-left: 7px; }
+.sub-list li.done input[type="text"] { color: var(--muted); text-decoration: line-through; }
+.sub-list input[type="date"] { font-size: 11.5px; padding: 3px 4px; }
+.icon-btn { background: none; border: 0; padding: 2px; cursor: pointer; color: var(--muted); display: inline-grid; place-content: center; border-radius: var(--radius); }
+.icon-btn:hover { color: var(--ink); }
+.d-notes { width: 100%; min-height: 110px; resize: vertical; line-height: 1.5; }
+.link-list { list-style: none; margin: 0; padding: 0; }
+.link-list li { display: grid; grid-template-columns: minmax(0, 1fr) 22px 22px; gap: 6px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.link-list input { font-family: var(--mono); font-size: 12px; border-color: transparent; padding-left: 0; }
+.link-list input:hover, .link-list input:focus { border-color: var(--rule-strong); padding-left: 7px; }
+.d-foot { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+
+/* =========================================================
+   QUICK ADD
+   ========================================================= */
+.quick {
+  position: fixed; top: 0; left: var(--rail); right: 0; z-index: 35;
+  background: var(--paper); border-bottom: 1px solid var(--ink);
+  padding: 16px 48px 14px; display: none;
+}
+.quick.open { display: block; }
+.quick-input { width: 100%; font-family: var(--serif) !important; font-size: 24px !important; border: 0 !important; border-bottom: 1px solid var(--rule-strong) !important; border-radius: 0 !important; padding: 2px 0 8px !important; }
+.quick-input:focus { outline: none; border-bottom-color: var(--ink) !important; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule-strong); border-radius: var(--radius); padding: 3px 4px 3px 8px; font-size: 13px; }
+.chip > span { font: 10px var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.chip.parsed { border-color: var(--ink); }
+.chip.assumed > span::after { content: " · assumed"; color: var(--accent-ink); }
+.chip input, .chip select { border: 0 !important; padding: 2px 2px !important; }
+.chip input[type="text"] { width: 220px; }
+.chip input[type="number"] { width: 54px; }
+.quick-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: var(--muted); }
+.quick-foot .acts { display: flex; gap: 8px; }
+
+/* =========================================================
+   DIALOGS
+   ========================================================= */
+dialog { border: 1px solid var(--ink); border-radius: var(--radius); background: var(--paper); color: var(--ink); padding: 0; width: min(780px, calc(100vw - 24px)); max-height: calc(100vh - 48px); }
+dialog::backdrop { background: rgba(20, 20, 18, .32); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--ink); position: sticky; top: 0; background: var(--paper); z-index: 1; }
+.dlg-head h2 { font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 0; }
+.dlg-body { padding: 18px 22px 22px; }
+.keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+.keys dl { margin: 0; display: grid; grid-template-columns: 90px 1fr; }
+.keys dt, .keys dd { padding: 7px 0; border-bottom: 1px solid var(--rule); margin: 0; }
+.keys dt { font-family: var(--mono); font-size: 12px; }
+.formula { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--ink); }
+.formula h3 { font-family: var(--serif); font-weight: 500; font-size: 17px; margin: 0 0 6px; }
+.formula p { margin: 4px 0; color: var(--ink-2); }
+.formula code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); margin-bottom: 14px; }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 12px 7px 0; margin-right: 12px; cursor: pointer; color: var(--muted); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.imp-text { width: 100%; min-height: 150px; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; }
+.imp-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.review { margin-top: 16px; overflow-x: auto; }
+.review td { padding: 5px 8px 5px 0; }
+.review input[type="text"] { width: 100%; min-width: 180px; }
+.review input[type="number"] { width: 60px; }
+.review tr.rejected td:not(:first-child) { opacity: .4; }
+.dlg-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 12px; flex-wrap: wrap; }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: var(--radius); font-size: 13px; z-index: 60; display: flex; gap: 14px; align-items: center; }
+.toast button { color: var(--paper); }
+
+/* Search */
+.search-results mark { background: none; color: inherit; text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 1100px) {
+  main { padding: 28px 32px 100px; }
+  .today-grid { grid-template-columns: 1fr; gap: 40px; }
+  .course-grid { grid-template-columns: 1fr; gap: 36px; }
+  .quick { padding: 14px 32px 12px; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .rail { position: sticky; top: 0; height: auto; max-height: 100vh; border-right: 0; border-bottom: 1px solid var(--ink); z-index: 25; }
+  .rail-top { padding: 12px 16px; border-bottom: 0; }
+  .wordmark { font-size: 24px; }
+  .term { display: none; }
+  .rail-brand { align-items: center; }
+  .rail-actions { margin-left: auto; }
+  .rail-top-inner { display: flex; align-items: center; gap: 12px; }
+  .menu-btn { display: inline-flex; }
+  .rail-body { display: none; border-top: 1px solid var(--rule); padding-bottom: 18px; }
+  .rail.open .rail-body { display: block; }
+  main { padding: 22px 16px 100px; }
+  .quick { left: 0; padding: 12px 16px; }
+  .quick-input { font-size: 19px !important; }
+  .chip input[type="text"] { width: 160px; }
+  .week-cols { grid-template-columns: 1fr; border-left: 0; }
+  .w-col { min-height: 0; border-right: 0; }
+  .w-col .w-head { justify-content: flex-start; gap: 10px; }
+  .ledger .hide-sm { display: none; }
+  .ledger td.course-cell .code { display: none; }
+  .ledger td.cb { width: 22px; }
+  .ledger th, .ledger td { padding-right: 8px; }
+  .week-tools label { margin-left: 0; }
+  .drawer { width: 100vw; border-left: 0; }
+  .d-head, .d-body { padding-left: 16px; padding-right: 16px; }
+  .sub-list li { grid-template-columns: 18px minmax(0, 1fr) 22px; }
+  .sub-list li input[type="date"] { grid-column: 2; }
+  .keys { grid-template-columns: 1fr; }
+  .course-head { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+  .rail, .drawer, .quick { display: none !important; }
+  .app { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<noscript><p style="padding:24px">Ledger needs JavaScript to run.</p></noscript>
+
+<div class="app">
+  <aside class="rail" id="rail" aria-label="Sidebar">
+    <div class="rail-top">
+      <div class="rail-top-inner">
+        <div>
+          <div class="rail-brand"><p class="wordmark">Ledger</p></div>
+          <p class="term mono" id="term"></p>
+        </div>
+        <div class="rail-actions">
+          <button class="btn primary" data-action="new" title="New assignment (N)">New <kbd>N</kbd></button>
+          <button class="btn quiet menu-btn" data-action="menu" aria-expanded="false" aria-controls="rail-body">Menu</button>
+        </div>
+      </div>
+    </div>
+    <div class="rail-body" id="rail-body">
+      <div class="search-wrap">
+        <label for="search" class="sr-only">Search assignments</label>
+        <input type="search" id="search" placeholder="Search" autocomplete="off">
+        <kbd aria-hidden="true">/</kbd>
+      </div>
+      <div id="rail-dyn"></div>
+    </div>
+  </aside>
+
+  <main id="main" tabindex="-1"></main>
+</div>
+
+<div class="quick" id="quick" role="dialog" aria-label="New assignment" aria-modal="false"></div>
+<aside class="drawer" id="drawer" aria-label="Assignment details" inert></aside>
+
+<dialog id="dlg-keys" aria-labelledby="keys-h"></dialog>
+<dialog id="dlg-import" aria-labelledby="imp-h"></dialog>
+<input type="file" id="json-file" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+const KEY = 'ledger.v1';
+const DAY = 864e5, HOUR = 36e5;
+const WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const WDS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MO = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MOS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLOURS = [
+  { key: 'ochre', name: 'Ochre' }, { key: 'sage', name: 'Sage' }, { key: 'slate', name: 'Slate blue' },
+  { key: 'clay', name: 'Clay' }, { key: 'plum', name: 'Plum' }, { key: 'teal', name: 'Teal' }
+];
+const STATUSES = ['Not started', 'In progress', 'Submitted', 'Graded'];
+const FIXED = /\b(exam|midterm|quiz|test|final)\b/i;
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const uid = () => Math.random().toString(36).slice(2, 10);
+const num = (v, d = 0) => { const n = parseFloat(v); return isFinite(n) ? n : d; };
+const sod = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const startOfWeek = d => { const x = sod(d); return addDays(x, -((x.getDay() + 6) % 7)); };
+const dayDiff = (a, b) => Math.round((sod(a) - sod(b)) / DAY);
+const sameDay = (a, b) => dayDiff(a, b) === 0;
+const fmtTime = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtShort = d => `${WDS[d.getDay()]} ${d.getDate()} ${MOS[d.getMonth()]}`;
+const fmtDM = d => `${d.getDate()} ${MOS[d.getMonth()]}`;
+const fmtLong = d => `${WD[d.getDay()]}, ${d.getDate()} ${MO[d.getMonth()]}`;
+const toInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const toDateInput = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromDateInput = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const fromInput = s => { const [dp, tp = '23:59'] = String(s).split('T'); const d = fromDateInput(dp); const [hh, mm] = tp.split(':').map(Number); d.setHours(hh || 0, mm || 0, 0, 0); return d; };
+const fmtH = v => `${+(+v || 0).toFixed(1)}h`;
+const fmtPct = v => `${+(+v || 0).toFixed(1)}%`;
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const ICON = {
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  ext: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'
+};
+const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+
+/* =========================================================
+   SEED DATA (relative to first load, so the demo stays current)
+   ========================================================= */
+function seed() {
+  const now = new Date();
+  const ws = startOfWeek(now);
+  const s = addDays(ws, -49);                 // today sits in week 8 of 14
+  const at = (w, d, t) => { const x = addDays(s, w * 7 + d); const [hh, mm] = t.split(':').map(Number); x.setHours(hh, mm, 0, 0); return x.toISOString(); };
+  const C = (id, code, name, colour, instructor, w) => ({ id, code, name, colour, instructor, weightings: w.map(([label, pct]) => ({ id: uid(), label, pct })) });
+  const courses = [
+    C('bio', 'BIO 204', 'Genetics', 'ochre', 'Dr. Hannah Okafor', [['Problem sets', 30], ['Lab reports', 20], ['Midterm', 20], ['Final exam', 30]]),
+    C('chem', 'CHEM 211', 'Organic Chemistry I', 'sage', 'Prof. Martin Reyes', [['Lab reports', 30], ['Quizzes', 10], ['Midterm', 25], ['Final exam', 35]]),
+    C('math', 'MATH 221', 'Linear Algebra', 'slate', 'Dr. Wei Chen', [['Homework', 20], ['Midterms', 30], ['Final exam', 50]]),
+    C('econ', 'ECON 202', 'Intermediate Microeconomics', 'clay', 'Prof. Laura Mendes', [['Problem sets', 25], ['Policy essay', 20], ['Midterm', 20], ['Final exam', 35]]),
+    C('hist', 'HIST 230', 'Modern Europe, 1789–1945', 'plum', 'Dr. Thomas Byrne', [['Response papers', 20], ['Source analysis', 15], ['Research essay', 35], ['Final exam', 30]])
+  ];
+  const sub = (text, done = false, due = null) => ({ id: uid(), text, done, due });
+  const A = (courseId, title, dueAt, weightPct, estimateHrs, status = 'Not started', x = {}) => ({
+    id: uid(), courseId, title, dueAt, weightPct, estimateHrs, status,
+    score: x.score ?? null, maxScore: x.maxScore ?? null, subtasks: x.subtasks || [], notes: x.notes || '', links: x.links || [],
+    createdAt: s.toISOString()
+  });
+  const overdue = addDays(sod(now), -2); overdue.setHours(23, 59, 0, 0);
+  const assignments = [
+    // BIO 204
+    A('bio', 'Problem Set 3: Linkage Mapping', at(2, 4, '17:00'), 6, 3, 'Graded', { score: 46, maxScore: 50 }),
+    A('bio', 'Midterm Exam', at(5, 2, '10:00'), 20, 8, 'Graded', { score: 78, maxScore: 100, notes: 'Lost marks on the chi-square question. Review expected ratios before the final.' }),
+    A('bio', 'Problem Set 5: Mendelian Genetics', at(8, 1, '17:00'), 6, 4, 'In progress', {
+      subtasks: [sub('Questions 1–4: monohybrid and dihybrid crosses', true), sub('Questions 5–7: pedigree analysis'), sub('Question 8: chi-square test')],
+      notes: 'Office hours Monday 14:00, Life Sciences 3.12.'
+    }),
+    A('bio', 'Lab Report: Drosophila Crosses', at(11, 3, '23:59'), 10, 6, 'Not started', {
+      subtasks: [sub('Tabulate F2 phenotype counts'), sub('Write methods and results'), sub('Discussion: linkage vs independent assortment')]
+    }),
+    A('bio', 'Final Exam', at(13, 2, '09:00'), 30, 12),
+    // CHEM 211
+    A('chem', 'Lab report 2: Recrystallisation of Acetanilide', at(3, 4, '23:59'), 7.5, 3, 'Graded', { score: 13, maxScore: 15 }),
+    A('chem', 'Midterm Exam', at(6, 0, '13:00'), 25, 10, 'Submitted'),
+    A('chem', 'Lab report 3: Extraction of Caffeine', at(8, 3, '23:59'), 7.5, 3, 'Not started', { notes: 'Include percent recovery and melting point range.' }),
+    A('chem', 'Quiz 4: Stereochemistry', at(9, 1, '09:00'), 2.5, 1.5),
+    A('chem', 'Lab report 4: Thin-layer Chromatography', at(10, 4, '23:59'), 7.5, 3),
+    A('chem', 'Final Exam', at(13, 4, '14:00'), 35, 14),
+    // MATH 221
+    A('math', 'Homework 6: Eigenvalues and Eigenvectors', overdue.toISOString(), 2.5, 3, 'Not started', { notes: 'Late penalty is 10% per day. Problems 5.1: 8, 12, 17; 5.2: 3, 9.' }),
+    A('math', 'Homework 7: Diagonalisation', at(8, 3, '23:59'), 2.5, 3),
+    A('math', 'Midterm 2', at(10, 1, '11:00'), 15, 8),
+    A('math', 'Homework 8: Inner Product Spaces', at(11, 4, '23:59'), 2.5, 3),
+    // ECON 202
+    A('econ', 'Problem Set 2: Consumer Choice', at(4, 0, '09:00'), 6, 4, 'Submitted'),
+    A('econ', 'Problem Set 3: Producer Theory', at(8, 0, '09:00'), 6, 4, 'In progress', {
+      subtasks: [sub('Cost minimisation (Q1–2)', true), sub('Short-run vs long-run cost curves (Q3)', true), sub('Returns to scale proof (Q4)')]
+    }),
+    A('econ', 'Policy Essay: Rent Control', at(12, 4, '17:00'), 20, 10, 'In progress', {
+      subtasks: [sub('Read Diamond, McQuade & Qian (2019)', true), sub('Outline argument', true), sub('Draft 2,000 words', false, toDateInput(addDays(s, 12 * 7 + 1))), sub('Proofread and format references')],
+      links: ['https://www.aeaweb.org/articles?id=10.1257/aer.20181289']
+    }),
+    A('econ', 'Final Exam', at(13, 3, '09:00'), 35, 12),
+    // HIST 230
+    A('hist', 'Response Paper 1: The Terror', at(1, 3, '17:00'), 5, 3, 'Submitted'),
+    A('hist', 'Source Analysis: Congress of Vienna', at(6, 2, '17:00'), 15, 5, 'Submitted'),
+    A('hist', 'Research Essay Proposal', at(9, 4, '17:00'), 5, 3, 'Not started', { notes: 'One page. Topic, question, five sources (at least two primary).' })
+  ];
+  return {
+    version: 1,
+    courses,
+    assignments,
+    settings: {
+      dailyCapacityHrs: 4,
+      semesterStart: toDateInput(s),
+      semesterEnd: toDateInput(addDays(s, 14 * 7 - 1)),
+      theme: document.documentElement.getAttribute('data-theme') || 'light'
+    },
+    archive: [
+      { name: `Spring ${s.getFullYear()}`, courses: [
+        ['BIO 102', 'Cell Biology', 4, 'A-'], ['CHEM 102', 'General Chemistry II', 4, 'B+'],
+        ['MATH 142', 'Calculus II', 4, 'A'], ['ECON 101', 'Principles of Economics', 3, 'A-'], ['WRIT 110', 'Academic Writing', 3, 'B+']
+      ] },
+      { name: `Autumn ${s.getFullYear() - 1}`, courses: [
+        ['BIO 101', 'Foundations of Biology', 4, 'B+'], ['CHEM 101', 'General Chemistry I', 4, 'B'],
+        ['MATH 141', 'Calculus I', 4, 'A-'], ['HIST 120', 'The Early Modern World', 3, 'A'], ['STAT 110', 'Introduction to Statistics', 3, 'A-']
+      ] }
+    ]
+  };
+}
+
+/* =========================================================
+   STORE
+   ========================================================= */
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (!s || !Array.isArray(s.courses) || !Array.isArray(s.assignments) || !s.settings) return null;
+    s.archive = s.archive || [];
+    return s;
+  } catch (e) { return null; }
+}
+let S = load() || seed();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+save();
+
+const ui = {
+  route: 'today', courseId: null, search: '', drawerId: null, weekOffset: 0,
+  sort: { key: 'dueAt', dir: 1 }, gPending: false, gTimer: null,
+  quick: null, target: {}, importTab: 'text', importRows: null, toastTimer: null
+};
+
+const course = id => S.courses.find(c => c.id === id);
+const asg = id => S.assignments.find(a => a.id === id);
+const col = key => `var(--c-${key || 'ochre'})`;
+const isDone = a => a.status === 'Submitted' || a.status === 'Graded';
+const byDue = (a, b) => new Date(a.dueAt) - new Date(b.dueAt);
+const semStart = () => fromDateInput(S.settings.semesterStart);
+const semEnd = () => addDays(fromDateInput(S.settings.semesterEnd), 1);
+function termName() {
+  const s = semStart(); const m = s.getMonth();
+  return `${m >= 7 ? 'Autumn' : m <= 4 ? 'Spring' : 'Summer'} ${s.getFullYear()}`;
+}
+function semWeeks() { return Math.max(1, Math.ceil((semEnd() - semStart()) / (7 * DAY))); }
+function weekOfSem(d) { return Math.floor((sod(d) - semStart()) / (7 * DAY)) + 1; }
+
+/* =========================================================
+   SMART BEHAVIOUR
+   ========================================================= */
+function remainingHrs(a) {
+  if (isDone(a)) return 0;
+  const st = a.subtasks || [];
+  if (st.length) return a.estimateHrs * (1 - st.filter(x => x.done).length / st.length);
+  return a.estimateHrs * (a.status === 'In progress' ? 0.6 : 1);
+}
+function urgency(a, now) { const days = (new Date(a.dueAt) - now) / DAY; return 1 / Math.pow(Math.max(days, 0.25), 1.5); }
+function priority(a, now) { return urgency(a, now) * (a.weightPct || 0.5) * Math.max(remainingHrs(a), 0.25); }
+function lateText(d, now) { const hrs = (now - d) / HOUR; return hrs < 24 ? `${Math.max(1, Math.round(hrs))}h late` : `${Math.round(hrs / 24)}d late`; }
+function dueIn(d, now) {
+  const hrs = (d - now) / HOUR;
+  if (hrs < 0) return lateText(d, now);
+  if (hrs < 1) return `Due in ${Math.max(1, Math.round(hrs * 60))}m`;
+  if (hrs < 48) return `Due in ${Math.round(hrs)}h`;
+  return `Due in ${Math.round(hrs / 24)}d`;
+}
+function leadDays(a) { return 1 + Math.floor((a.estimateHrs || 0) / 4); }
+function reminders(now) {
+  return S.assignments.filter(a => {
+    if (isDone(a)) return false;
+    const d = new Date(a.dueAt);
+    if (d < now) return false;
+    return now >= addDays(sod(d), -leadDays(a));
+  }).sort(byDue);
+}
+function dayLoad(date) {
+  const items = S.assignments.filter(a => sameDay(new Date(a.dueAt), date));
+  return { date, items, load: items.reduce((s, a) => s + remainingHrs(a), 0) };
+}
+function weekSuggestion(days, cap, now) {
+  const today = sod(now);
+  for (let i = 0; i < days.length; i++) {
+    const d = days[i]; const over = d.load - cap;
+    if (over <= 0.05) continue;
+    if (d.date < today) continue;
+    const movable = d.items.filter(a => !isDone(a) && !FIXED.test(a.title)).sort((x, y) => remainingHrs(y) - remainingHrs(x));
+    for (const a of movable) {
+      const r = remainingHrs(a);
+      for (let j = i - 1; j >= 0; j--) {
+        if (days[j].date < today) break;
+        if (days[j].load + r <= cap) return { a, from: d, to: days[j], over };
+      }
+    }
+    return { a: null, from: d, over };
+  }
+  return null;
+}
+function crunchWeeks() {
+  const s = semStart(); const n = semWeeks(); const out = [];
+  for (let w = 0; w < n; w++) {
+    const a = addDays(s, w * 7), b = addDays(s, w * 7 + 7);
+    const items = S.assignments.filter(x => { const d = new Date(x.dueAt); return d >= a && d < b; });
+    const hrs = items.reduce((t, x) => t + (x.estimateHrs || 0), 0);
+    out.push({ w, start: a, end: b, items, hrs, crunch: items.length >= 3 || hrs > 15 });
+  }
+  return out;
+}
+function gradeStats(courseId) {
+  const items = S.assignments.filter(a => a.courseId === courseId);
+  const graded = items.filter(a => a.status === 'Graded' && a.maxScore > 0 && a.score != null);
+  const gW = graded.reduce((s, a) => s + (+a.weightPct || 0), 0);
+  const earned = graded.reduce((s, a) => s + (a.score / a.maxScore) * (+a.weightPct || 0), 0);
+  const tracked = items.reduce((s, a) => s + (+a.weightPct || 0), 0);
+  return { items, graded, gW, earned, current: gW ? earned / gW * 100 : null, remainingW: Math.max(0, 100 - gW), tracked };
+}
+
+/* =========================================================
+   QUICK-ADD / SYLLABUS PARSER
+   ========================================================= */
+const WDK = { sun: 0, mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
+const MK = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+const MON_RE = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.?';
+function rollYear(d, now) { if (d < addDays(now, -60)) d.setFullYear(d.getFullYear() + 1); return d; }
+
+function parseText(text, now = new Date()) {
+  let rest = ' ' + String(text).replace(/\s+/g, ' ') + ' ';
+  const out = { title: '', courseId: null, date: null, time: null, weight: null, estimate: null };
+  const take = (re, fn) => { let hit = false; rest = rest.replace(re, (...m) => { if (hit) return m[0]; const r = fn(...m); if (r === false) return m[0]; hit = true; return ' '; }); return hit; };
+
+  // weight
+  take(/[\s(](\d{1,3}(?:\.\d+)?)\s?%(?=[\s,.;)])/, (m, n) => { out.weight = +n; });
+  // estimate
+  if (!take(/\s(?:~|est\.?\s)?(\d{1,2}(?:\.\d+)?)\s?(?:h|hr|hrs|hours?)(?=[\s,.;)])/i, (m, n) => { out.estimate = +n; }))
+    take(/\s(?:~)?(\d{1,3})\s?(?:m|min|mins|minutes)(?=[\s,.;)])/i, (m, n) => { out.estimate = Math.round(n / 60 * 4) / 4; });
+  // time
+  if (!take(/\s(?:at\s|@\s?)?(\d{1,2})(?::(\d{2}))?\s?(am|pm)(?=[\s,.;)])/i, (m, hh, mi, ap) => { out.time = [(+hh % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0), +(mi || 0)]; }))
+    if (!take(/\s(?:at\s|@\s?)?([01]?\d|2[0-3])[:.]([0-5]\d)(?=[\s,.;)])/, (m, hh, mi) => { out.time = [+hh, +mi]; }))
+      take(/\s(noon|midday|midnight|eod)(?=[\s,.;)])/i, (m, w) => { out.time = /noon|midday/i.test(w) ? [12, 0] : [23, 59]; });
+  // date
+  const base = sod(now);
+  const tries = [
+    [/\s(\d{4})-(\d{2})-(\d{2})(?=[\s,.;)])/, (m, y, mo, d) => new Date(+y, mo - 1, +d)],
+    [new RegExp(`\\s(\\d{1,2})(?:st|nd|rd|th)?\\s${MON_RE}(?:\\s(\\d{4}))?(?=[\\s,.;)])`, 'i'), (m, d, mo, y) => { const x = new Date(y ? +y : now.getFullYear(), MK[mo.slice(0, 3).toLowerCase()], +d); return y ? x : rollYear(x, now); }],
+    [new RegExp(`\\s${MON_RE}\\s(\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s(\\d{4}))?(?=[\\s,.;)])`, 'i'), (m, mo, d, y) => { const x = new Date(y ? +y : now.getFullYear(), MK[mo.slice(0, 3).toLowerCase()], +d); return y ? x : rollYear(x, now); }],
+    [/\s(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=[\s,.;)])/, (m, d, mo, y) => { if (+mo > 12) return false; let yy = y ? +y : now.getFullYear(); if (yy < 100) yy += 2000; const x = new Date(yy, mo - 1, +d); return y ? x : rollYear(x, now); }],
+    [/\s(today|tonight)(?=[\s,.;)])/i, () => base],
+    [/\s(tomorrow|tmrw?|tmr)(?=[\s,.;)])/i, () => addDays(base, 1)],
+    [/\sin\s(\d{1,2})\s?days?(?=[\s,.;)])/i, (m, n) => addDays(base, +n)],
+    [/\s(?:(next|this)\s)?(monday|mon|tuesday|tues|tue|wednesday|wed|thursday|thurs|thur|thu|friday|fri|saturday|sat|sunday|sun)(?=[\s,.;)])/i, (m, mod, wd) => {
+      const k = WDK[wd.slice(0, 3).toLowerCase()]; let diff = (k - now.getDay() + 7) % 7; if (diff === 0) diff = 7; return addDays(base, diff); }],
+    [/\sweek\s(\d{1,2})(?=[\s,.;):])/i, (m, n) => addDays(semStart(), (n - 1) * 7 + 4)]
+  ];
+  for (const [re, fn] of tries) {
+    if (take(re, (...m) => { const d = fn(...m); if (!d || isNaN(d)) return false; out.date = d; })) break;
+  }
+  // course
+  for (const c of S.courses) {
+    const letters = c.code.replace(/[^a-z]/gi, ''); const digits = c.code.replace(/\D/g, '');
+    const firstWord = (c.name.split(/[\s,]/)[0] || '').replace(/[^a-z]/gi, '');
+    const pats = [];
+    if (letters) pats.push(`${letters}\\s?${digits ? `(?:${digits})?` : ''}`);
+    if (firstWord.length > 3) pats.push(firstWord);
+    if (!pats.length) continue;
+    const re = new RegExp(`\\s(?:${pats.join('|')})(?=[\\s,.;:)])`, 'i');
+    if (take(re, () => {})) { out.courseId = c.id; break; }
+  }
+  // tidy title
+  let t = rest.replace(/\(\s*\)/g, ' ').replace(/(^|\s)\)(?=\s|$)/g, ' ').replace(/\((?=\s*$)/, ' ').replace(/\b(due|deadline|by|on|at)\b\s*:?/gi, ' ').replace(/\s+/g, ' ').trim();
+  t = t.replace(/^[-–—*•·:\d.)\s]+(?=[A-Za-z])/, m => /^\d+[.)]\s/.test(m) || /^[-–—*•·:]/.test(m) ? '' : m);
+  t = t.replace(/[\s,;:–—-]+$/, '').replace(/^[\s,;:–—-]+/, '');
+  out.title = t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+  return out;
+}
+function resolveDue(p, now = new Date()) {
+  let d, assumed = false;
+  if (p.date) d = new Date(p.date); else { d = addDays(sod(now), 7); assumed = true; }
+  if (p.time) d.setHours(p.time[0], p.time[1], 0, 0); else d.setHours(23, 59, 0, 0);
+  return { d, assumed };
+}
+
+/* =========================================================
+   RENDER: RAIL
+   ========================================================= */
+function renderRail() {
+  const now = new Date();
+  $('#term').textContent = `${termName()} · Week ${Math.min(Math.max(weekOfSem(now), 1), semWeeks())} of ${semWeeks()}`;
+  const nav = [['today', 'Today', 'G T'], ['week', 'Week', 'G W'], ['semester', 'Semester', 'G S'], ['archive', 'Archive', 'G A']];
+  const rem = reminders(now);
+  $('#rail-dyn').innerHTML = `
+    <nav class="rail-sec" aria-label="Views"><ul class="nav">
+      ${nav.map(([k, l, s]) => `<li><a href="#/${k}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><span>${l}</span><span class="mono">${s}</span></a></li>`).join('')}
+    </ul></nav>
+    <section class="rail-sec" aria-labelledby="rh-courses">
+      <h2 class="rail-h" id="rh-courses">Courses</h2>
+      <ul class="courses">
+        ${S.courses.map(c => {
+          const n = S.assignments.filter(a => a.courseId === c.id && !isDone(a)).length;
+          const cur = ui.route === 'course' && ui.courseId === c.id && !ui.search;
+          return `<li><a href="#/course/${h(c.id)}" ${cur ? 'aria-current="page"' : ''} title="${h(c.code)} ${h(c.name)}">
+            <span class="sq" style="--c:${col(c.colour)}"></span><span class="mono code">${h(c.code)}</span>
+            <span class="cname">${h(c.name)}</span><span class="mono cnt" aria-label="${n} open">${n}</span></a></li>`;
+        }).join('')}
+      </ul>
+      <button class="link-btn mono" style="margin-top:6px;font-size:11.5px;color:var(--muted)" data-action="add-course">Add course</button>
+    </section>
+    <section class="rail-sec" aria-labelledby="rh-rem">
+      <h2 class="rail-h" id="rh-rem">Reminders</h2>
+      ${rem.length ? `<ul class="reminders">${rem.slice(0, 5).map(a => {
+        const d = new Date(a.dueAt); const c = course(a.courseId);
+        const started = a.status === 'In progress';
+        return `<li><button class="link-btn" style="text-decoration:none" data-action="open" data-id="${a.id}">${started ? 'Keep going on' : 'Start'} ${h(a.title)}</button>
+          <span class="mono">${h(c?.code || '')} · due ${fmtShort(d)} ${fmtTime(d)}</span></li>`;
+      }).join('')}</ul>${rem.length > 5 ? `<p class="mono muted" style="margin:6px 0 0">${rem.length - 5} more</p>` : ''}`
+      : `<p class="muted" style="margin:0;font-size:13px">No reminders.</p>`}
+    </section>
+    <section class="rail-sec rail-foot" aria-label="Data and settings">
+      <button class="link-btn" data-action="import">Import syllabus / .ics</button>
+      <button class="link-btn" data-action="export">Export JSON</button>
+      <button class="link-btn" data-action="import-json">Import JSON</button>
+      <button class="link-btn" data-action="theme">${S.settings.theme === 'dark' ? 'Light theme' : 'Dark theme'}</button>
+      <button class="link-btn" data-action="keys">Shortcuts <kbd>?</kbd></button>
+    </section>`;
+}
+
+/* =========================================================
+   RENDER: MAIN
+   ========================================================= */
+function renderMain(opts = {}) {
+  const main = $('#main');
+  const act = document.activeElement;
+  let restore = null;
+  if (act && main.contains(act)) {
+    if (act.matches('[data-row]')) restore = `[data-row][data-id="${act.dataset.id}"]`;
+    else if (act.id) restore = '#' + CSS.escape(act.id);
+  }
+  let html;
+  if (ui.search.trim()) html = viewSearch();
+  else if (ui.route === 'week') html = viewWeek();
+  else if (ui.route === 'semester') html = viewSemester();
+  else if (ui.route === 'archive') html = viewArchive();
+  else if (ui.route === 'course' && course(ui.courseId)) html = viewCourse();
+  else html = viewToday();
+  main.innerHTML = `<div class="page">${html}</div>`;
+  if (opts.focusIndex != null) {
+    const rows = $$('[data-row]', main);
+    if (rows.length) rows[Math.min(opts.focusIndex, rows.length - 1)].focus();
+  } else if (restore) { const el = $(restore, main); if (el) el.focus(); }
+  if (ui.route === 'course') updateCourseCalc();
+}
+
+function courseCell(c) {
+  return `<td class="course-cell"><span class="sq" style="--c:${col(c?.colour)}" title="${h(c?.name || '')}"></span><span class="mono code">${h(c?.code || '—')}</span></td>`;
+}
+function rowHTML(a, now, { showDay = false } = {}) {
+  const c = course(a.courseId); const d = new Date(a.dueAt);
+  const late = !isDone(a) && d < now;
+  const due = late ? `${lateText(d, now)}` : (showDay ? `${fmtShort(d)} · ${fmtTime(d)}` : fmtTime(d));
+  return `<tr class="row ${late ? 'overdue' : ''} ${isDone(a) ? 'done' : ''}" data-row data-id="${a.id}" tabindex="0">
+    <td class="cb"><input type="checkbox" data-action="toggle" data-id="${a.id}" ${isDone(a) ? 'checked' : ''} aria-label="Mark ${h(a.title)} as submitted" tabindex="-1"></td>
+    ${courseCell(c)}
+    <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td>
+    <td class="due">${due}</td>
+    <td class="num hide-sm">${fmtH(isDone(a) ? a.estimateHrs : remainingHrs(a))}</td>
+    <td class="num">${fmtPct(a.weightPct)}</td>
+  </tr>`;
+}
+const ledgerHead = (dueLabel = 'Due') => `<thead><tr><th scope="col"><span class="sr-only">Submitted</span></th><th scope="col"><span class="hide-sm">Course</span></th><th scope="col">Assignment</th><th scope="col">${dueLabel}</th><th scope="col" class="num hide-sm">Left</th><th scope="col" class="num">Weight</th></tr></thead>`;
+
+/* ---------- TODAY ---------- */
+function viewToday() {
+  const now = new Date();
+  const open = S.assignments.filter(a => !isDone(a));
+  const overdue = open.filter(a => new Date(a.dueAt) < now).sort(byDue);
+  const upcoming = open.filter(a => new Date(a.dueAt) >= now).sort(byDue);
+  const within48 = upcoming.filter(a => new Date(a.dueAt) - now <= 48 * HOUR).length;
+  const weekHrs = open.filter(a => new Date(a.dueAt) - now <= 7 * DAY).reduce((s, a) => s + remainingHrs(a), 0);
+  const ranked = [...open].sort((a, b) => priority(b, now) - priority(a, now)).slice(0, 3);
+  const wk = weekOfSem(now);
+
+  const nowHTML = ranked.length ? `<ol class="now-list">${ranked.map((a, i) => {
+    const c = course(a.courseId); const d = new Date(a.dueAt); const late = d < now;
+    return `<li class="now-item" data-row data-id="${a.id}" tabindex="0">
+      <span class="rank" aria-hidden="true">${i + 1}</span>
+      <div class="now-title"><span class="sq" style="--c:${col(c?.colour)}"></span><span class="mono">${h(c?.code || '')}</span>
+        <button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></div>
+      <p class="reason mono ${late ? 'late' : ''}">${dueIn(d, now)} · ${fmtPct(a.weightPct)} of grade · ~${fmtH(remainingHrs(a))} left</p>
+    </li>`;
+  }).join('')}</ol>` : `<p class="empty">Nothing due. Add an assignment <button class="link-btn" data-action="new">(N)</button>.</p>`;
+
+  // group upcoming
+  const groups = [];
+  const push = (key, label, sub, a, opts = {}) => {
+    let g = groups.find(x => x.key === key);
+    if (!g) { g = { key, label, sub, items: [], ...opts }; groups.push(g); }
+    g.items.push(a);
+  };
+  for (const a of upcoming) {
+    const d = new Date(a.dueAt); const dd = dayDiff(d, now);
+    if (dd === 0) push('d0', 'Today', fmtShort(d), a);
+    else if (dd === 1) push('d1', 'Tomorrow', fmtShort(d), a);
+    else if (dd <= 6) push('d' + dd, fmtShort(d), '', a);
+    else { const ws = startOfWeek(d); push('w' + +ws, `Week of ${fmtDM(ws)}`, `W${weekOfSem(ws)}`, a, { showDay: true }); }
+  }
+  const tableHTML = (overdue.length || groups.length) ? `<table class="ledger">${ledgerHead()}
+    ${overdue.length ? `<tbody><tr class="group late"><th colspan="6" scope="rowgroup">Overdue<span class="mono">${overdue.length}</span></th></tr>${overdue.map(a => rowHTML(a, now)).join('')}</tbody>` : ''}
+    ${groups.map(g => `<tbody><tr class="group"><th colspan="6" scope="rowgroup">${h(g.label)}${g.sub ? `<span class="mono">${h(g.sub)}</span>` : ''}</th></tr>${g.items.map(a => rowHTML(a, now, { showDay: g.showDay })).join('')}</tbody>`).join('')}
+  </table>` : `<p class="empty">Nothing due. Add an assignment <button class="link-btn" data-action="new">(N)</button>.</p>`;
+
+  // side: next 7 days load + recently submitted
+  const cap = +S.settings.dailyCapacityHrs || 4;
+  const days = Array.from({ length: 7 }, (_, i) => dayLoad(addDays(sod(now), i)));
+  const max = Math.max(cap * 1.5, ...days.map(d => d.load));
+  const recent = S.assignments.filter(a => isDone(a) && new Date(a.dueAt) > addDays(now, -21) ).sort((a, b) => byDue(b, a)).slice(0, 5);
+
+  return `
+  <header class="page-head">
+    <p class="eyebrow mono">${termName()} · Week ${Math.min(Math.max(wk, 1), semWeeks())} of ${semWeeks()}</p>
+    <h1 class="display">${fmtLong(now)}</h1>
+    <p class="meta mono">${open.length} open · ${within48} due within 48h · ~${fmtH(weekHrs)} of work in the next 7 days${overdue.length ? ` · <span class="accent">${overdue.length} overdue</span>` : ''}</p>
+  </header>
+  <div class="today-grid">
+    <div>
+      <section aria-labelledby="h-now">
+        <h2 class="section-h" id="h-now">Work on now <span class="mono">ranked by urgency × weight × effort left</span></h2>
+        ${nowHTML}
+      </section>
+      <section aria-labelledby="h-up">
+        <h2 class="section-h" id="h-up">Coming up <span class="mono">${upcoming.length} open</span></h2>
+        ${tableHTML}
+      </section>
+    </div>
+    <aside aria-label="Overview">
+      <div class="side-block">
+        <h2 class="side-h">Next 7 days · ${cap}h a day</h2>
+        <ul class="load-mini">${days.map((d, i) => `
+          <li class="${i === 0 ? 'is-today' : ''}"><span class="mono">${i === 0 ? 'Today' : WDS[d.date.getDay()] + ' ' + d.date.getDate()}</span>
+            <span class="track" aria-hidden="true"><span class="fill ${d.load > cap ? 'over' : ''}" style="width:${(d.load / max * 100).toFixed(1)}%"></span><span class="capmark" style="left:${(cap / max * 100).toFixed(1)}%"></span></span>
+            <span class="mono h ${d.load > cap ? 'accent' : ''}">${d.load ? fmtH(d.load) : '–'}</span></li>`).join('')}
+        </ul>
+      </div>
+      <div class="side-block">
+        <h2 class="side-h">Recently submitted</h2>
+        ${recent.length ? `<ul class="done-list">${recent.map(a => `<li><span class="sq" style="--c:${col(course(a.courseId)?.colour)}"></span><span class="t">${h(a.title)}</span><button class="link-btn mono" style="font-size:11px" data-action="toggle-btn" data-id="${a.id}">Undo</button></li>`).join('')}</ul>` : `<p class="muted" style="margin:0;font-size:13px">Nothing submitted in the last three weeks.</p>`}
+      </div>
+    </aside>
+  </div>`;
+}
+
+/* ---------- WEEK ---------- */
+function viewWeek() {
+  const now = new Date();
+  const ws = addDays(startOfWeek(now), ui.weekOffset * 7);
+  const cap = +S.settings.dailyCapacityHrs || 4;
+  const days = Array.from({ length: 7 }, (_, i) => dayLoad(addDays(ws, i)));
+  const max = Math.max(cap * 1.6, ...days.map(d => d.load), 1);
+  const total = days.reduce((s, d) => s + d.load, 0);
+  const sg = weekSuggestion(days, cap, now);
+  const label = ui.weekOffset === 0 ? 'This week' : ui.weekOffset === 1 ? 'Next week' : ui.weekOffset === -1 ? 'Last week' : `Week ${weekOfSem(ws)}`;
+  let sgHTML = '';
+  if (sg) {
+    const dn = WD[sg.from.date.getDay()];
+    sgHTML = sg.a
+      ? `<div class="suggest" role="status"><p>${dn} is ${fmtH(sg.over)} over. Move <strong>${h(sg.a.title)}</strong> to ${WDS[sg.to.date.getDay()]}?</p>
+         <button class="btn small" data-action="apply-move" data-id="${sg.a.id}" data-to="${+sg.to.date}">Apply</button></div>`
+      : `<div class="suggest" role="status"><p>${dn} is ${fmtH(sg.over)} over, and no earlier day this week has room. Consider starting sooner.</p></div>`;
+  }
+  return `
+  <header class="page-head">
+    <div class="head-row">
+      <div>
+        <p class="eyebrow mono">${label} · W${weekOfSem(ws)} of ${semWeeks()} · ~${fmtH(total)} planned</p>
+        <h1 class="display">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</h1>
+      </div>
+      <div class="week-tools">
+        <button class="btn quiet small" data-action="week-prev" aria-label="Previous week">${icon('left')}Prev</button>
+        <button class="btn quiet small" data-action="week-now" ${ui.weekOffset === 0 ? 'disabled' : ''}>This week</button>
+        <button class="btn quiet small" data-action="week-next" aria-label="Next week">Next${icon('right')}</button>
+        <label for="cap">Daily capacity <input type="number" id="cap" min="0.5" max="16" step="0.5" value="${cap}"> h</label>
+      </div>
+    </div>
+  </header>
+  <div class="strip-wrap" role="img" aria-label="Estimated hours per day against a ${cap} hour capacity: ${days.map(d => `${WD[d.date.getDay()]} ${fmtH(d.load)}`).join(', ')}">
+    <div class="strip">
+      ${days.map(d => `<div class="strip-col"><div class="strip-bar ${d.load > cap ? 'over' : ''}" style="height:${(d.load / max * 100).toFixed(1)}%"></div></div>`).join('')}
+      <div class="cap-line" style="bottom:${(cap / max * 100).toFixed(1)}%"><span>${cap}h capacity</span></div>
+    </div>
+    <div class="strip-labels">${days.map(d => `<div class="${d.load > cap ? 'over' : ''}">${d.load ? fmtH(d.load) : '–'}</div>`).join('')}</div>
+  </div>
+  ${sgHTML || '<div style="height:22px"></div>'}
+  <div class="week-cols">
+    ${days.map(d => {
+      const isT = sameDay(d.date, now); const past = d.date < sod(now);
+      const items = d.items.slice().sort(byDue);
+      return `<div class="w-col ${isT ? 'is-today' : ''} ${past ? 'past' : ''}" data-drop="${+d.date}" aria-label="${fmtLong(d.date)}">
+        <div class="w-head"><span class="wd">${isT ? 'Today' : WDS[d.date.getDay()]}</span><span class="d">${d.date.getDate()}</span></div>
+        ${items.length ? items.map(a => {
+          const c = course(a.courseId); const dt = new Date(a.dueAt); const late = !isDone(a) && dt < now;
+          return `<div class="w-entry ${isDone(a) ? 'done' : ''} ${late ? 'overdue' : ''}" draggable="true" data-row data-id="${a.id}" tabindex="0" style="--c:${col(c?.colour)}" aria-label="${h(c?.code || '')} ${h(a.title)}, due ${fmtTime(dt)}, ${fmtH(a.estimateHrs)}">
+            <span class="mono">${fmtTime(dt)} · ${h(c?.code || '')} · ${fmtH(isDone(a) ? a.estimateHrs : remainingHrs(a))}</span><span class="t">${h(a.title)}</span></div>`;
+        }).join('') : `<div class="w-empty">—</div>`}
+      </div>`;
+    }).join('')}
+  </div>
+  <p class="mono muted" style="margin-top:12px">Drag an entry to another day to change its due date. Time of day is kept.</p>`;
+}
+
+/* ---------- SEMESTER ---------- */
+function viewSemester() {
+  const now = new Date();
+  const s = semStart(), e = semEnd(), span = e - s, n = semWeeks();
+  const pct = d => ((new Date(d) - s) / span * 100);
+  const weeks = crunchWeeks();
+  const crunch = weeks.filter(w => w.crunch);
+  const todayPct = pct(now);
+  const showToday = todayPct >= 0 && todayPct <= 100;
+  const scaffold = (head) => `
+    ${weeks.map(w => `<div class="tl-wk" style="left:${pct(w.start).toFixed(3)}%"></div>`).join('')}
+    ${crunch.map(w => `<div class="tl-band" style="left:${pct(w.start).toFixed(3)}%;width:${(pct(w.end) - pct(w.start)).toFixed(3)}%"></div>`).join('')}
+    ${showToday ? `<div class="tl-today" style="left:${todayPct.toFixed(3)}%"></div>` : ''}
+    ${head ? weeks.map(w => `<div class="tl-wk-label" style="left:${pct(w.start).toFixed(3)}%"><b>W${w.w + 1}</b>${fmtDM(w.start)}</div>`).join('') : ''}`;
+  return `
+  <header class="page-head">
+    <div class="head-row">
+      <div>
+        <p class="eyebrow mono">${n} weeks · ${S.assignments.length} assignments · ${crunch.length} crunch ${crunch.length === 1 ? 'week' : 'weeks'}</p>
+        <h1 class="display">${termName()}</h1>
+      </div>
+      <div class="sem-tools">
+        <label for="sem-start">Starts <input type="date" id="sem-start" value="${S.settings.semesterStart}"></label>
+        <label for="sem-end">Ends <input type="date" id="sem-end" value="${S.settings.semesterEnd}"></label>
+      </div>
+    </div>
+  </header>
+  <div class="tl-scroll">
+    <div class="tl" role="group" aria-label="Semester timeline">
+      <div class="tl-row tl-head"><div class="tl-label mono">Course</div><div class="tl-track">${scaffold(true)}</div></div>
+      ${S.courses.map(c => {
+        const items = S.assignments.filter(a => a.courseId === c.id);
+        return `<div class="tl-row"><div class="tl-label"><span class="sq" style="--c:${col(c.colour)}"></span><a href="#/course/${h(c.id)}"><span class="mono code">${h(c.code)}</span></a></div>
+          <div class="tl-track">${scaffold(false)}
+            ${items.map(a => {
+              const d = new Date(a.dueAt); const p = pct(d); if (p < 0 || p > 100) return '';
+              const late = !isDone(a) && d < now;
+              const ht = Math.round(10 + Math.min(+a.weightPct || 0, 40) * 1.2);
+              return `<button class="tick ${isDone(a) ? 'done' : ''} ${late ? 'overdue' : ''}" style="left:${p.toFixed(3)}%;height:${ht}px;--c:${col(c.colour)}" data-action="open" data-id="${a.id}"
+                title="${h(c.code)} · ${h(a.title)} · ${fmtShort(d)} · ${fmtPct(a.weightPct)}" aria-label="${h(c.code)} ${h(a.title)}, due ${fmtShort(d)}, ${fmtPct(a.weightPct)} of grade${isDone(a) ? ', ' + a.status.toLowerCase() : ''}"></button>`;
+            }).join('')}
+          </div></div>`;
+      }).join('')}
+    </div>
+  </div>
+  <div class="tl-legend">
+    <span><span class="swatch-tick" aria-hidden="true"></span>Tick height = share of grade</span>
+    <span><span class="swatch-hatch" aria-hidden="true"></span>Crunch week: 3+ items due or more than 15h of work</span>
+    <span><span class="swatch-tick" style="opacity:.38" aria-hidden="true"></span>Submitted or graded</span>
+  </div>
+  <section aria-labelledby="h-crunch" style="margin-top:40px">
+    <h2 class="section-h" id="h-crunch">Crunch weeks</h2>
+    ${crunch.length ? `<table class="ledger"><thead><tr><th scope="col">Week</th><th scope="col">Dates</th><th scope="col">Due</th><th scope="col" class="num">Items</th><th scope="col" class="num">Hours</th></tr></thead><tbody>
+      ${crunch.map(w => `<tr><td class="mono">W${w.w + 1}</td><td class="mono" style="white-space:nowrap">${fmtDM(w.start)} – ${fmtDM(addDays(w.end, -1))}</td>
+        <td>${w.items.sort(byDue).map(a => `<button class="title-link" data-action="open" data-id="${a.id}">${h(course(a.courseId)?.code || '')} ${h(a.title)}</button>`).join('<span class="muted"> · </span>')}</td>
+        <td class="num">${w.items.length}</td><td class="num">${fmtH(w.hrs)}</td></tr>`).join('')}
+    </tbody></table>` : `<p class="empty">No crunch weeks this term.</p>`}
+  </section>`;
+}
+
+/* ---------- COURSE ---------- */
+function viewCourse() {
+  const c = course(ui.courseId);
+  const st = gradeStats(c.id);
+  const now = new Date();
+  const wTotal = c.weightings.reduce((s, w) => s + (+w.pct || 0), 0);
+  const { key, dir } = ui.sort;
+  const val = a => key === 'pct' ? (a.status === 'Graded' && a.maxScore ? a.score / a.maxScore : -1)
+    : key === 'dueAt' ? +new Date(a.dueAt) : key === 'status' ? STATUSES.indexOf(a.status) : key === 'title' ? a.title.toLowerCase() : +a[key] || 0;
+  const items = st.items.slice().sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : 0) * dir; });
+  const th = (k, label, cls = '') => `<th scope="col" class="${cls}" ${key === k ? `aria-sort="${dir === 1 ? 'ascending' : 'descending'}"` : ''}><button class="sort-btn" data-action="sort" data-key="${k}">${label}${key === k ? (dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
+  return `
+  <header class="page-head">
+    <div class="course-head">
+      <div>
+        <p class="eyebrow mono">Course · ${st.items.filter(a => !isDone(a)).length} open of ${st.items.length}</p>
+        <label class="sr-only" for="c-name">Course name</label>
+        <input id="c-name" class="plain-input display" data-cfield="name" value="${h(c.name)}">
+        <div class="course-meta">
+          <span class="sq" style="--c:${col(c.colour)}"></span>
+          <label class="sr-only" for="c-code">Course code</label>
+          <input id="c-code" class="plain-input code-in" data-cfield="code" value="${h(c.code)}">
+          <label class="sr-only" for="c-inst">Instructor</label>
+          <input id="c-inst" class="plain-input inst-in" data-cfield="instructor" value="${h(c.instructor)}" placeholder="Instructor">
+          <span class="colour-pick" role="group" aria-label="Course colour">
+            ${COLOURS.map(k => `<button style="--c:${col(k.key)}" data-action="colour" data-colour="${k.key}" aria-pressed="${c.colour === k.key}" aria-label="${k.name}" title="${k.name}"></button>`).join('')}
+          </span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn quiet small" data-action="new-for-course">Add assignment</button>
+        <button class="btn quiet small danger" data-action="delete-course">Delete course</button>
+      </div>
+    </div>
+  </header>
+  <div class="course-grid">
+    <div>
+      <section aria-labelledby="h-grade">
+        <h2 class="section-h" id="h-grade">Current grade</h2>
+        <p class="grade-figure" id="grade-figure">${st.current == null ? '—' : `${st.current.toFixed(1)}<small>%</small>`}</p>
+        <p class="mono muted" style="margin:0">${st.current == null ? 'No graded work yet.' : `From ${fmtPct(st.gW)} of the course graded (${st.graded.length} ${st.graded.length === 1 ? 'item' : 'items'}).`}</p>
+        <div class="calc">
+          <label for="target">What do I need for <input type="number" id="target" min="0" max="100" step="1" value="${ui.target[c.id] ?? 80}"> % overall?</label>
+          <p id="calc-out" aria-live="polite"></p>
+          <p class="note" id="calc-note"></p>
+        </div>
+      </section>
+      <section aria-labelledby="h-wt">
+        <h2 class="section-h" id="h-wt">Weighting</h2>
+        <table class="ledger wt-table">
+          <thead><tr><th scope="col">Component</th><th scope="col" class="num">Weight</th><th scope="col"><span class="sr-only">Remove</span></th></tr></thead>
+          <tbody>
+            ${c.weightings.map((w, i) => `<tr><td><input type="text" data-wfield="label" data-i="${i}" value="${h(w.label)}" aria-label="Component name"></td>
+              <td class="num"><input type="number" data-wfield="pct" data-i="${i}" value="${w.pct}" min="0" max="100" step="0.5" aria-label="${h(w.label)} weight percent"></td>
+              <td style="width:24px"><button class="icon-btn" data-action="w-remove" data-i="${i}" aria-label="Remove ${h(w.label)}">${icon('x')}</button></td></tr>`).join('')}
+            <tr class="tot"><td>Total</td><td class="num" id="wt-total">${fmtPct(wTotal)}</td><td></td></tr>
+          </tbody>
+        </table>
+        <button class="link-btn mono" style="font-size:11.5px;margin-top:8px" data-action="w-add">Add component</button>
+        <p class="mono accent" id="wt-warn" style="margin:6px 0 0">${Math.abs(wTotal - 100) > 0.01 ? `Components add up to ${fmtPct(wTotal)}, not 100%.` : ''}</p>
+      </section>
+    </div>
+    <section aria-labelledby="h-items">
+      <h2 class="section-h" id="h-items">Assignments <span class="mono">${fmtPct(st.tracked)} of grade tracked</span></h2>
+      ${items.length ? `<table class="ledger">
+        <thead><tr><th scope="col"><span class="sr-only">Submitted</span></th>${th('title', 'Assignment')}${th('dueAt', 'Due')}${th('weightPct', 'Weight', 'num')}${th('estimateHrs', 'Est.', 'num hide-sm')}${th('status', 'Status', 'hide-sm')}${th('pct', 'Score', 'num')}</tr></thead>
+        <tbody>${items.map(a => {
+          const d = new Date(a.dueAt); const late = !isDone(a) && d < now;
+          return `<tr class="row ${late ? 'overdue' : ''} ${isDone(a) ? 'done' : ''}" data-row data-id="${a.id}" tabindex="0">
+            <td class="cb"><input type="checkbox" data-action="toggle" data-id="${a.id}" ${isDone(a) ? 'checked' : ''} aria-label="Mark ${h(a.title)} as submitted" tabindex="-1"></td>
+            <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td>
+            <td class="due">${late ? lateText(d, now) : `${fmtShort(d)} ${fmtTime(d)}`}</td>
+            <td class="num">${fmtPct(a.weightPct)}</td>
+            <td class="num hide-sm">${fmtH(a.estimateHrs)}</td>
+            <td class="hide-sm"><span class="status-tag">${a.status}</span></td>
+            <td class="num">${a.status === 'Graded' && a.maxScore ? `${a.score}/${a.maxScore} · ${(a.score / a.maxScore * 100).toFixed(0)}%` : '–'}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`
+      : `<p class="empty">No assignments for this course. <button class="link-btn" data-action="new-for-course">Add one</button>.</p>`}
+    </section>
+  </div>`;
+}
+function updateCourseCalc() {
+  const c = course(ui.courseId); const out = $('#calc-out'); if (!c || !out) return;
+  const st = gradeStats(c.id);
+  const target = num($('#target')?.value, 80);
+  ui.target[c.id] = target;
+  const note = $('#calc-note');
+  if (st.remainingW <= 0.01) { out.textContent = `Everything is graded. Final: ${(st.earned).toFixed(1)}%.`; note.textContent = ''; return; }
+  const need = (target - st.earned) / st.remainingW * 100;
+  if (need <= 0) out.textContent = `Already secured. Any result on the remaining ${fmtPct(st.remainingW)} gets you ${target}%.`;
+  else if (need > 100) out.textContent = `Not reachable: you would need ${need.toFixed(1)}% on the remaining ${fmtPct(st.remainingW)}.`;
+  else out.innerHTML = `You need an average of <strong>${need.toFixed(1)}%</strong> on the remaining ${fmtPct(st.remainingW)}.`;
+  const ungradedTracked = st.items.filter(a => a.status !== 'Graded').reduce((s, a) => s + (+a.weightPct || 0), 0);
+  note.textContent = Math.abs(ungradedTracked - st.remainingW) > 0.5
+    ? `Your tracked ungraded work covers ${fmtPct(ungradedTracked)} of that ${fmtPct(st.remainingW)}.` : '';
+}
+
+/* ---------- ARCHIVE ---------- */
+const GP = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, F: 0 };
+function viewArchive() {
+  const graded = S.assignments.filter(a => a.status === 'Graded' && a.maxScore).sort(byDue);
+  return `
+  <header class="page-head">
+    <p class="eyebrow mono">${S.archive.length} past ${S.archive.length === 1 ? 'semester' : 'semesters'} · ${graded.length} graded this term</p>
+    <h1 class="display">Archive</h1>
+  </header>
+  <section aria-labelledby="h-graded">
+    <h2 class="section-h" id="h-graded">Graded this term <span class="mono">${termName()}</span></h2>
+    ${graded.length ? `<table class="ledger"><thead><tr><th scope="col">Course</th><th scope="col">Assignment</th><th scope="col">Due</th><th scope="col" class="num">Weight</th><th scope="col" class="num">Score</th><th scope="col" class="num">%</th></tr></thead><tbody>
+      ${graded.map(a => { const d = new Date(a.dueAt); return `<tr class="row" data-row data-id="${a.id}" tabindex="0">${courseCell(course(a.courseId))}
+        <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td><td class="due">${fmtShort(d)}</td>
+        <td class="num">${fmtPct(a.weightPct)}</td><td class="num">${a.score}/${a.maxScore}</td><td class="num">${(a.score / a.maxScore * 100).toFixed(1)}</td></tr>`; }).join('')}
+    </tbody></table>` : `<p class="empty">No graded work yet. Set an assignment's status to Graded and enter the score.</p>`}
+  </section>
+  ${S.archive.map((sem, si) => {
+    const cr = sem.courses.reduce((s, c) => s + (+c[2] || 0), 0);
+    const pts = sem.courses.reduce((s, c) => s + (+c[2] || 0) * (GP[c[3]] ?? 0), 0);
+    return `<section aria-labelledby="h-sem-${si}">
+      <h2 class="section-h" id="h-sem-${si}">${h(sem.name)} <span class="mono">${cr} credits · GPA ${cr ? (pts / cr).toFixed(2) : '–'}</span></h2>
+      <table class="ledger"><thead><tr><th scope="col">Code</th><th scope="col">Course</th><th scope="col" class="num">Credits</th><th scope="col" class="num">Final grade</th></tr></thead><tbody>
+        ${sem.courses.map(c => `<tr><td class="mono">${h(c[0])}</td><td>${h(c[1])}</td><td class="num">${c[2]}</td><td class="num">${h(c[3])}</td></tr>`).join('')}
+      </tbody></table></section>`;
+  }).join('')}`;
+}
+
+/* ---------- SEARCH ---------- */
+function viewSearch() {
+  const q = ui.search.trim().toLowerCase(); const now = new Date();
+  const res = S.assignments.filter(a => {
+    const c = course(a.courseId);
+    return [a.title, a.notes, c?.code, c?.name, a.status].join(' ').toLowerCase().includes(q);
+  }).sort(byDue);
+  return `
+  <header class="page-head">
+    <p class="eyebrow mono">Search · Esc to clear</p>
+    <h1 class="display">“${h(ui.search.trim())}”</h1>
+    <p class="meta mono">${res.length} ${res.length === 1 ? 'result' : 'results'}</p>
+  </header>
+  ${res.length ? `<table class="ledger search-results">${ledgerHead()}<tbody>${res.map(a => rowHTML(a, now, { showDay: true })).join('')}</tbody></table>`
+    : `<p class="empty">No assignments match. Add one <button class="link-btn" data-action="new">(N)</button>.</p>`}`;
+}
+
+/* =========================================================
+   DRAWER
+   ========================================================= */
+function renderDrawer(focusSel) {
+  const el = $('#drawer'); const a = ui.drawerId && asg(ui.drawerId);
+  if (!a) { el.classList.remove('open'); el.setAttribute('inert', ''); return; }
+  const c = course(a.courseId); const now = new Date(); const d = new Date(a.dueAt);
+  const late = !isDone(a) && d < now;
+  el.innerHTML = `
+    <div class="d-head">
+      <div class="left"><span class="sq" style="--c:${col(c?.colour)}"></span><span class="mono">${h(c?.code || 'No course')}</span></div>
+      <button class="btn quiet small" data-action="close-drawer">Close <kbd>Esc</kbd></button>
+    </div>
+    <div class="d-body">
+      <label class="sr-only" for="d-title">Title</label>
+      <textarea id="d-title" class="d-title" rows="1" data-field="title">${h(a.title)}</textarea>
+      <p class="d-status mono ${late ? 'accent' : 'muted'}" id="d-status">${isDone(a) ? a.status : `${dueIn(d, now)} · ~${fmtH(remainingHrs(a))} left`}</p>
+      <div class="fields">
+        <label for="d-course">Course</label>
+        <div class="val"><select id="d-course" data-field="courseId">${S.courses.map(x => `<option value="${h(x.id)}" ${x.id === a.courseId ? 'selected' : ''}>${h(x.code)} · ${h(x.name)}</option>`).join('')}</select></div>
+        <label for="d-due">Due</label>
+        <div class="val"><input type="datetime-local" id="d-due" data-field="dueAt" value="${toInput(d)}"></div>
+        <label for="d-weight">Weight</label>
+        <div class="val"><input type="number" id="d-weight" data-field="weightPct" min="0" max="100" step="0.5" value="${a.weightPct}"><span class="mono muted">% of course grade</span></div>
+        <label for="d-est">Estimate</label>
+        <div class="val"><input type="number" id="d-est" data-field="estimateHrs" min="0" step="0.5" value="${a.estimateHrs}"><span class="mono muted">hours</span></div>
+        <label for="d-stat">Status</label>
+        <div class="val"><select id="d-stat" data-field="status">${STATUSES.map(s => `<option ${s === a.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+        ${a.status === 'Graded' ? `
+        <label for="d-score">Score</label>
+        <div class="val"><input type="number" id="d-score" data-field="score" min="0" step="0.5" value="${a.score ?? ''}" aria-label="Score"><span class="mono">/</span>
+          <input type="number" id="d-max" data-field="maxScore" min="0" step="0.5" value="${a.maxScore ?? ''}" aria-label="Out of">
+          <span class="mono muted" id="d-pct">${a.maxScore ? (a.score / a.maxScore * 100).toFixed(1) + '%' : ''}</span></div>` : ''}
+      </div>
+
+      <div class="d-sec">
+        <h3><span>Subtasks</span><span>${(a.subtasks || []).filter(x => x.done).length}/${(a.subtasks || []).length}</span></h3>
+        <ul class="sub-list">${(a.subtasks || []).map((st, i) => `
+          <li class="${st.done ? 'done' : ''}">
+            <input type="checkbox" data-sub="${i}" data-subfield="done" ${st.done ? 'checked' : ''} aria-label="Done">
+            <input type="text" data-sub="${i}" data-subfield="text" value="${h(st.text)}" aria-label="Subtask">
+            <input type="date" data-sub="${i}" data-subfield="due" value="${st.due || ''}" aria-label="Subtask due date (optional)">
+            <button class="icon-btn" data-action="sub-remove" data-i="${i}" aria-label="Remove subtask">${icon('x')}</button>
+          </li>`).join('')}</ul>
+        <button class="link-btn mono" style="font-size:11.5px;margin-top:8px" data-action="sub-add">Add subtask</button>
+      </div>
+
+      <div class="d-sec">
+        <h3><label for="d-notes">Notes</label></h3>
+        <textarea id="d-notes" class="d-notes" data-field="notes" placeholder="Rubric points, room numbers, what the instructor said…">${h(a.notes)}</textarea>
+      </div>
+
+      <div class="d-sec">
+        <h3><span>Links</span></h3>
+        <ul class="link-list">${(a.links || []).map((u, i) => `
+          <li><input type="url" data-link="${i}" value="${h(u)}" placeholder="https://" aria-label="Link">
+            <a class="icon-btn" href="${/^https?:\/\//i.test(u) ? h(u) : '#'}" target="_blank" rel="noopener" aria-label="Open link">${icon('ext')}</a>
+            <button class="icon-btn" data-action="link-remove" data-i="${i}" aria-label="Remove link">${icon('x')}</button></li>`).join('')}</ul>
+        <button class="link-btn mono" style="font-size:11.5px;margin-top:8px" data-action="link-add">Add link</button>
+      </div>
+
+      <div class="d-foot">
+        <span class="mono">Added ${fmtShort(new Date(a.createdAt))}</span>
+        <button class="link-btn danger" data-action="delete-asg">Delete assignment</button>
+      </div>
+    </div>`;
+  el.classList.add('open'); el.removeAttribute('inert');
+  autosize($('#d-title'));
+  if (focusSel) { const f = $(focusSel, el); if (f) f.focus(); }
+}
+function autosize(t) { if (!t) return; t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; }
+function openDrawer(id, focusSel = '#d-title') {
+  ui.lastFocus = document.activeElement;
+  ui.drawerId = id; renderDrawer(focusSel);
+}
+function closeDrawer() {
+  ui.drawerId = null; renderDrawer();
+  const lf = ui.lastFocus;
+  if (lf && document.contains(lf)) lf.focus();
+  else { const r = lf?.dataset?.id && $(`[data-row][data-id="${lf.dataset.id}"]`); if (r) r.focus(); }
+}
+function updateDrawerStatus() {
+  const a = asg(ui.drawerId); const el = $('#d-status'); if (!a || !el) return;
+  const now = new Date(); const d = new Date(a.dueAt); const late = !isDone(a) && d < now;
+  el.className = `d-status mono ${late ? 'accent' : 'muted'}`;
+  el.textContent = isDone(a) ? a.status : `${dueIn(d, now)} · ~${fmtH(remainingHrs(a))} left`;
+  const p = $('#d-pct'); if (p) p.textContent = a.maxScore ? (a.score / a.maxScore * 100).toFixed(1) + '%' : '';
+}
+
+/* =========================================================
+   QUICK ADD
+   ========================================================= */
+function openQuick(defaults = {}) {
+  ui.quick = { overrides: {}, courseDefault: defaults.courseId || null };
+  const q = $('#quick');
+  q.innerHTML = `
+    <label class="sr-only" for="q-in">Describe the assignment</label>
+    <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="Lab report 3 chem fri 11:59pm 15% 3h">
+    <div class="chips" id="q-chips">
+      <label class="chip" data-chip="title"><span>Title</span><input type="text" data-q="title"></label>
+      <label class="chip" data-chip="courseId"><span>Course</span><select data-q="courseId">${S.courses.map(c => `<option value="${h(c.id)}">${h(c.code)}</option>`).join('')}</select></label>
+      <label class="chip" data-chip="due"><span>Due</span><input type="datetime-local" data-q="due"></label>
+      <label class="chip" data-chip="weight"><span>Weight</span><input type="number" data-q="weight" min="0" max="100" step="0.5">%</label>
+      <label class="chip" data-chip="estimate"><span>Estimate</span><input type="number" data-q="estimate" min="0" step="0.5">h</label>
+    </div>
+    <div class="quick-foot">
+      <span class="mono">Enter to save · Esc to cancel · unparsed words stay in the title</span>
+      <span class="acts"><button class="btn quiet small" data-action="quick-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
+    </div>`;
+  q.classList.add('open');
+  if (!S.courses.length) { q.querySelector('[data-chip="courseId"] select').innerHTML = '<option value="">No courses</option>'; }
+  syncQuick();
+  $('#q-in').focus();
+}
+function closeQuick() { $('#quick').classList.remove('open'); $('#quick').innerHTML = ''; ui.quick = null; }
+function syncQuick() {
+  if (!ui.quick) return;
+  const text = $('#q-in').value; const p = parseText(text); const { d, assumed } = resolveDue(p);
+  const o = ui.quick.overrides; const set = (k, v) => { if (o[k]) return; const el = $(`[data-q="${k}"]`); if (el) el.value = v; };
+  set('title', p.title || '');
+  set('courseId', p.courseId || ui.quick.courseDefault || S.courses[0]?.id || '');
+  set('due', toInput(d));
+  set('weight', p.weight ?? '');
+  set('estimate', p.estimate ?? '');
+  const mark = (k, on) => $(`[data-chip="${k}"]`)?.classList.toggle('parsed', !!on || !!o[k]);
+  mark('title', p.title); mark('courseId', p.courseId); mark('due', p.date || p.time); mark('weight', p.weight != null); mark('estimate', p.estimate != null);
+  $('[data-chip="due"]')?.classList.toggle('assumed', assumed && !o.due && !!text.trim());
+}
+function saveQuick() {
+  const v = k => $(`[data-q="${k}"]`)?.value ?? '';
+  const title = v('title').trim() || $('#q-in').value.trim();
+  if (!title) { $('#q-in').focus(); return; }
+  if (!S.courses.length) { toast('Add a course first.'); return; }
+  const a = {
+    id: uid(), courseId: v('courseId') || S.courses[0].id, title,
+    dueAt: (v('due') ? fromInput(v('due')) : addDays(new Date(), 7)).toISOString(),
+    weightPct: num(v('weight'), 0), estimateHrs: num(v('estimate'), 1), status: 'Not started',
+    score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString()
+  };
+  S.assignments.push(a); save(); closeQuick(); renderRail(); renderMain();
+  toast(`Added “${a.title}”, due ${fmtShort(new Date(a.dueAt))} ${fmtTime(new Date(a.dueAt))}.`, { label: 'Open', fn: () => openDrawer(a.id) });
+}
+
+/* =========================================================
+   IMPORT (syllabus text / .ics) & JSON
+   ========================================================= */
+function openImport() {
+  ui.importRows = null; ui.importTab = 'text';
+  renderImport(); $('#dlg-import').showModal();
+}
+function renderImport() {
+  const rows = ui.importRows;
+  const acc = rows ? rows.filter(r => r.accept).length : 0;
+  $('#dlg-import').innerHTML = `
+    <div class="dlg-head"><h2 id="imp-h">Import</h2><button class="btn quiet small" data-action="close-dlg">Close <kbd>Esc</kbd></button></div>
+    <div class="dlg-body">
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="${ui.importTab === 'text'}" data-action="imp-tab" data-tab="text">Syllabus text</button>
+        <button role="tab" aria-selected="${ui.importTab === 'ics'}" data-action="imp-tab" data-tab="ics">Calendar file (.ics)</button>
+      </div>
+      ${ui.importTab === 'text' ? `
+        <label for="imp-text" class="sr-only">Syllabus text</label>
+        <textarea id="imp-text" class="imp-text" placeholder="Paste the schedule section of a syllabus. One item per line, e.g.&#10;Problem Set 6 due 13 Nov, 6%&#10;Week 12: Lab report 5 (10%)&#10;Final exam — Dec 9 9:00am, 30%">${h(ui.importText || '')}</textarea>`
+      : `<p style="margin:0 0 8px;color:var(--ink-2)">Choose an .ics export from Canvas, Moodle, Blackboard or your calendar.</p>
+         <input type="file" id="imp-ics" accept=".ics,text/calendar">`}
+      <div class="imp-row">
+        <label for="imp-course">Default course</label>
+        <select id="imp-course">${S.courses.map(c => `<option value="${h(c.id)}" ${c.id === ui.importCourse ? 'selected' : ''}>${h(c.code)} · ${h(c.name)}</option>`).join('')}</select>
+        ${ui.importTab === 'text' ? `<button class="btn small" data-action="imp-parse">Parse</button>` : ''}
+      </div>
+      ${rows ? (rows.length ? `
+        <div class="review"><table class="ledger">
+          <thead><tr><th scope="col">Keep</th><th scope="col">Title</th><th scope="col">Course</th><th scope="col">Due</th><th scope="col" class="num">Weight</th><th scope="col" class="num">Est.</th></tr></thead>
+          <tbody>${rows.map((r, i) => `<tr class="${r.accept ? '' : 'rejected'}">
+            <td><input type="checkbox" data-imp="${i}" data-impfield="accept" ${r.accept ? 'checked' : ''} aria-label="Keep row ${i + 1}"></td>
+            <td><input type="text" data-imp="${i}" data-impfield="title" value="${h(r.title)}" aria-label="Title"></td>
+            <td><select data-imp="${i}" data-impfield="courseId" aria-label="Course">${S.courses.map(c => `<option value="${h(c.id)}" ${c.id === r.courseId ? 'selected' : ''}>${h(c.code)}</option>`).join('')}</select></td>
+            <td><input type="datetime-local" data-imp="${i}" data-impfield="due" value="${r.due}" aria-label="Due"></td>
+            <td class="num"><input type="number" data-imp="${i}" data-impfield="weight" value="${r.weight ?? ''}" min="0" max="100" step="0.5" aria-label="Weight"></td>
+            <td class="num"><input type="number" data-imp="${i}" data-impfield="estimate" value="${r.estimate ?? ''}" min="0" step="0.5" aria-label="Estimate"></td>
+          </tr>`).join('')}</tbody></table></div>
+        <div class="dlg-foot"><span class="mono muted">${rows.length} found · review each row before importing</span>
+          <button class="btn primary" data-action="imp-commit" ${acc ? '' : 'disabled'}>Import ${acc} ${acc === 1 ? 'item' : 'items'}</button></div>`
+        : `<p class="empty" style="margin-top:16px">No dated lines found. Each line needs a date such as “13 Nov”, “Nov 13”, “13/11”, “Fri” or “Week 12”.</p>`) : ''}
+    </div>`;
+}
+function rowsFromText(text) {
+  const def = $('#imp-course')?.value || S.courses[0]?.id;
+  return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(line => {
+    const p = parseText(line); if (!p.date) return null;
+    const { d } = resolveDue(p);
+    return { accept: true, title: p.title || line, courseId: p.courseId || def, due: toInput(d), weight: p.weight, estimate: p.estimate ?? (FIXED.test(line) ? 8 : 3) };
+  }).filter(Boolean);
+}
+function parseICS(text) {
+  const def = $('#imp-course')?.value || S.courses[0]?.id;
+  const lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/);
+  const out = []; let ev = null;
+  const toDate = v => {
+    const m = v.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?/); if (!m) return null;
+    if (!m[4]) return new Date(+m[1], m[2] - 1, +m[3], 23, 59);
+    return m[7] ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5])) : new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+  };
+  for (const ln of lines) {
+    if (/^BEGIN:(VEVENT|VTODO)/.test(ln)) ev = {};
+    else if (/^END:(VEVENT|VTODO)/.test(ln)) { if (ev && ev.date && ev.summary) out.push(ev); ev = null; }
+    else if (ev) {
+      const i = ln.indexOf(':'); if (i < 0) continue;
+      const k = ln.slice(0, i).split(';')[0].toUpperCase(); const v = ln.slice(i + 1);
+      if (k === 'SUMMARY') ev.summary = v.replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\n/gi, ' ');
+      if (k === 'DUE' || (k === 'DTSTART' && !ev.date) || (k === 'DTEND' && !ev.date)) ev.date = toDate(v) || ev.date;
+      if (k === 'DUE') ev.date = toDate(v) || ev.date;
+    }
+  }
+  return out.map(ev => {
+    const p = parseText(ev.summary);
+    return { accept: ev.date >= addDays(new Date(), -1), title: p.title || ev.summary, courseId: p.courseId || def, due: toInput(ev.date), weight: p.weight, estimate: p.estimate ?? (FIXED.test(ev.summary) ? 8 : 3) };
+  }).sort((a, b) => a.due < b.due ? -1 : 1);
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `ledger-${toDateInput(new Date())}.json`; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+function toggleSubmitted(id, rowEl) {
+  const a = asg(id); if (!a) return;
+  const rows = $$('#main [data-row]'); const idx = rowEl ? rows.indexOf(rowEl.closest('[data-row]')) : -1;
+  const apply = () => {
+    if (isDone(a)) { a.status = a.prevStatus && !['Submitted', 'Graded'].includes(a.prevStatus) ? a.prevStatus : 'In progress'; }
+    else { a.prevStatus = a.status; a.status = 'Submitted'; }
+    save(); renderRail(); renderMain(idx >= 0 ? { focusIndex: idx } : {});
+    if (ui.drawerId === id) renderDrawer();
+  };
+  const tr = rowEl?.closest('tr');
+  if (tr && ui.route === 'today' && !isDone(a) && !reduced() && !ui.search) { tr.classList.add('leaving'); setTimeout(apply, 180); }
+  else apply();
+  if (!isDone(a)) toast(`Submitted “${a.title}”.`, { label: 'Undo', fn: () => { toggleSubmitted(id); } });
+}
+function toast(msg, action) {
+  $('.toast')?.remove(); clearTimeout(ui.toastTimer);
+  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status');
+  t.innerHTML = `<span>${h(msg)}</span>${action ? `<button class="link-btn">${h(action.label)}</button>` : ''}`;
+  if (action) t.querySelector('button').onclick = () => { t.remove(); action.fn(); };
+  document.body.appendChild(t);
+  ui.toastTimer = setTimeout(() => t.remove(), 4500);
+}
+function go(route) { location.hash = '#/' + route; }
+function setRoute() {
+  const p = location.hash.replace(/^#\/?/, '').split('/');
+  ui.route = ['today', 'week', 'semester', 'archive', 'course'].includes(p[0]) ? p[0] : 'today';
+  ui.courseId = ui.route === 'course' ? decodeURIComponent(p[1] || '') : null;
+  if (ui.route === 'course' && !course(ui.courseId)) ui.route = 'today';
+  if (ui.search) { ui.search = ''; $('#search').value = ''; }
+  $('#rail').classList.remove('open'); $('.menu-btn').setAttribute('aria-expanded', 'false');
+  renderRail(); renderMain(); window.scrollTo(0, 0);
+}
+function setTheme(t) {
+  S.settings.theme = t; document.documentElement.setAttribute('data-theme', t); save(); renderRail();
+}
+function openKeys() {
+  $('#dlg-keys').innerHTML = `
+    <div class="dlg-head"><h2 id="keys-h">Keyboard shortcuts</h2><button class="btn quiet small" data-action="close-dlg">Close <kbd>Esc</kbd></button></div>
+    <div class="dlg-body">
+      <div class="keys">
+        <dl><dt>N</dt><dd>New assignment</dd><dt>/</dt><dd>Search</dd><dt>G then T</dt><dd>Go to Today</dd><dt>G then W</dt><dd>Go to Week</dd><dt>G then S</dt><dd>Go to Semester</dd><dt>G then A</dt><dd>Go to Archive</dd></dl>
+        <dl><dt>J / K</dt><dd>Next / previous row</dd><dt>X</dt><dd>Toggle submitted</dd><dt>E or Enter</dt><dd>Edit in drawer</dd><dt>Esc</dt><dd>Close drawer, input or search</dd><dt>?</dt><dd>This sheet</dd></dl>
+      </div>
+      <div class="formula">
+        <h3>How “Work on now” is ranked</h3>
+        <p><code>priority = urgency × weight × remaining effort</code></p>
+        <p><code>urgency = 1 ÷ max(days until due, 0.25)^1.5</code> — overdue items get the maximum, distant deadlines fade quickly.</p>
+        <p><code>remaining effort = estimate × share of subtasks left</code>, or × 0.6 when marked In progress without subtasks.</p>
+        <h3 style="margin-top:14px">Reminders</h3>
+        <p>Appear in the sidebar from <code>1 day + 1 day per 4h of estimate</code> before the due date.</p>
+        <h3 style="margin-top:14px">Quick add</h3>
+        <p><code>Lab report 3 chem fri 11:59pm 15% 3h</code> → course, date, time, weight and estimate are pulled out; the rest becomes the title. Dates: today, tomorrow, mon–sun, 13 Nov, Nov 13, 13/11, in 3 days, week 12.</p>
+      </div>
+    </div>`;
+  $('#dlg-keys').showModal();
+}
+
+/* ---------- click delegation ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-action]'); if (!t) return;
+  const act = t.dataset.action; const id = t.dataset.id;
+  switch (act) {
+    case 'new': closeDrawer(); openQuick(); break;
+    case 'new-for-course': openQuick({ courseId: ui.courseId }); break;
+    case 'menu': { const r = $('#rail'); const o = !r.classList.contains('open'); r.classList.toggle('open', o); t.setAttribute('aria-expanded', o); break; }
+    case 'open': e.preventDefault(); openDrawer(id); break;
+    case 'toggle': break; // handled on change
+    case 'toggle-btn': toggleSubmitted(id); break;
+    case 'close-drawer': closeDrawer(); break;
+    case 'theme': setTheme(S.settings.theme === 'dark' ? 'light' : 'dark'); break;
+    case 'keys': openKeys(); break;
+    case 'close-dlg': t.closest('dialog').close(); break;
+    case 'export': exportJSON(); break;
+    case 'import-json': $('#json-file').click(); break;
+    case 'import': ui.importCourse = ui.courseId || S.courses[0]?.id; ui.importText = ''; openImport(); break;
+    case 'imp-tab': ui.importTab = t.dataset.tab; ui.importRows = null; ui.importCourse = $('#imp-course')?.value; renderImport(); break;
+    case 'imp-parse': ui.importText = $('#imp-text').value; ui.importCourse = $('#imp-course').value; ui.importRows = rowsFromText(ui.importText); renderImport(); break;
+    case 'imp-commit': {
+      const rows = ui.importRows.filter(r => r.accept && r.title.trim() && r.due);
+      rows.forEach(r => S.assignments.push({ id: uid(), courseId: r.courseId, title: r.title.trim(), dueAt: fromInput(r.due).toISOString(), weightPct: num(r.weight, 0), estimateHrs: num(r.estimate, 3), status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() }));
+      save(); $('#dlg-import').close(); renderRail(); renderMain(); toast(`Imported ${rows.length} ${rows.length === 1 ? 'item' : 'items'}.`); break;
+    }
+    case 'quick-save': saveQuick(); break;
+    case 'quick-cancel': closeQuick(); break;
+    case 'week-prev': ui.weekOffset--; renderMain(); break;
+    case 'week-next': ui.weekOffset++; renderMain(); break;
+    case 'week-now': ui.weekOffset = 0; renderMain(); break;
+    case 'apply-move': {
+      const a = asg(id); const to = new Date(+t.dataset.to); const d = new Date(a.dueAt);
+      to.setHours(d.getHours(), d.getMinutes(), 0, 0); a.dueAt = to.toISOString(); save(); renderRail(); renderMain();
+      toast(`Moved “${a.title}” to ${fmtShort(to)}.`, { label: 'Undo', fn: () => { a.dueAt = d.toISOString(); save(); renderRail(); renderMain(); } });
+      break;
+    }
+    case 'sort': { const k = t.dataset.key; ui.sort = { key: k, dir: ui.sort.key === k ? -ui.sort.dir : 1 }; renderMain(); $(`[data-action="sort"][data-key="${k}"]`)?.focus(); break; }
+    case 'colour': course(ui.courseId).colour = t.dataset.colour; save(); renderRail(); renderMain(); break;
+    case 'w-add': course(ui.courseId).weightings.push({ id: uid(), label: 'New component', pct: 0 }); save(); renderMain(); break;
+    case 'w-remove': course(ui.courseId).weightings.splice(+t.dataset.i, 1); save(); renderMain(); break;
+    case 'add-course': {
+      const used = S.courses.map(c => c.colour); const colour = (COLOURS.find(k => !used.includes(k.key)) || COLOURS[S.courses.length % 6]).key;
+      const c = { id: uid(), code: 'NEW 100', name: 'Untitled course', colour, instructor: '', weightings: [{ id: uid(), label: 'Assignments', pct: 40 }, { id: uid(), label: 'Midterm', pct: 25 }, { id: uid(), label: 'Final exam', pct: 35 }] };
+      S.courses.push(c); save(); go('course/' + c.id); setTimeout(() => { $('#c-name')?.select(); }, 30); break;
+    }
+    case 'delete-course': {
+      const c = course(ui.courseId); const n = S.assignments.filter(a => a.courseId === c.id).length;
+      if (!confirm(`Delete ${c.code} and its ${n} ${n === 1 ? 'assignment' : 'assignments'}? This cannot be undone.`)) break;
+      S.courses = S.courses.filter(x => x.id !== c.id); S.assignments = S.assignments.filter(a => a.courseId !== c.id); save(); go('today'); break;
+    }
+    case 'delete-asg': {
+      const a = asg(ui.drawerId); const idx = S.assignments.indexOf(a);
+      S.assignments.splice(idx, 1); save(); ui.drawerId = null; renderDrawer(); renderRail(); renderMain();
+      toast(`Deleted “${a.title}”.`, { label: 'Undo', fn: () => { S.assignments.splice(idx, 0, a); save(); renderRail(); renderMain(); } });
+      break;
+    }
+    case 'sub-add': { const a = asg(ui.drawerId); a.subtasks = a.subtasks || []; a.subtasks.push({ id: uid(), text: '', done: false, due: null }); save(); renderDrawer(`[data-sub="${a.subtasks.length - 1}"][data-subfield="text"]`); renderMain(); break; }
+    case 'sub-remove': { const a = asg(ui.drawerId); a.subtasks.splice(+t.dataset.i, 1); save(); renderDrawer(); renderMain(); break; }
+    case 'link-add': { const a = asg(ui.drawerId); a.links = a.links || []; a.links.push(''); save(); renderDrawer(`[data-link="${a.links.length - 1}"]`); break; }
+    case 'link-remove': { const a = asg(ui.drawerId); a.links.splice(+t.dataset.i, 1); save(); renderDrawer(); break; }
+  }
+});
+
+/* ---------- change / input delegation ---------- */
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('[data-action="toggle"]')) { toggleSubmitted(t.dataset.id, t); return; }
+  if (t.id === 'cap') { S.settings.dailyCapacityHrs = Math.max(0.5, num(t.value, 4)); save(); renderMain(); return; }
+  if (t.id === 'sem-start' || t.id === 'sem-end') {
+    if (!t.value) return;
+    S.settings[t.id === 'sem-start' ? 'semesterStart' : 'semesterEnd'] = t.value;
+    if (fromDateInput(S.settings.semesterEnd) <= fromDateInput(S.settings.semesterStart)) S.settings.semesterEnd = toDateInput(addDays(fromDateInput(S.settings.semesterStart), 97));
+    save(); renderRail(); renderMain(); return;
+  }
+  if (t.id === 'json-file') {
+    const f = t.files[0]; if (!f) return;
+    f.text().then(txt => {
+      const d = JSON.parse(txt);
+      if (!d || !Array.isArray(d.courses) || !Array.isArray(d.assignments) || !d.settings) throw new Error('shape');
+      if (!confirm(`Replace your current data with ${d.courses.length} courses and ${d.assignments.length} assignments from ${f.name}?`)) return;
+      d.archive = d.archive || []; S = d; save(); setTheme(S.settings.theme || 'light'); ui.drawerId = null; renderDrawer(); go('today'); renderRail(); renderMain();
+      toast('Data imported.');
+    }).catch(() => toast('That file is not a Ledger export.')).finally(() => { t.value = ''; });
+    return;
+  }
+  if (t.id === 'imp-ics') {
+    const f = t.files[0]; if (!f) return;
+    f.text().then(txt => { ui.importCourse = $('#imp-course').value; ui.importRows = parseICS(txt); renderImport(); });
+    return;
+  }
+  if (t.dataset.imp != null) {
+    const r = ui.importRows[+t.dataset.imp]; const k = t.dataset.impfield;
+    r[k] = k === 'accept' ? t.checked : t.value;
+    if (k === 'accept') renderImport();
+    return;
+  }
+  // drawer selects / dates
+  if (t.closest('#drawer')) drawerField(t, true);
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.id === 'search') { ui.search = t.value; renderRail(); renderMain(); return; }
+  if (t.id === 'q-in') { syncQuick(); return; }
+  if (t.dataset.q) { ui.quick.overrides[t.dataset.q] = true; t.closest('.chip')?.classList.add('parsed'); t.closest('.chip')?.classList.remove('assumed'); return; }
+  if (t.dataset.imp != null && t.dataset.impfield !== 'accept') { ui.importRows[+t.dataset.imp][t.dataset.impfield] = t.value; return; }
+  if (t.id === 'target') { updateCourseCalc(); return; }
+  if (t.dataset.cfield) { course(ui.courseId)[t.dataset.cfield] = t.value; save(); renderRail(); return; }
+  if (t.dataset.wfield) {
+    const c = course(ui.courseId); const w = c.weightings[+t.dataset.i];
+    w[t.dataset.wfield] = t.dataset.wfield === 'pct' ? num(t.value, 0) : t.value; save();
+    const tot = c.weightings.reduce((s, x) => s + (+x.pct || 0), 0);
+    $('#wt-total').textContent = fmtPct(tot);
+    $('#wt-warn').textContent = Math.abs(tot - 100) > 0.01 ? `Components add up to ${fmtPct(tot)}, not 100%.` : '';
+    return;
+  }
+  if (t.closest('#drawer')) drawerField(t, false);
+});
+function drawerField(t, isChange) {
+  const a = asg(ui.drawerId); if (!a) return;
+  if (t.dataset.field) {
+    const f = t.dataset.field;
+    if (f === 'title') { a.title = t.value; autosize(t); }
+    else if (f === 'notes') a.notes = t.value;
+    else if (f === 'dueAt') { if (!t.value) return; a.dueAt = fromInput(t.value).toISOString(); }
+    else if (f === 'weightPct' || f === 'estimateHrs') a[f] = Math.max(0, num(t.value, 0));
+    else if (f === 'score' || f === 'maxScore') a[f] = t.value === '' ? null : num(t.value, 0);
+    else if (f === 'courseId') { if (!isChange) return; a.courseId = t.value; save(); renderRail(); renderMain(); renderDrawer('#d-course'); return; }
+    else if (f === 'status') {
+      if (!isChange) return;
+      a.status = t.value;
+      if (a.status === 'Graded' && a.maxScore == null) a.maxScore = 100;
+      save(); renderRail(); renderMain(); renderDrawer('#d-stat'); return;
+    }
+    save(); updateDrawerStatus();
+    if (f !== 'notes') { renderMain(); if (f === 'dueAt' || f === 'estimateHrs') renderRail(); }
+    return;
+  }
+  if (t.dataset.sub != null) {
+    const st = a.subtasks[+t.dataset.sub]; const k = t.dataset.subfield;
+    if (k === 'done') { if (!isChange) return; st.done = t.checked; save(); renderDrawer(); renderMain(); renderRail(); $(`#drawer [data-sub="${t.dataset.sub}"][data-subfield="done"]`)?.focus(); return; }
+    st[k] = t.value || (k === 'due' ? null : ''); save(); return;
+  }
+  if (t.dataset.link != null) {
+    a.links[+t.dataset.link] = t.value.trim(); save();
+    const open = t.parentElement.querySelector('a'); if (open) open.href = /^https?:\/\//i.test(t.value) ? t.value : '#';
+  }
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  // Quick add input / chips
+  if (t.closest && t.closest('#quick')) {
+    if (e.key === 'Escape') { e.preventDefault(); closeQuick(); return; }
+    if (e.key === 'Enter' && !t.matches('button')) { e.preventDefault(); saveQuick(); return; }
+    return;
+  }
+  if (t.id === 'search' && e.key === 'Escape') { t.value = ''; ui.search = ''; renderRail(); renderMain(); t.blur(); return; }
+  if (t.id === 'search' && (e.key === 'Enter' || e.key === 'ArrowDown')) { e.preventDefault(); $('#main [data-row]')?.focus(); return; }
+  if (t.matches && t.matches('input, textarea, select, [contenteditable="true"]')) {
+    if (e.key === 'Escape' && t.closest('#drawer')) { e.preventDefault(); closeDrawer(); }
+    else if (e.key === 'Escape') t.blur();
+    return;
+  }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (document.querySelector('dialog[open]')) return;
+  const k = e.key;
+  if (ui.gPending) {
+    ui.gPending = false; clearTimeout(ui.gTimer);
+    const map = { t: 'today', w: 'week', s: 'semester', a: 'archive' };
+    if (map[k.toLowerCase()]) { e.preventDefault(); go(map[k.toLowerCase()]); }
+    return;
+  }
+  if (k === 'Escape') {
+    if (ui.drawerId) { closeDrawer(); return; }
+    if (ui.search) { ui.search = ''; $('#search').value = ''; renderRail(); renderMain(); return; }
+    if ($('#rail').classList.contains('open')) { $('#rail').classList.remove('open'); return; }
+    return;
+  }
+  const rowEl = t.closest ? t.closest('[data-row]') : null;
+  switch (k) {
+    case 'n': case 'N': e.preventDefault(); closeDrawer(); openQuick(ui.route === 'course' ? { courseId: ui.courseId } : {}); break;
+    case '/': e.preventDefault(); if (matchMedia('(max-width:760px)').matches) $('#rail').classList.add('open'); $('#search').focus(); $('#search').select(); break;
+    case 'g': case 'G': ui.gPending = true; ui.gTimer = setTimeout(() => ui.gPending = false, 1200); break;
+    case '?': e.preventDefault(); openKeys(); break;
+    case 'j': case 'k': case 'J': case 'K': case 'ArrowDown': case 'ArrowUp': {
+      if ((k === 'ArrowDown' || k === 'ArrowUp') && !rowEl) return;
+      e.preventDefault();
+      const rows = $$('#main [data-row]'); if (!rows.length) return;
+      const i = rowEl ? rows.indexOf(rowEl) : -1;
+      const down = k.toLowerCase() === 'j' || k === 'ArrowDown';
+      const n = i < 0 ? 0 : Math.max(0, Math.min(rows.length - 1, i + (down ? 1 : -1)));
+      rows[n].focus(); rows[n].scrollIntoView({ block: 'nearest' });
+      if (ui.drawerId) openDrawer(rows[n].dataset.id, null);
+      break;
+    }
+    case 'x': case 'X': if (rowEl) { e.preventDefault(); toggleSubmitted(rowEl.dataset.id, rowEl.querySelector('input[type=checkbox]') || rowEl); } break;
+    case 'e': case 'E': case 'Enter': if (rowEl) { e.preventDefault(); openDrawer(rowEl.dataset.id); } break;
+  }
+});
+
+/* ---------- drag & drop (week view) ---------- */
+document.addEventListener('dragstart', e => {
+  const el = e.target.closest && e.target.closest('.w-entry'); if (!el) return;
+  e.dataTransfer.setData('text/plain', el.dataset.id); e.dataTransfer.effectAllowed = 'move';
+  el.classList.add('dragging');
+});
+document.addEventListener('dragend', e => { e.target.classList?.remove('dragging'); $$('.w-col.drop').forEach(c => c.classList.remove('drop')); });
+document.addEventListener('dragover', e => {
+  const c = e.target.closest && e.target.closest('[data-drop]'); if (!c) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  $$('.w-col.drop').forEach(x => x !== c && x.classList.remove('drop')); c.classList.add('drop');
+});
+document.addEventListener('drop', e => {
+  const c = e.target.closest && e.target.closest('[data-drop]'); if (!c) return;
+  e.preventDefault();
+  const a = asg(e.dataTransfer.getData('text/plain')); if (!a) return;
+  const prev = new Date(a.dueAt); const to = new Date(+c.dataset.drop);
+  to.setHours(prev.getHours(), prev.getMinutes(), 0, 0);
+  if (sameDay(to, prev)) { renderMain(); return; }
+  a.dueAt = to.toISOString(); save(); renderRail(); renderMain();
+  if (ui.drawerId === a.id) renderDrawer();
+  toast(`Moved “${a.title}” to ${fmtShort(to)}.`, { label: 'Undo', fn: () => { a.dueAt = prev.toISOString(); save(); renderRail(); renderMain(); } });
+});
+
+/* ---------- boot ---------- */
+window.addEventListener('hashchange', setRoute);
+window.addEventListener('storage', e => { if (e.key === KEY) { S = load() || S; renderRail(); renderMain(); renderDrawer(); } });
+// refresh relative times every minute
+setInterval(() => {
+  const a = document.activeElement;
+  if (a && (a.matches('input, textarea, select') || ui.quick)) return;
+  renderRail(); renderMain();
+}, 60000);
+if (!location.hash) history.replaceState(null, '', '#/today');
+setRoute();
+</script>
+</body>
+</html>
