@@ -424,8 +424,9 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .quick-foot .acts .btn { min-width: 96px; justify-content: center; }
 /* "Are you sure?" layer */
 .q-confirm { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; border-radius: inherit; background: color-mix(in srgb, var(--paper) 70%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: qFade .2s ease both; }
-.q-confirm > div { text-align: center; background: var(--paper); border: 1px solid var(--glass-edge); border-radius: 20px; padding: 22px 26px; box-shadow: 0 18px 50px rgba(20,12,40,.3); animation: qPop .45s cubic-bezier(.34,1.5,.64,1) both; }
-.q-confirm h3 { margin: 0 0 4px; font: 500 22px var(--serif); } .q-confirm p { margin: 0 0 16px; color: var(--muted); }
+.q-confirm > div { text-align: center; background: var(--paper); border: 1px solid var(--glass-edge); border-radius: 24px; padding: 30px 34px; max-width: 420px; box-shadow: 0 18px 50px rgba(20,12,40,.3); animation: qPop .45s cubic-bezier(.34,1.5,.64,1) both; }
+.q-confirm h3 { margin: 0 0 8px; font: 500 30px var(--serif); } .q-confirm p { margin: 0 0 22px; font-size: 18px; color: var(--muted); }
+.q-confirm .btn { font-size: 16px; padding: 12px 22px; }
 .q-confirm .acts { display: flex; gap: 8px; justify-content: center; }
 @keyframes qFade { from { opacity: 0; } } @keyframes qPop { from { opacity: 0; transform: scale(.85) translateY(10px); } }
 /* Save celebration */
@@ -624,6 +625,28 @@ input, select, textarea { transition: border-color .2s ease, box-shadow .25s eas
 .quick .chip:focus-within { box-shadow: none; }
 input[readonly][type="datetime-local"] { cursor: pointer; }
 @media (max-width: 760px) { .quick .chips { grid-template-columns: 1fr; } }
+/* iOS gives date inputs a fixed minimum width, which pushed the due box past the edge */
+.quick .chip { min-width: 0; }
+.quick .chip input[type="datetime-local"] { min-width: 0; box-sizing: border-box; -webkit-appearance: none; appearance: none; text-align: left; }
+.quick .chip input[type="datetime-local"]::-webkit-date-and-time-value { text-align: left; }
+/* Soft purple glow around the add box */
+.quick { border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent), 0 0 34px color-mix(in srgb, var(--accent) 30%, transparent), 0 30px 80px rgba(20,12,40,.35), inset 0 1px 0 var(--glass-hi); }
+/* Settings menu at the bottom of the sidebar */
+@media (min-width: 761px) { .rail-body, #rail-dyn { display: flex; flex-direction: column; } } /* phones keep the Menu toggle */
+#rail-dyn { flex: 1; }
+.rail-foot { margin-top: auto; padding-top: 24px; display: block; }
+.set-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 6px 2px; cursor: pointer; font: 500 14px var(--sans); color: var(--ink-2); }
+.set-btn:hover { color: var(--ink); }
+.set-btn svg { width: 20px; height: 20px; stroke-width: 1.6; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+.rail-foot.open .set-btn svg { transform: rotate(120deg); }
+.set-menu { display: grid; gap: 2px; margin-bottom: 6px; max-height: 0; overflow: hidden; opacity: 0; transform: translateY(6px); transition: max-height .3s ease, opacity .2s ease, transform .3s ease; }
+.rail-foot.open .set-menu { max-height: 260px; opacity: 1; transform: none; }
+.set-menu .link-btn { text-align: left; padding: 6px 2px; font-size: 13.5px; color: var(--ink-2); text-decoration: none; }
+.set-menu .link-btn:hover { color: var(--accent-ink); }
+/* Profile page */
+.profile { display: grid; gap: 18px; max-width: 520px; margin-top: 8px; }
+.profile label { display: grid; gap: 6px; font: 600 14px var(--sans); color: var(--ink-2); }
+.profile input { font: 500 16px var(--sans); border: 1px solid var(--rule-strong); border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--paper) 60%, transparent); }
 /* Date + time picker */
 .dtp-scrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 14px; background: rgba(24,18,40,.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: qFade .2s ease both; }
 .dtp-scrim.out { opacity: 0; transition: opacity .2s ease; }
@@ -1015,15 +1038,15 @@ function resolveDue(p, now = new Date()) {
 function renderRail() {
   const now = new Date();
   $('#term').textContent = `${termName()} · Week ${Math.min(Math.max(weekOfSem(now), 1), semWeeks())} of ${semWeeks()}`;
-  const nav = [['today', 'Today', 'G T'], ['week', 'Week', 'G W'], ['semester', 'Semester', 'G S'], ['archive', 'Archive', 'G A']];
+  const nav = [['today', 'Today', 'G T'], ['week', 'Week', 'G W'], ['semester', 'Semester', 'G S'], ['profile', 'Profile', 'G P']];
   const rem = reminders(now);
   const TI = {
     today: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/>',
     week: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     semester: '<path d="M4 7h10M4 12h16M4 17h8"/>',
-    archive: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+    profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>'
   };
-  const tabs = [['today', 'Today', 'What to do now'], ['week', 'Week', 'Plan your week'], ['new', 'Add', 'Add an assignment'], ['semester', 'Term', 'Whole semester'], ['archive', 'Past', 'Finished terms']];
+  const tabs = [['today', 'Today', 'What to do now'], ['week', 'Week', 'Plan your week'], ['new', 'Add', 'Add an assignment'], ['semester', 'Term', 'Whole semester'], ['profile', 'Profile', 'Your details']];
   $('#tabbar').innerHTML = tabs.map(([k, l, tip]) => k === 'new'
     ? `<button class="tab-new" data-action="new" title="${tip}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>${l}</span></button>`
     : `<a href="#/${k}" title="${tip}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${TI[k]}</svg><span>${l}</span></a>`).join('');
@@ -1054,12 +1077,18 @@ function renderRail() {
       }).join('')}</ul>${rem.length > 5 ? `<p class="mono muted" style="margin:6px 0 0">${rem.length - 5} more</p>` : ''}`
       : `<p class="muted" style="margin:0;font-size:13px">No reminders.</p>`}
     </section>
-    <section class="rail-sec rail-foot" aria-label="Data and settings">
-      <button class="link-btn" data-action="import">Import syllabus / .ics</button>
-      <button class="link-btn" data-action="export">Export JSON</button>
-      <button class="link-btn" data-action="import-json">Import JSON</button>
-      <button class="link-btn" data-action="theme">${S.settings.theme === 'dark' ? 'Light theme' : 'Dark theme'}</button>
-      <button class="link-btn" data-action="keys">Shortcuts <kbd>?</kbd></button>
+    <section class="rail-sec rail-foot ${ui.settingsOpen ? 'open' : ''}" aria-label="Settings">
+      <div class="set-menu" id="set-menu" ${ui.settingsOpen ? '' : 'inert'}>
+        <button class="link-btn" data-action="import">Import syllabus / .ics</button>
+        <button class="link-btn" data-action="export">Export JSON</button>
+        <button class="link-btn" data-action="import-json">Import JSON</button>
+        <button class="link-btn" data-action="theme">${S.settings.theme === 'dark' ? 'Light theme' : 'Dark theme'}</button>
+        <button class="link-btn" data-action="keys">Shortcuts <kbd>?</kbd></button>
+      </div>
+      <button class="set-btn" data-action="settings" aria-expanded="${!!ui.settingsOpen}" aria-controls="set-menu">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span>Settings</span>
+      </button>
     </section>`;
 }
 
@@ -1078,7 +1107,7 @@ function renderMain(opts = {}) {
   if (ui.search.trim()) html = viewSearch();
   else if (ui.route === 'week') html = viewWeek();
   else if (ui.route === 'semester') html = viewSemester();
-  else if (ui.route === 'archive') html = viewArchive();
+  else if (ui.route === 'profile') html = viewProfile();
   else if (ui.route === 'course' && course(ui.courseId)) html = viewCourse();
   else html = viewToday();
   main.innerHTML = `<div class="page">${html}</div>`;
@@ -1159,7 +1188,7 @@ function viewToday() {
     <ol>
       <li>Tap <b>Add</b> and type like <i>“Lab report ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15% 3h”</i> to add one.</li>
       <li>Tap an assignment to edit it, add steps or notes. Tick the box when it’s handed in.</li>
-      <li>Use the bar at the bottom: <b>Today</b> = what to do now, <b>Week</b> = plan your week, <b>Term</b> = the whole semester, <b>Past</b> = finished terms. <b>Menu</b> (top right on phones) has courses and settings.</li>
+      <li>Use the bar at the bottom: <b>Today</b> = what to do now, <b>Week</b> = plan your week, <b>Term</b> = the whole semester, <b>Profile</b> = your details. <b>Menu</b> (top right on phones) has courses and <b>Settings</b>.</li>
     </ol>
     <p class="muted">Your courses are set up from your timetable. Add assignments as you get them.</p>
     <div class="welcome-acts">
@@ -1417,31 +1446,21 @@ function updateCourseCalc() {
 }
 
 /* ---------- ARCHIVE ---------- */
-const GP = { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, F: 0 };
-function viewArchive() {
-  const graded = S.assignments.filter(a => a.status === 'Graded' && a.maxScore).sort(byDue);
+function viewProfile() {
+  const p = S.profile || {};
+  const f = (key, label, ph) => `<label>${label}<input data-pfield="${key}" value="${h(p[key] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
   return `
   <header class="page-head">
-    <p class="eyebrow mono">${S.archive.length} past ${S.archive.length === 1 ? 'semester' : 'semesters'} · ${graded.length} graded this term</p>
-    <h1 class="display">Archive</h1>
+    <p class="eyebrow mono">${h(termName())}</p>
+    <h1 class="display">${h(p.name || 'Your profile')}</h1>
   </header>
-  <section aria-labelledby="h-graded">
-    <h2 class="section-h" id="h-graded">Graded this term <span class="mono">${termName()}</span></h2>
-    ${graded.length ? `<table class="ledger"><thead><tr><th scope="col">Course</th><th scope="col">Assignment</th><th scope="col">Due</th><th scope="col" class="num">Mark</th><th scope="col" class="num">Score</th><th scope="col" class="num">%</th></tr></thead><tbody>
-      ${graded.map(a => { const d = new Date(a.dueAt); return `<tr class="row" data-row data-id="${a.id}" tabindex="0">${courseCell(course(a.courseId))}
-        <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td><td class="due">${fmtShort(d)}</td>
-        <td class="num">${fmtPct(a.weightPct)}</td><td class="num">${a.score}/${a.maxScore}</td><td class="num">${(a.score / a.maxScore * 100).toFixed(1)}</td></tr>`; }).join('')}
-    </tbody></table>` : `<p class="empty">No graded work yet. Set an assignment's status to Graded and enter the score.</p>`}
-  </section>
-  ${S.archive.map((sem, si) => {
-    const cr = sem.courses.reduce((s, c) => s + (+c[2] || 0), 0);
-    const pts = sem.courses.reduce((s, c) => s + (+c[2] || 0) * (GP[c[3]] ?? 0), 0);
-    return `<section aria-labelledby="h-sem-${si}">
-      <h2 class="section-h" id="h-sem-${si}">${h(sem.name)} <span class="mono">${cr} credits · GPA ${cr ? (pts / cr).toFixed(2) : '–'}</span></h2>
-      <table class="ledger"><thead><tr><th scope="col">Code</th><th scope="col">Course</th><th scope="col" class="num">Credits</th><th scope="col" class="num">Final grade</th></tr></thead><tbody>
-        ${sem.courses.map(c => `<tr><td class="mono">${h(c[0])}</td><td>${h(c[1])}</td><td class="num">${c[2]}</td><td class="num">${h(c[3])}</td></tr>`).join('')}
-      </tbody></table></section>`;
-  }).join('')}`;
+  <section class="profile" aria-label="Your details">
+    ${f('name', 'Name', 'e.g. Danial')}
+    ${f('studentId', 'Student ID', 'e.g. 52213125123')}
+    ${f('classGroup', 'Class', 'e.g. L01')}
+    ${f('programme', 'Course name', 'e.g. Bachelor of IT')}
+    <p class="muted" style="margin:0;font-size:13px">Saved on this device as you type.</p>
+  </section>`;
 }
 
 /* ---------- SEARCH ---------- */
@@ -1745,12 +1764,12 @@ function toast(msg, action) {
 function go(route) { location.hash = '#/' + route; }
 function setRoute() {
   const p = location.hash.replace(/^#\/?/, '').split('/');
-  ui.route = ['today', 'week', 'semester', 'archive', 'course'].includes(p[0]) ? p[0] : 'today';
+  ui.route = ['today', 'week', 'semester', 'profile', 'course'].includes(p[0]) ? p[0] : 'today';
   ui.courseId = ui.route === 'course' ? decodeURIComponent(p[1] || '') : null;
   if (ui.route === 'course' && !course(ui.courseId)) ui.route = 'today';
   if (ui.search) { ui.search = ''; $('#search').value = ''; }
   $('#rail').classList.remove('open'); $('.menu-btn').setAttribute('aria-expanded', 'false');
-  const order = ['today', 'week', 'semester', 'archive', 'course'];
+  const order = ['today', 'week', 'semester', 'profile', 'course'];
   const back = prevRoute != null && order.indexOf(ui.route) < order.indexOf(prevRoute);
   renderRail(); renderMain(); window.scrollTo(0, 0);
   if (prevRoute !== ui.route || ui.route === 'course') {
@@ -1768,7 +1787,7 @@ function openKeys() {
     <div class="dlg-head"><h2 id="keys-h">Keyboard shortcuts</h2><button class="btn quiet small" data-action="close-dlg">Close <kbd>Esc</kbd></button></div>
     <div class="dlg-body">
       <div class="keys">
-        <dl><dt>N</dt><dd>New assignment</dd><dt>/</dt><dd>Search</dd><dt>G then T</dt><dd>Go to Today</dd><dt>G then W</dt><dd>Go to Week</dd><dt>G then S</dt><dd>Go to Semester</dd><dt>G then A</dt><dd>Go to Archive</dd></dl>
+        <dl><dt>N</dt><dd>New assignment</dd><dt>/</dt><dd>Search</dd><dt>G then T</dt><dd>Go to Today</dd><dt>G then W</dt><dd>Go to Week</dd><dt>G then S</dt><dd>Go to Semester</dd><dt>G then P</dt><dd>Go to Profile</dd></dl>
         <dl><dt>J / K</dt><dd>Next / previous row</dd><dt>X</dt><dd>Toggle submitted</dd><dt>E or Enter</dt><dd>Edit in drawer</dd><dt>Esc</dt><dd>Close drawer, input or search</dd><dt>?</dt><dd>This sheet</dd></dl>
       </div>
       <div class="formula">
@@ -1804,6 +1823,7 @@ document.addEventListener('click', e => {
     case 'theme': setTheme(S.settings.theme === 'dark' ? 'light' : 'dark'); break;
     case 'keys': openKeys(); break;
     case 'close-dlg': t.closest('dialog').close(); break;
+    case 'settings': { ui.settingsOpen = !ui.settingsOpen; const f = t.closest('.rail-foot'); f.classList.toggle('open', ui.settingsOpen); $('#set-menu').inert = !ui.settingsOpen; t.setAttribute('aria-expanded', ui.settingsOpen); break; }
     case 'export': exportJSON(); break;
     case 'import-json': $('#json-file').click(); break;
     case 'import': ui.importCourse = ui.courseId || S.courses[0]?.id; ui.importText = ''; openImport(); break;
@@ -1897,6 +1917,7 @@ document.addEventListener('input', e => {
   if (t.dataset.q) { ui.quick.overrides[t.dataset.q] = true; t.closest('.chip')?.classList.add('parsed'); t.closest('.chip')?.classList.remove('assumed'); return; }
   if (t.dataset.imp != null && t.dataset.impfield !== 'accept') { ui.importRows[+t.dataset.imp][t.dataset.impfield] = t.value; return; }
   if (t.id === 'target') { updateCourseCalc(); return; }
+  if (t.dataset.pfield) { (S.profile ||= {})[t.dataset.pfield] = t.value; save(); return; }
   if (t.dataset.cfield) { course(ui.courseId)[t.dataset.cfield] = t.value; save(); renderRail(); return; }
   if (t.dataset.wfield) {
     const c = course(ui.courseId); const w = c.weightings[+t.dataset.i];
@@ -1960,7 +1981,7 @@ document.addEventListener('keydown', e => {
   const k = e.key;
   if (ui.gPending) {
     ui.gPending = false; clearTimeout(ui.gTimer);
-    const map = { t: 'today', w: 'week', s: 'semester', a: 'archive' };
+    const map = { t: 'today', w: 'week', s: 'semester', p: 'profile' };
     if (map[k.toLowerCase()]) { e.preventDefault(); go(map[k.toLowerCase()]); }
     return;
   }
