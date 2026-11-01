@@ -1969,8 +1969,9 @@ setRoute();
     const w = el.offsetWidth;
     blob.style.width = w + 'px'; blob.style.height = el.offsetHeight + 'px';
     blob.style.top = el.offsetTop + 'px';
+    lensMap.setAttribute('width', w); lensMap.setAttribute('height', el.offsetHeight);
     blob.style.setProperty('--x', (el.offsetLeft + pull) + 'px');
-    blob.style.setProperty('--sx', pressed ? 1.14 : 1); blob.style.setProperty('--sy', pressed ? 1.1 : 1);
+    blob.style.setProperty('--sx', pressed ? 1.22 : 1); blob.style.setProperty('--sy', pressed ? 1.3 : 1);
     if (firstPlace) { blob.classList.add('snap'); requestAnimationFrame(() => requestAnimationFrame(() => blob.classList.remove('snap'))); firstPlace = false; }
     blob.classList.add('on');
   }
