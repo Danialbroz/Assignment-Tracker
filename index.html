@@ -599,16 +599,11 @@ body {
 .lg-blob.on { opacity: 1; }
 .lg-blob.snap { transition: none; }
 [data-theme="dark"] .lg-blob { box-shadow: inset 0 1px 1px rgba(255,255,255,.4), inset 0 -8px 14px rgba(255,255,255,.08), 0 8px 22px rgba(0,0,0,.5); }
-/* While held: the bubble rises above the icons and becomes a clear lens that magnifies them */
-.lg-blob.lift {
-  z-index: 2;
-  background: radial-gradient(70% 55% at var(--hx, 50%) 0%, rgba(255,255,255,.5), rgba(255,255,255,0) 70%), rgba(255,255,255,.04);
-  border-color: rgba(255,255,255,.7);
-  box-shadow: inset 3px 0 4px -1px rgba(255,60,160,.45), inset -3px 0 4px -1px rgba(0,190,255,.45), inset 0 3px 4px -1px rgba(255,230,90,.4), inset 0 -3px 5px -1px rgba(120,255,200,.35), 0 12px 30px rgba(27,27,24,.25);
-  -webkit-backdrop-filter: blur(.6px) saturate(170%) brightness(1.08); backdrop-filter: blur(.6px) saturate(170%) brightness(1.08);
+/* Phones: a plain, flat bubble with no gradients that glides to the new tab */
+@media (max-width: 760px) {
+  .lg-blob { background: var(--glass-hi); border: 1px solid var(--glass-edge); box-shadow: 0 2px 8px rgba(27,27,24,.14); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  [data-theme="dark"] .lg-blob { box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 }
-.refract .lg-blob.lift { backdrop-filter: url(#lg-lens) saturate(170%) brightness(1.08); }
-[data-theme="dark"] .lg-blob.lift { background: radial-gradient(70% 55% at var(--hx, 50%) 0%, rgba(255,255,255,.22), rgba(255,255,255,0) 70%), rgba(255,255,255,.03); }
 @media (prefers-reduced-motion: reduce) { .lg-blob { transition: opacity .2s; } }
 .nav { display: none; } /* the glass bar replaces the sidebar view list */
 .rail-sec:has(> .nav) { display: none; }
@@ -1087,7 +1082,7 @@ function viewToday() {
     </ol>
     <p class="muted">Your courses are set up from your timetable. Add assignments as you get them.</p>
     <div class="welcome-acts">
-      <button class="btn primary" data-action="welcome-dismiss">Got it</button>
+      <button class="btn primary" data-action="welcome-dismiss">Got it</button>
     </div>
   </aside>`;
   return `
@@ -1928,14 +1923,8 @@ setRoute();
   const bar = document.getElementById('tabbar');
   const blob = document.createElement('div');
   blob.className = 'lg-blob'; blob.setAttribute('aria-hidden', 'true');
-  // Lens: displacement map with red = x and green = y ramps; a negative scale pulls pixels toward the centre (magnify).
-  const map = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="r"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#f00"/></linearGradient><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="#000"/><stop offset="1" stop-color="#0f0"/></linearGradient></defs><rect width="100" height="100" fill="url(#r)"/><rect width="100" height="100" fill="url(#g)" style="mix-blend-mode:screen"/></svg>');
-  document.body.insertAdjacentHTML('beforeend', `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lg-lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage id="lg-map" href="${map}" x="0" y="0" width="64" height="54" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="-22" xChannelSelector="R" yChannelSelector="G"/></filter></svg>`);
-  const lensMap = document.getElementById('lg-map');
-  // shortcut: only Chromium renders SVG filters in backdrop-filter; Safari/Firefox get the blur-only lens. Drop the check if they add support.
-  if (navigator.userAgentData) bar.classList.add('refract');
   let target = null, down = false, firstPlace = true, relax = 0;
-  const lift = on => blob.classList.toggle('lift', on);
+
   const items = () => [...bar.querySelectorAll('a')];
   const current = () => bar.querySelector('a[aria-current="page"]');
   const squish = (sx, sy) => { blob.style.setProperty('--sx', sx); blob.style.setProperty('--sy', sy); clearTimeout(relax); relax = setTimeout(() => place(target || current(), 0, down), 140); };
@@ -1944,13 +1933,19 @@ setRoute();
     const w = el.offsetWidth;
     blob.style.width = w + 'px'; blob.style.height = el.offsetHeight + 'px';
     blob.style.top = el.offsetTop + 'px';
-    lensMap.setAttribute('width', w); lensMap.setAttribute('height', el.offsetHeight);
     blob.style.setProperty('--x', (el.offsetLeft + pull) + 'px');
-    blob.style.setProperty('--sx', pressed ? 1.22 : 1); blob.style.setProperty('--sy', pressed ? 1.3 : 1);
+    blob.style.setProperty('--sx', pressed ? 1.14 : 1); blob.style.setProperty('--sy', pressed ? 1.1 : 1);
     if (firstPlace) { blob.classList.add('snap'); requestAnimationFrame(() => requestAnimationFrame(() => blob.classList.remove('snap'))); firstPlace = false; }
     blob.classList.add('on');
   }
-  const sync = () => { if (blob.parentNode !== bar) bar.prepend(blob); target = null; place(current()); };
+  const sync = () => {
+    if (blob.parentNode !== bar) {
+      const s = blob.style, from = [s.width, s.height, s.top, s.getPropertyValue('--x')];
+      bar.prepend(blob);
+      if (from[0]) { s.width = from[0]; s.height = from[1]; s.top = from[2]; s.setProperty('--x', from[3]); blob.offsetWidth; } // reflow so the move animates
+    }
+    target = null; place(current());
+  };
   new MutationObserver(sync).observe(bar, { childList: true });
   sync();
   addEventListener('resize', () => place(target || current()));
@@ -1959,12 +1954,11 @@ setRoute();
     const el = hit(e); if (!el) return;
     const r = el.getBoundingClientRect();
     const pull = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / (r.width / 2))) * 6; // gentle magnetic pull
-    blob.style.setProperty('--hx', Math.round((e.clientX - r.left) / r.width * 100) + '%'); // highlight follows the finger
     if (el !== target) { target = el; place(el, pull, down); squish(1.12, .92); } else place(el, pull, down);
   });
-  bar.addEventListener('pointerdown', e => { down = true; const el = hit(e); if (el) { target = el; lift(true); place(el, 0, true); } });
+  bar.addEventListener('pointerdown', e => { down = true; const el = hit(e); if (el) { target = el; place(el, 0, true); } });
   const up = e => {
-    if (!down) return; down = false; lift(false);
+    if (!down) return; down = false;
     const el = hit(e), origin = e.target.closest && e.target.closest('#tabbar a');
     if (e.pointerType === 'touch' && matchMedia('(min-width: 761px)').matches && el && origin && el !== origin) location.hash = el.getAttribute('href'); // drag to switch
     place(target || current());
