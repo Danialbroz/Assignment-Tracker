@@ -1577,8 +1577,15 @@ function saveQuick() {
     weightPct: num(v('weight'), 0), estimateHrs: num(v('estimate'), 1), status: 'Not started',
     score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString()
   };
-  S.assignments.push(a); save(); closeQuick(); renderRail(); renderMain();
-  toast(`Added “${a.title}”, due ${fmtShort(new Date(a.dueAt))} ${fmtTime(new Date(a.dueAt))}.`, { label: 'Open', fn: () => openDrawer(a.id) });
+  S.assignments.push(a); save(); chime();
+  const q = $('#quick');
+  q.querySelector('.q-confirm')?.remove();
+  q.insertAdjacentHTML('beforeend', `<div class="q-done"><svg viewBox="0 0 84 84" aria-hidden="true"><circle class="ring" cx="42" cy="42" r="30"/><path class="tick" d="M30 43l9 9 17-19"/></svg><b>Saved</b></div>`);
+  q.classList.add('saved');
+  setTimeout(() => {
+    closeQuick(); renderRail(); renderMain();
+    toast(`Added “${a.title}”, due ${fmtShort(new Date(a.dueAt))} ${fmtTime(new Date(a.dueAt))}.`, { label: 'Open', fn: () => openDrawer(a.id) });
+  }, 1250);
 }
 
 /* =========================================================
