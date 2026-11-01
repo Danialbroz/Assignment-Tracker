@@ -403,12 +403,40 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 /* =========================================================
    QUICK ADD
    ========================================================= */
-.quick {
-  position: fixed; top: 0; left: var(--rail); right: 0; z-index: 35;
-  background: var(--paper); border-bottom: 1px solid var(--ink);
-  padding: 16px 48px 14px; display: none;
+.quick-scrim {
+  position: fixed; inset: 0; z-index: 34; background: rgba(24,18,40,.38);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility 0s .3s;
 }
-.quick.open { display: block; }
+.quick-scrim.open { opacity: 1; visibility: visible; transition: opacity .3s ease; }
+.quick {
+  position: fixed; top: 50%; left: 50%; z-index: 35; width: min(660px, calc(100vw - 28px)); max-height: 88vh; overflow-y: auto;
+  background: color-mix(in srgb, var(--paper) 92%, transparent); border: 1px solid var(--glass-edge); border-radius: 26px;
+  padding: 26px 30px 20px; box-shadow: 0 30px 80px rgba(20,12,40,.35), inset 0 1px 0 var(--glass-hi);
+  -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%);
+  opacity: 0; visibility: hidden; transform: translate(-50%, -46%) scale(.92);
+  transition: opacity .25s ease, transform .35s ease, visibility 0s .35s;
+}
+.quick.open { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity .25s ease, transform .5s cubic-bezier(.34,1.4,.64,1); }
+.quick-title { margin: 0 0 14px; font: 500 13px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.quick-foot { flex-wrap: wrap; gap: 12px; margin-top: 22px !important; padding-top: 16px; border-top: 1px solid var(--rule); }
+.quick-foot .acts { margin-left: auto; }
+.quick-foot .acts .btn { min-width: 96px; justify-content: center; }
+/* "Are you sure?" layer */
+.q-confirm { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; border-radius: inherit; background: color-mix(in srgb, var(--paper) 70%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: qFade .2s ease both; }
+.q-confirm > div { text-align: center; background: var(--paper); border: 1px solid var(--glass-edge); border-radius: 20px; padding: 22px 26px; box-shadow: 0 18px 50px rgba(20,12,40,.3); animation: qPop .45s cubic-bezier(.34,1.5,.64,1) both; }
+.q-confirm h3 { margin: 0 0 4px; font: 500 22px var(--serif); } .q-confirm p { margin: 0 0 16px; color: var(--muted); }
+.q-confirm .acts { display: flex; gap: 8px; justify-content: center; }
+@keyframes qFade { from { opacity: 0; } } @keyframes qPop { from { opacity: 0; transform: scale(.85) translateY(10px); } }
+/* Save celebration */
+.q-done { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 10px; border-radius: inherit; background: var(--paper); animation: qFade .25s ease both; }
+.q-done svg { width: 84px; height: 84px; } .q-done .ring { fill: none; stroke: var(--accent); stroke-width: 3; stroke-dasharray: 190; stroke-dashoffset: 190; animation: qDraw .6s .05s ease forwards; transform-origin: center; }
+.q-done .tick { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; stroke-dashoffset: 50; animation: qDraw .4s .5s ease forwards; }
+.q-done b { font: 500 22px var(--serif); animation: qPop .5s .55s cubic-bezier(.34,1.5,.64,1) both; }
+@keyframes qDraw { to { stroke-dashoffset: 0; } }
+.quick.saved { animation: qSaved .5s .95s cubic-bezier(.5,0,.75,0) forwards; }
+@keyframes qSaved { to { opacity: 0; transform: translate(-50%, -56%) scale(.9); } }
+@media (prefers-reduced-motion: reduce) { .quick, .quick.open, .q-confirm > div, .q-done b { transition: opacity .2s; animation: none; } }
 .quick-input { width: 100%; font-family: var(--serif) !important; font-size: 24px !important; border: 0 !important; border-bottom: 1px solid var(--rule-strong) !important; border-radius: 0 !important; padding: 2px 0 8px !important; }
 .quick-input:focus { outline: none; border-bottom-color: var(--ink) !important; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 12px; }
