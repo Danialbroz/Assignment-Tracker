@@ -2029,6 +2029,90 @@ if (!location.hash) history.replaceState(null, '', '#/today');
 setRoute();
 </script>
 <script>
+/* Apple-style date + time picker: month grid and spinning wheels. Replaces the browser's datetime-local popup. */
+(() => {
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const ROW = 36;
+  let tickCtx;
+  const tick = () => { try { tickCtx = tickCtx || new (window.AudioContext || window.webkitAudioContext)(); const t = tickCtx.currentTime, o = tickCtx.createOscillator(), g = tickCtx.createGain(); o.frequency.value = 1800; o.connect(g); g.connect(tickCtx.destination); g.gain.setValueAtTime(.025, t); g.gain.exponentialRampToValueAtTime(.0001, t + .03); o.start(t); o.stop(t + .035); if (navigator.vibrate) navigator.vibrate(4); } catch (e) {} };
+
+  function openPicker(input) {
+    if (document.querySelector('.dtp-scrim')) return;
+    let sel = input.value ? fromInput(input.value) : new Date();
+    if (isNaN(sel)) sel = new Date();
+    let view = new Date(sel.getFullYear(), sel.getMonth(), 1);
+    const ov = document.createElement('div'); ov.className = 'dtp-scrim';
+    ov.innerHTML = `<div class="dtp" role="dialog" aria-modal="true" aria-label="Pick date and time">
+      <div class="dtp-head"><button type="button" class="dtp-nav" data-nav="-1" aria-label="Previous month">‹</button><b class="dtp-month" aria-live="polite"></b><button type="button" class="dtp-nav" data-nav="1" aria-label="Next month">›</button></div>
+      <div class="dtp-dow">${'MTWTFSS'.split('').map(c => `<span>${c}</span>`).join('')}</div>
+      <div class="dtp-grid"></div>
+      <div class="dtp-quick"><button type="button" data-plus="0">Today</button><button type="button" data-plus="1">Tomorrow</button><button type="button" data-plus="7">Next week</button></div>
+      <div class="dtp-time" aria-label="Time"><div class="dtp-hl"></div><div class="wheel" data-w="h" aria-label="Hour"></div><span class="dtp-colon">:</span><div class="wheel" data-w="m" aria-label="Minute"></div><div class="wheel" data-w="p" aria-label="AM or PM"></div></div>
+      <div class="dtp-acts"><button type="button" class="btn quiet" data-a="cancel">Cancel</button><button type="button" class="btn primary" data-a="ok">Done</button></div></div>`;
+    document.body.appendChild(ov);
+    const grid = ov.querySelector('.dtp-grid'), month = ov.querySelector('.dtp-month');
+    const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    function draw(dir) {
+      month.textContent = `${MONTHS[view.getMonth()]} ${view.getFullYear()}`;
+      const lead = (view.getDay() + 6) % 7, days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate(), today = new Date();
+      let html = '<span></span>'.repeat(lead);
+      for (let d = 1; d <= days; d++) {
+        const dt = new Date(view.getFullYear(), view.getMonth(), d);
+        html += `<button type="button" class="dtp-day ${sameDay(dt, today) ? 'today' : ''} ${sameDay(dt, sel) ? 'sel' : ''}" data-day="${d}">${d}</button>`;
+      }
+      grid.innerHTML = html;
+      grid.classList.remove('go-next', 'go-prev'); void grid.offsetWidth;
+      if (dir) grid.classList.add(dir > 0 ? 'go-next' : 'go-prev');
+    }
+    // wheels
+    const wheels = {};
+    function wheel(key, labels, start) {
+      const el = ov.querySelector(`[data-w="${key}"]`);
+      el.innerHTML = '<div class="wp"></div>' + labels.map(l => `<div class="wi">${l}</div>`).join('') + '<div class="wp"></div>';
+      const items = [...el.querySelectorAll('.wi')]; let last = start, raf = 0;
+      const paint = () => {
+        raf = 0; const f = el.scrollTop / ROW;
+        items.forEach((it, i) => { const d = i - f, a = Math.abs(d); it.style.opacity = Math.max(.18, 1 - a * .34); it.style.transform = `rotateX(${Math.max(-70, Math.min(70, -d * 26))}deg) scale(${Math.max(.7, 1 - a * .07)})`; it.style.fontWeight = a < .5 ? 700 : 500; });
+        const i = Math.max(0, Math.min(items.length - 1, Math.round(f))); if (i !== last) { last = i; tick(); }
+      };
+      el.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(paint); });
+      el.addEventListener('click', e => { const it = e.target.closest('.wi'); if (it) el.scrollTo({ top: items.indexOf(it) * ROW, behavior: 'smooth' }); });
+      el.scrollTop = start * ROW; paint();
+      wheels[key] = () => Math.max(0, Math.min(items.length - 1, Math.round(el.scrollTop / ROW)));
+      wheels[key].set = i => el.scrollTo({ top: i * ROW, behavior: 'smooth' });
+    }
+    draw(0);
+    const h24 = sel.getHours();
+    wheel('h', Array.from({ length: 12 }, (_, i) => i + 1), ((h24 + 11) % 12));
+    wheel('m', Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0')), sel.getMinutes());
+    wheel('p', ['AM', 'PM'], h24 >= 12 ? 1 : 0);
+
+    function close(apply) {
+      if (apply) {
+        const d = new Date(sel); const pm = wheels.p() === 1;
+        d.setHours((wheels.h() + 1) % 12 + (pm ? 12 : 0), wheels.m(), 0, 0);
+        input.value = toInput(d);
+        input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      ov.classList.add('out'); setTimeout(() => { ov.remove(); input.focus({ preventScroll: true }); }, 200);
+    }
+    ov.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape') close(false); if (e.key === 'Enter' && !e.target.closest('.dtp-day, .dtp-nav, [data-a], [data-plus]')) close(true); });
+    ov.addEventListener('click', e => {
+      const t = e.target;
+      if (t === ov) return close(false);
+      const nav = t.closest('[data-nav]'), day = t.closest('[data-day]'), plus = t.closest('[data-plus]'), act = t.closest('[data-a]');
+      if (nav) { view = new Date(view.getFullYear(), view.getMonth() + +nav.dataset.nav, 1); draw(+nav.dataset.nav); }
+      else if (day) { sel = new Date(view.getFullYear(), view.getMonth(), +day.dataset.day); grid.querySelector('.sel')?.classList.remove('sel'); day.classList.add('sel'); tick(); }
+      else if (plus) { sel = new Date(); sel.setDate(sel.getDate() + +plus.dataset.plus); view = new Date(sel.getFullYear(), sel.getMonth(), 1); draw(0); tick(); }
+      else if (act) close(act.dataset.a === 'ok');
+    });
+    ov.querySelector('[data-a="ok"]').focus({ preventScroll: true });
+  }
+  // inputs are readonly, so the native popup never opens; Enter/Space open ours too
+  document.addEventListener('click', e => { const t = e.target; if (t.matches && t.matches('input[type="datetime-local"][readonly]')) { e.preventDefault(); openPicker(t); } });
+  document.addEventListener('keydown', e => { const t = e.target; if ((e.key === 'Enter' || e.key === ' ') && t.matches && t.matches('input[type="datetime-local"][readonly]')) { e.preventDefault(); e.stopPropagation(); openPicker(t); } }, true);
+})();
+
 /* Liquid-glass bubble for the tab bar: follows hover/touch with a springy, squishy feel. */
 (() => {
   const bar = document.getElementById('tabbar');
