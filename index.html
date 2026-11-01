@@ -1770,6 +1770,8 @@ document.addEventListener('click', e => {
       save(); $('#dlg-import').close(); renderRail(); renderMain(); toast(`Imported ${rows.length} ${rows.length === 1 ? 'item' : 'items'}.`); break;
     }
     case 'quick-save': saveQuick(); break;
+    case 'quick-ask-cancel': askCancelQuick(); break;
+    case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
     case 'quick-cancel': closeQuick(); break;
     case 'week-prev': ui.weekOffset--; renderMain(); break;
     case 'week-next': ui.weekOffset++; renderMain(); break;
