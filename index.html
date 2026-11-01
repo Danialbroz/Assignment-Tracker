@@ -605,6 +605,59 @@ body {
   box-shadow: 0 10px 30px rgba(27,27,24,.14), inset 0 1px 0 rgba(255,255,255,.7), inset 0 -1px 0 rgba(255,255,255,.15);
 }
 [data-theme="dark"] .tabbar { background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border-color: rgba(255,255,255,.16); box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.2); }
+/* Purple glow on focused fields */
+input:focus, select:focus, textarea:focus, .chip:focus-within { outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 24%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 38%, transparent); }
+input, select, textarea { transition: border-color .2s ease, box-shadow .25s ease; }
+.quick:focus { outline: none; }
+/* Easier-to-read add form */
+.quick-label { display: block; font: 600 15px var(--sans); margin: 0 0 8px; color: var(--ink); }
+.quick .quick-input { font-family: var(--sans) !important; font-size: 18px !important; border: 1px solid var(--rule-strong) !important; border-radius: 14px !important; padding: 14px 16px !important; background: color-mix(in srgb, var(--paper) 60%, transparent); }
+.quick .quick-input:focus { border-color: var(--accent) !important; }
+.quick-tip { margin: 8px 2px 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.quick .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+.quick .chip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; border: 0; padding: 0; font-size: 15px; box-shadow: none; }
+.quick .chip[data-chip="due"] { grid-column: 1 / -1; }
+.quick .chip > span { font: 600 13px var(--sans); text-transform: none; letter-spacing: 0; color: var(--ink-2); }
+.quick .chip.assumed > span::after { content: " · we guessed, tap to change"; font-weight: 400; }
+.quick .chip input, .quick .chip select { width: 100% !important; font: 500 16px var(--sans) !important; border: 1px solid var(--rule-strong) !important; border-radius: 12px; padding: 12px 14px !important; background: color-mix(in srgb, var(--paper) 60%, transparent); }
+.quick .chip.parsed input, .quick .chip.parsed select { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule-strong)) !important; }
+.quick .chip:focus-within { box-shadow: none; }
+input[readonly][type="datetime-local"] { cursor: pointer; }
+@media (max-width: 760px) { .quick .chips { grid-template-columns: 1fr; } }
+/* Date + time picker */
+.dtp-scrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 14px; background: rgba(24,18,40,.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: qFade .2s ease both; }
+.dtp-scrim.out { opacity: 0; transition: opacity .2s ease; }
+.dtp { width: min(360px, 100%); max-height: 94vh; overflow-y: auto; background: color-mix(in srgb, var(--paper) 94%, transparent); border: 1px solid var(--glass-edge); border-radius: 28px; padding: 18px 18px 16px; box-shadow: 0 30px 80px rgba(20,12,40,.4); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); animation: qPop .45s cubic-bezier(.34,1.5,.64,1) both; user-select: none; -webkit-user-select: none; }
+.dtp-scrim.out .dtp { transform: scale(.94); transition: transform .2s ease; }
+.dtp button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.dtp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dtp-month { font: 600 17px var(--sans); }
+.dtp-nav { width: 36px; height: 36px; border-radius: 50%; font-size: 22px !important; line-height: 1; color: var(--accent-ink); transition: background .15s, transform .15s; }
+.dtp-nav:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); } .dtp-nav:active { transform: scale(.88); }
+.dtp-dow, .dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
+.dtp-dow span { font: 600 11px var(--sans); color: var(--muted); padding: 4px 0; }
+.dtp-grid { gap: 2px 0; }
+.dtp-grid.go-next { animation: dtpNext .32s cubic-bezier(.22,1,.36,1); } .dtp-grid.go-prev { animation: dtpPrev .32s cubic-bezier(.22,1,.36,1); }
+@keyframes dtpNext { from { opacity: 0; transform: translateX(22px); } } @keyframes dtpPrev { from { opacity: 0; transform: translateX(-22px); } }
+.dtp-day { height: 40px; width: 40px; margin: 0 auto; border-radius: 50%; font: 500 15px var(--sans) !important; transition: background .18s, color .18s, transform .18s cubic-bezier(.34,1.56,.64,1); }
+.dtp-day:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.dtp-day:active { transform: scale(.88); }
+.dtp-day.today { color: var(--accent-ink); font-weight: 700 !important; }
+.dtp-day.sel { background: var(--accent-btn); color: var(--on-accent); font-weight: 700 !important; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-btn) 45%, transparent); animation: dtpPop .35s cubic-bezier(.34,1.8,.64,1); }
+@keyframes dtpPop { from { transform: scale(.7); } }
+.dtp-quick { display: flex; gap: 8px; margin: 12px 0; justify-content: center; }
+.dtp-quick button { padding: 7px 14px; border-radius: 999px; font-size: 13px !important; border: 1px solid var(--rule-strong); transition: background .15s, transform .15s; }
+.dtp-quick button:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); } .dtp-quick button:active { transform: scale(.94); }
+.dtp-time { position: relative; display: flex; justify-content: center; align-items: center; gap: 2px; height: 180px; margin: 4px 0 10px; border-radius: 18px; background: color-mix(in srgb, var(--ink) 5%, transparent); overflow: hidden; }
+.dtp-hl { position: absolute; left: 10px; right: 10px; top: 72px; height: 36px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 16%, transparent); pointer-events: none; }
+.dtp-time::before, .dtp-time::after { content: ""; position: absolute; left: 0; right: 0; height: 66px; z-index: 2; pointer-events: none; }
+.dtp-time::before { top: 0; background: linear-gradient(var(--paper), transparent); } .dtp-time::after { bottom: 0; background: linear-gradient(transparent, var(--paper)); }
+.wheel { position: relative; z-index: 1; height: 180px; width: 74px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; perspective: 400px; overscroll-behavior: contain; touch-action: pan-y; }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel .wp { height: 72px; } .wheel .wi { height: 36px; line-height: 36px; text-align: center; font: 500 22px var(--sans); scroll-snap-align: center; cursor: pointer; will-change: transform, opacity; font-variant-numeric: tabular-nums; }
+.dtp-colon { font: 600 22px var(--sans); position: relative; z-index: 1; }
+.dtp-acts { display: flex; gap: 10px; } .dtp-acts .btn { flex: 1; justify-content: center; min-height: 46px; font-size: 16px !important; }
+@media (prefers-reduced-motion: reduce) { .dtp, .dtp-grid, .dtp-day.sel { animation: none !important; } }
 /* Smooth page change */
 .page-in { animation: pageIn .42s cubic-bezier(.22,1,.36,1) both; }
 .page-in.from-left { --dx: -24px; }
@@ -1048,11 +1101,10 @@ function rowHTML(a, now, { showDay = false } = {}) {
     ${courseCell(c)}
     <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td>
     <td class="due">${due}</td>
-    <td class="num hide-sm">${fmtH(isDone(a) ? a.estimateHrs : remainingHrs(a))}</td>
     <td class="num">${fmtPct(a.weightPct)}</td>
   </tr>`;
 }
-const ledgerHead = (dueLabel = 'Due') => `<thead><tr><th scope="col"><span class="sr-only">Submitted</span></th><th scope="col"><span class="hide-sm">Course</span></th><th scope="col">Assignment</th><th scope="col">${dueLabel}</th><th scope="col" class="num hide-sm">Left</th><th scope="col" class="num">Weight</th></tr></thead>`;
+const ledgerHead = (dueLabel = 'Due') => `<thead><tr><th scope="col"><span class="sr-only">Submitted</span></th><th scope="col"><span class="hide-sm">Course</span></th><th scope="col">Assignment</th><th scope="col">${dueLabel}</th><th scope="col" class="num">Mark</th></tr></thead>`;
 
 /* ---------- TODAY ---------- */
 function viewToday() {
@@ -1071,7 +1123,7 @@ function viewToday() {
       <span class="rank" aria-hidden="true">${i + 1}</span>
       <div class="now-title"><span class="sq" style="--c:${col(c?.colour)}"></span><span class="mono">${h(c?.code || '')}</span>
         <button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></div>
-      <p class="reason mono ${late ? 'late' : ''}">${dueIn(d, now)} · ${fmtPct(a.weightPct)} of grade · ~${fmtH(remainingHrs(a))} left</p>
+      <p class="reason mono ${late ? 'late' : ''}">${dueIn(d, now)} · ${fmtPct(a.weightPct)} of grade</p>
     </li>`;
   }).join('')}</ol>` : `<p class="empty">Nothing due. Add an assignment <button class="link-btn" data-action="new">(N)</button>.</p>`;
 
@@ -1124,7 +1176,7 @@ function viewToday() {
   <div class="today-grid">
     <div>
       <section aria-labelledby="h-now">
-        <h2 class="section-h" id="h-now">Work on now <span class="mono">ranked by urgency × weight × effort left</span></h2>
+        <h2 class="section-h" id="h-now">Work on now <span class="mono">ranked by urgency × mark</span></h2>
         ${nowHTML}
       </section>
       <section aria-labelledby="h-up">
@@ -1198,8 +1250,8 @@ function viewWeek() {
         <div class="w-head"><span class="wd">${isT ? 'Today' : WDS[d.date.getDay()]}</span><span class="d">${d.date.getDate()}</span></div>
         ${items.length ? items.map(a => {
           const c = course(a.courseId); const dt = new Date(a.dueAt); const late = !isDone(a) && dt < now;
-          return `<div class="w-entry ${isDone(a) ? 'done' : ''} ${late ? 'overdue' : ''}" draggable="true" data-row data-id="${a.id}" tabindex="0" style="--c:${col(c?.colour)}" aria-label="${h(c?.code || '')} ${h(a.title)}, due ${fmtTime(dt)}, ${fmtH(a.estimateHrs)}">
-            <span class="mono">${fmtTime(dt)} · ${h(c?.code || '')} · ${fmtH(isDone(a) ? a.estimateHrs : remainingHrs(a))}</span><span class="t">${h(a.title)}</span></div>`;
+          return `<div class="w-entry ${isDone(a) ? 'done' : ''} ${late ? 'overdue' : ''}" draggable="true" data-row data-id="${a.id}" tabindex="0" style="--c:${col(c?.colour)}" aria-label="${h(c?.code || '')} ${h(a.title)}, due ${fmtTime(dt)}">
+            <span class="mono">${fmtTime(dt)} · ${h(c?.code || '')}</span><span class="t">${h(a.title)}</span></div>`;
         }).join('') : `<div class="w-empty">—</div>`}
       </div>`;
     }).join('')}
@@ -1332,7 +1384,7 @@ function viewCourse() {
     <section aria-labelledby="h-items">
       <h2 class="section-h" id="h-items">Assignments <span class="mono">${fmtPct(st.tracked)} of grade tracked</span></h2>
       ${items.length ? `<table class="ledger">
-        <thead><tr><th scope="col"><span class="sr-only">Submitted</span></th>${th('title', 'Assignment')}${th('dueAt', 'Due')}${th('weightPct', 'Weight', 'num')}${th('estimateHrs', 'Est.', 'num hide-sm')}${th('status', 'Status', 'hide-sm')}${th('pct', 'Score', 'num')}</tr></thead>
+        <thead><tr><th scope="col"><span class="sr-only">Submitted</span></th>${th('title', 'Assignment')}${th('dueAt', 'Due')}${th('weightPct', 'Mark', 'num')}${th('status', 'Status', 'hide-sm')}${th('pct', 'Score', 'num')}</tr></thead>
         <tbody>${items.map(a => {
           const d = new Date(a.dueAt); const late = !isDone(a) && d < now;
           return `<tr class="row ${late ? 'overdue' : ''} ${isDone(a) ? 'done' : ''}" data-row data-id="${a.id}" tabindex="0">
@@ -1340,7 +1392,6 @@ function viewCourse() {
             <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td>
             <td class="due">${late ? lateText(d, now) : `${fmtShort(d)} ${fmtTime(d)}`}</td>
             <td class="num">${fmtPct(a.weightPct)}</td>
-            <td class="num hide-sm">${fmtH(a.estimateHrs)}</td>
             <td class="hide-sm"><span class="status-tag">${a.status}</span></td>
             <td class="num">${a.status === 'Graded' && a.maxScore ? `${a.score}/${a.maxScore} · ${(a.score / a.maxScore * 100).toFixed(0)}%` : '–'}</td>
           </tr>`;
@@ -1376,7 +1427,7 @@ function viewArchive() {
   </header>
   <section aria-labelledby="h-graded">
     <h2 class="section-h" id="h-graded">Graded this term <span class="mono">${termName()}</span></h2>
-    ${graded.length ? `<table class="ledger"><thead><tr><th scope="col">Course</th><th scope="col">Assignment</th><th scope="col">Due</th><th scope="col" class="num">Weight</th><th scope="col" class="num">Score</th><th scope="col" class="num">%</th></tr></thead><tbody>
+    ${graded.length ? `<table class="ledger"><thead><tr><th scope="col">Course</th><th scope="col">Assignment</th><th scope="col">Due</th><th scope="col" class="num">Mark</th><th scope="col" class="num">Score</th><th scope="col" class="num">%</th></tr></thead><tbody>
       ${graded.map(a => { const d = new Date(a.dueAt); return `<tr class="row" data-row data-id="${a.id}" tabindex="0">${courseCell(course(a.courseId))}
         <td><button class="title-link" data-action="open" data-id="${a.id}" tabindex="-1">${h(a.title)}</button></td><td class="due">${fmtShort(d)}</td>
         <td class="num">${fmtPct(a.weightPct)}</td><td class="num">${a.score}/${a.maxScore}</td><td class="num">${(a.score / a.maxScore * 100).toFixed(1)}</td></tr>`; }).join('')}
@@ -1426,16 +1477,14 @@ function renderDrawer(focusSel) {
     <div class="d-body">
       <label class="sr-only" for="d-title">Title</label>
       <textarea id="d-title" class="d-title" rows="1" data-field="title">${h(a.title)}</textarea>
-      <p class="d-status mono ${late ? 'accent' : 'muted'}" id="d-status">${isDone(a) ? a.status : `${dueIn(d, now)} · ~${fmtH(remainingHrs(a))} left`}</p>
+      <p class="d-status mono ${late ? 'accent' : 'muted'}" id="d-status">${isDone(a) ? a.status : dueIn(d, now)}</p>
       <div class="fields">
         <label for="d-course">Course</label>
         <div class="val"><select id="d-course" data-field="courseId">${S.courses.map(x => `<option value="${h(x.id)}" ${x.id === a.courseId ? 'selected' : ''}>${h(x.code)} · ${h(x.name)}</option>`).join('')}</select></div>
         <label for="d-due">Due</label>
-        <div class="val"><input type="datetime-local" id="d-due" data-field="dueAt" value="${toInput(d)}"></div>
-        <label for="d-weight">Weight</label>
+        <div class="val"><input type="datetime-local" readonly id="d-due" data-field="dueAt" value="${toInput(d)}"></div>
+        <label for="d-weight">Mark</label>
         <div class="val"><input type="number" id="d-weight" data-field="weightPct" min="0" max="100" step="0.5" value="${a.weightPct}"><span class="mono muted">% of course grade</span></div>
-        <label for="d-est">Estimate</label>
-        <div class="val"><input type="number" id="d-est" data-field="estimateHrs" min="0" step="0.5" value="${a.estimateHrs}"><span class="mono muted">hours</span></div>
         <label for="d-stat">Status</label>
         <div class="val"><select id="d-stat" data-field="status">${STATUSES.map(s => `<option ${s === a.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
         ${a.status === 'Graded' ? `
@@ -1508,23 +1557,22 @@ function openQuick(defaults = {}) {
   clearTimeout(ui.quickClear); q.classList.remove('saved');
   q.innerHTML = `
     <h2 class="quick-title">New assignment</h2>
-    <label class="sr-only" for="q-in">Describe the assignment</label>
-    <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="Lab report 3 ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15% 3h">
+    <label class="quick-label" for="q-in">What is the assignment?</label>
+    <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="e.g. Lab report 3">
+    <p class="quick-tip">Tip: you can type it all at once, like “Lab report 3 ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15%”. Course, date and mark fill in below.</p>
     <div class="chips" id="q-chips">
-      <label class="chip" data-chip="title"><span>Title</span><input type="text" data-q="title"></label>
+      <input type="hidden" data-q="title">
       <label class="chip" data-chip="courseId"><span>Course</span><select data-q="courseId">${S.courses.map(c => `<option value="${h(c.id)}">${h(c.code)}</option>`).join('')}</select></label>
-      <label class="chip" data-chip="due"><span>Due</span><input type="datetime-local" data-q="due"></label>
-      <label class="chip" data-chip="weight"><span>Weight</span><input type="number" data-q="weight" min="0" max="100" step="0.5">%</label>
-      <label class="chip" data-chip="estimate"><span>Estimate</span><input type="number" data-q="estimate" min="0" step="0.5">h</label>
+      <label class="chip" data-chip="due"><span>Due date &amp; time</span><input type="datetime-local" data-q="due" readonly></label>
+      <label class="chip" data-chip="weight"><span>Mark (% of grade)</span><input type="number" data-q="weight" min="0" max="100" step="0.5" placeholder="e.g. 15"></label>
     </div>
     <div class="quick-foot">
-      <span class="mono">Enter to save · Esc to cancel · unparsed words stay in the title</span>
       <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
     </div>`;
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
   if (!S.courses.length) { q.querySelector('[data-chip="courseId"] select').innerHTML = '<option value="">No courses</option>'; }
   syncQuick();
-  $('#q-in').focus();
+  q.tabIndex = -1; q.focus({ preventScroll: true }); // no auto-focus on the title: the user taps it first
 }
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
@@ -1559,9 +1607,8 @@ function syncQuick() {
   set('courseId', p.courseId || ui.quick.courseDefault || S.courses[0]?.id || '');
   set('due', toInput(d));
   set('weight', p.weight ?? '');
-  set('estimate', p.estimate ?? '');
   const mark = (k, on) => $(`[data-chip="${k}"]`)?.classList.toggle('parsed', !!on || !!o[k]);
-  mark('title', p.title); mark('courseId', p.courseId); mark('due', p.date || p.time); mark('weight', p.weight != null); mark('estimate', p.estimate != null);
+  mark('title', p.title); mark('courseId', p.courseId); mark('due', p.date || p.time); mark('weight', p.weight != null);
   $('[data-chip="due"]')?.classList.toggle('assumed', assumed && !o.due && !!text.trim());
 }
 function saveQuick() {
@@ -1574,7 +1621,7 @@ function saveQuick() {
   const a = {
     id: uid(), courseId: v('courseId') || S.courses[0].id, title,
     dueAt: (v('due') ? fromInput(v('due')) : addDays(new Date(), 7)).toISOString(),
-    weightPct: num(v('weight'), 0), estimateHrs: num(v('estimate'), 1), status: 'Not started',
+    weightPct: num(v('weight'), 0), estimateHrs: 1, status: 'Not started',
     score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString()
   };
   S.assignments.push(a); save(); chime();
@@ -1617,14 +1664,13 @@ function renderImport() {
       </div>
       ${rows ? (rows.length ? `
         <div class="review"><table class="ledger">
-          <thead><tr><th scope="col">Keep</th><th scope="col">Title</th><th scope="col">Course</th><th scope="col">Due</th><th scope="col" class="num">Weight</th><th scope="col" class="num">Est.</th></tr></thead>
+          <thead><tr><th scope="col">Keep</th><th scope="col">Title</th><th scope="col">Course</th><th scope="col">Due</th><th scope="col" class="num">Mark</th></tr></thead>
           <tbody>${rows.map((r, i) => `<tr class="${r.accept ? '' : 'rejected'}">
             <td><input type="checkbox" data-imp="${i}" data-impfield="accept" ${r.accept ? 'checked' : ''} aria-label="Keep row ${i + 1}"></td>
             <td><input type="text" data-imp="${i}" data-impfield="title" value="${h(r.title)}" aria-label="Title"></td>
             <td><select data-imp="${i}" data-impfield="courseId" aria-label="Course">${S.courses.map(c => `<option value="${h(c.id)}" ${c.id === r.courseId ? 'selected' : ''}>${h(c.code)}</option>`).join('')}</select></td>
-            <td><input type="datetime-local" data-imp="${i}" data-impfield="due" value="${r.due}" aria-label="Due"></td>
-            <td class="num"><input type="number" data-imp="${i}" data-impfield="weight" value="${r.weight ?? ''}" min="0" max="100" step="0.5" aria-label="Weight"></td>
-            <td class="num"><input type="number" data-imp="${i}" data-impfield="estimate" value="${r.estimate ?? ''}" min="0" step="0.5" aria-label="Estimate"></td>
+            <td><input type="datetime-local" readonly data-imp="${i}" data-impfield="due" value="${r.due}" aria-label="Due"></td>
+            <td class="num"><input type="number" data-imp="${i}" data-impfield="weight" value="${r.weight ?? ''}" min="0" max="100" step="0.5" aria-label="Mark"></td>
           </tr>`).join('')}</tbody></table></div>
         <div class="dlg-foot"><span class="mono muted">${rows.length} found · review each row before importing</span>
           <button class="btn primary" data-action="imp-commit" ${acc ? '' : 'disabled'}>Import ${acc} ${acc === 1 ? 'item' : 'items'}</button></div>`
@@ -1727,13 +1773,12 @@ function openKeys() {
       </div>
       <div class="formula">
         <h3>How “Work on now” is ranked</h3>
-        <p><code>priority = urgency × weight × remaining effort</code></p>
+        <p><code>priority = urgency × mark</code></p>
         <p><code>urgency = 1 ÷ max(days until due, 0.25)^1.5</code> — overdue items get the maximum, distant deadlines fade quickly.</p>
-        <p><code>remaining effort = estimate × share of subtasks left</code>, or × 0.6 when marked In progress without subtasks.</p>
         <h3 style="margin-top:14px">Reminders</h3>
-        <p>Appear in the sidebar from <code>1 day + 1 day per 4h of estimate</code> before the due date.</p>
+        <p>Appear in the sidebar from <code>1 day</code> before the due date.</p>
         <h3 style="margin-top:14px">Quick add</h3>
-        <p><code>Lab report 3 chem fri 11:59pm 15% 3h</code> → course, date, time, weight and estimate are pulled out; the rest becomes the title. Dates: today, tomorrow, mon–sun, 13 Nov, Nov 13, 13/11, in 3 days, week 12.</p>
+        <p><code>Lab report 3 chem fri 11:59pm 15%</code> → course, date, time and mark are pulled out; the rest becomes the title. Dates: today, tomorrow, mon–sun, 13 Nov, Nov 13, 13/11, in 3 days, week 12.</p>
       </div>
     </div>`;
   $('#dlg-keys').showModal();
