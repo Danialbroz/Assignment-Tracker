@@ -1526,7 +1526,31 @@ function openQuick(defaults = {}) {
   syncQuick();
   $('#q-in').focus();
 }
-function closeQuick() { $('#quick').classList.remove('open'); $('#quick').innerHTML = ''; ui.quick = null; }
+function closeQuick() {
+  const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
+  clearTimeout(ui.quickClear); ui.quickClear = setTimeout(() => { q.innerHTML = ''; q.classList.remove('saved'); }, 400); // let the exit animation finish
+}
+function askCancelQuick() {
+  const q = $('#quick');
+  if (!ui.quick || ui.quick.saving || q.querySelector('.q-confirm')) return;
+  const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
+  el.innerHTML = `<div><h3>Are you sure?</h3><p>Your assignment won’t be saved.</p>
+    <span class="acts"><button class="btn quiet" data-action="quick-keep">Keep editing</button><button class="btn primary" data-action="quick-cancel">Yes, discard</button></span></div>`;
+  q.appendChild(el); el.querySelector('[data-action="quick-keep"]').focus();
+}
+let audioCtx;
+function chime() { // soft two-note "ding" via WebAudio; no audio files needed
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    [[659.25, 0], [987.77, .11]].forEach(([f, d]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f; o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0, t + d); g.gain.linearRampToValueAtTime(.18, t + d + .02); g.gain.exponentialRampToValueAtTime(.001, t + d + .6);
+      o.start(t + d); o.stop(t + d + .65);
+    });
+  } catch (e) { /* sound is optional */ }
+}
 function syncQuick() {
   if (!ui.quick) return;
   const text = $('#q-in').value; const p = parseText(text); const { d, assumed } = resolveDue(p);
