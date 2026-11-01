@@ -1505,7 +1505,9 @@ function updateDrawerStatus() {
 function openQuick(defaults = {}) {
   ui.quick = { overrides: {}, courseDefault: defaults.courseId || null };
   const q = $('#quick');
+  clearTimeout(ui.quickClear); q.classList.remove('saved');
   q.innerHTML = `
+    <h2 class="quick-title">New assignment</h2>
     <label class="sr-only" for="q-in">Describe the assignment</label>
     <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="Lab report 3 ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15% 3h">
     <div class="chips" id="q-chips">
