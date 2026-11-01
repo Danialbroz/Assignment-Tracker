@@ -2019,7 +2019,7 @@ setRoute();
   const up = e => {
     if (!down) return; down = false; lift(false);
     const el = hit(e), origin = e.target.closest && e.target.closest('#tabbar a');
-    if (e.pointerType === 'touch' && el && origin && el !== origin) location.hash = el.getAttribute('href'); // drag to switch
+    if (e.pointerType === 'touch' && matchMedia('(min-width: 761px)').matches && el && origin && el !== origin) location.hash = el.getAttribute('href'); // drag to switch
     place(target || current());
   };
   addEventListener('pointerup', up); addEventListener('pointercancel', up);
