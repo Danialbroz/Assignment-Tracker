@@ -1899,8 +1899,8 @@ document.addEventListener('keydown', e => {
   const t = e.target;
   // Quick add input / chips
   if (t.closest && t.closest('#quick')) {
-    if (e.key === 'Escape') { e.preventDefault(); closeQuick(); return; }
-    if (e.key === 'Enter' && !t.matches('button')) { e.preventDefault(); saveQuick(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); if ($('.q-confirm')) $('.q-confirm').remove(); else askCancelQuick(); return; }
+    if (e.key === 'Enter' && !t.matches('button') && !$('.q-confirm')) { e.preventDefault(); saveQuick(); return; }
     return;
   }
   if (t.id === 'search' && e.key === 'Escape') { t.value = ''; ui.search = ''; renderRail(); renderMain(); t.blur(); return; }
