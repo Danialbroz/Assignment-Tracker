@@ -1984,11 +1984,12 @@ setRoute();
     const el = hit(e); if (!el) return;
     const r = el.getBoundingClientRect();
     const pull = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / (r.width / 2))) * 6; // gentle magnetic pull
+    blob.style.setProperty('--hx', Math.round((e.clientX - r.left) / r.width * 100) + '%'); // highlight follows the finger
     if (el !== target) { target = el; place(el, pull, down); squish(1.12, .92); } else place(el, pull, down);
   });
-  bar.addEventListener('pointerdown', e => { down = true; const el = hit(e); if (el) { target = el; place(el, 0, true); } });
+  bar.addEventListener('pointerdown', e => { down = true; const el = hit(e); if (el) { target = el; lift(true); place(el, 0, true); } });
   const up = e => {
-    if (!down) return; down = false;
+    if (!down) return; down = false; lift(false);
     const el = hit(e), origin = e.target.closest && e.target.closest('#tabbar a');
     if (e.pointerType === 'touch' && el && origin && el !== origin) location.hash = el.getAttribute('href'); // drag to switch
     place(target || current());
