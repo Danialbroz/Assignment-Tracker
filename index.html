@@ -1569,6 +1569,8 @@ function saveQuick() {
   const title = v('title').trim() || $('#q-in').value.trim();
   if (!title) { $('#q-in').focus(); return; }
   if (!S.courses.length) { toast('Add a course first.'); return; }
+  if (ui.quick.saving) return;
+  ui.quick.saving = true;
   const a = {
     id: uid(), courseId: v('courseId') || S.courses[0].id, title,
     dueAt: (v('due') ? fromInput(v('due')) : addDays(new Date(), 7)).toISOString(),
