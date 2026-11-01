@@ -732,87 +732,34 @@ const ICON = {
 const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
 
 /* =========================================================
-   SEED DATA (relative to first load, so the demo stays current)
+   STARTING DATA: this term's timetable. Edit this table (or the courses in the app) to change it.
    ========================================================= */
+const TERM = { name: 'October 2026', start: '2026-10-12', weeks: 14 };   // start = Monday of week 1
+const TIMETABLE = [   // [code, name, colour]; names are the class types from the timetable, rename them in the app
+  ['MPU3242', 'Lecture & Tutorial', 'ochre'],
+  ['INB23304', 'Lecture & Lab', 'sage'],
+  ['ISB16003', 'Lecture & Lab', 'slate'],
+  ['IEB20603', 'Lecture & Lab', 'clay'],
+  ['IDB30402', 'Lecture', 'plum'],
+  ['INB33103', 'Lecture & Lab', 'teal']
+];
 function seed() {
-  const now = new Date();
-  const ws = startOfWeek(now);
-  const s = addDays(ws, -49);                 // today sits in week 8 of 14
-  const at = (w, d, t) => { const x = addDays(s, w * 7 + d); const [hh, mm] = t.split(':').map(Number); x.setHours(hh, mm, 0, 0); return x.toISOString(); };
-  const C = (id, code, name, colour, instructor, w) => ({ id, code, name, colour, instructor, weightings: w.map(([label, pct]) => ({ id: uid(), label, pct })) });
-  const courses = [
-    C('bio', 'BIO 204', 'Genetics', 'ochre', 'Dr. Hannah Okafor', [['Problem sets', 30], ['Lab reports', 20], ['Midterm', 20], ['Final exam', 30]]),
-    C('chem', 'CHEM 211', 'Organic Chemistry I', 'sage', 'Prof. Martin Reyes', [['Lab reports', 30], ['Quizzes', 10], ['Midterm', 25], ['Final exam', 35]]),
-    C('math', 'MATH 221', 'Linear Algebra', 'slate', 'Dr. Wei Chen', [['Homework', 20], ['Midterms', 30], ['Final exam', 50]]),
-    C('econ', 'ECON 202', 'Intermediate Microeconomics', 'clay', 'Prof. Laura Mendes', [['Problem sets', 25], ['Policy essay', 20], ['Midterm', 20], ['Final exam', 35]]),
-    C('hist', 'HIST 230', 'Modern Europe, 1789–1945', 'plum', 'Dr. Thomas Byrne', [['Response papers', 20], ['Source analysis', 15], ['Research essay', 35], ['Final exam', 30]])
-  ];
-  const sub = (text, done = false, due = null) => ({ id: uid(), text, done, due });
-  const A = (courseId, title, dueAt, weightPct, estimateHrs, status = 'Not started', x = {}) => ({
-    id: uid(), courseId, title, dueAt, weightPct, estimateHrs, status,
-    score: x.score ?? null, maxScore: x.maxScore ?? null, subtasks: x.subtasks || [], notes: x.notes || '', links: x.links || [],
-    createdAt: s.toISOString()
-  });
-  const overdue = addDays(sod(now), -2); overdue.setHours(23, 59, 0, 0);
-  const assignments = [
-    // BIO 204
-    A('bio', 'Problem Set 3: Linkage Mapping', at(2, 4, '17:00'), 6, 3, 'Graded', { score: 46, maxScore: 50 }),
-    A('bio', 'Midterm Exam', at(5, 2, '10:00'), 20, 8, 'Graded', { score: 78, maxScore: 100, notes: 'Lost marks on the chi-square question. Review expected ratios before the final.' }),
-    A('bio', 'Problem Set 5: Mendelian Genetics', at(8, 1, '17:00'), 6, 4, 'In progress', {
-      subtasks: [sub('Questions 1–4: monohybrid and dihybrid crosses', true), sub('Questions 5–7: pedigree analysis'), sub('Question 8: chi-square test')],
-      notes: 'Office hours Monday 14:00, Life Sciences 3.12.'
-    }),
-    A('bio', 'Lab Report: Drosophila Crosses', at(11, 3, '23:59'), 10, 6, 'Not started', {
-      subtasks: [sub('Tabulate F2 phenotype counts'), sub('Write methods and results'), sub('Discussion: linkage vs independent assortment')]
-    }),
-    A('bio', 'Final Exam', at(13, 2, '09:00'), 30, 12),
-    // CHEM 211
-    A('chem', 'Lab report 2: Recrystallisation of Acetanilide', at(3, 4, '23:59'), 7.5, 3, 'Graded', { score: 13, maxScore: 15 }),
-    A('chem', 'Midterm Exam', at(6, 0, '13:00'), 25, 10, 'Submitted'),
-    A('chem', 'Lab report 3: Extraction of Caffeine', at(8, 3, '23:59'), 7.5, 3, 'Not started', { notes: 'Include percent recovery and melting point range.' }),
-    A('chem', 'Quiz 4: Stereochemistry', at(9, 1, '09:00'), 2.5, 1.5),
-    A('chem', 'Lab report 4: Thin-layer Chromatography', at(10, 4, '23:59'), 7.5, 3),
-    A('chem', 'Final Exam', at(13, 4, '14:00'), 35, 14),
-    // MATH 221
-    A('math', 'Homework 6: Eigenvalues and Eigenvectors', overdue.toISOString(), 2.5, 3, 'Not started', { notes: 'Late penalty is 10% per day. Problems 5.1: 8, 12, 17; 5.2: 3, 9.' }),
-    A('math', 'Homework 7: Diagonalisation', at(8, 3, '23:59'), 2.5, 3),
-    A('math', 'Midterm 2', at(10, 1, '11:00'), 15, 8),
-    A('math', 'Homework 8: Inner Product Spaces', at(11, 4, '23:59'), 2.5, 3),
-    // ECON 202
-    A('econ', 'Problem Set 2: Consumer Choice', at(4, 0, '09:00'), 6, 4, 'Submitted'),
-    A('econ', 'Problem Set 3: Producer Theory', at(8, 0, '09:00'), 6, 4, 'In progress', {
-      subtasks: [sub('Cost minimisation (Q1–2)', true), sub('Short-run vs long-run cost curves (Q3)', true), sub('Returns to scale proof (Q4)')]
-    }),
-    A('econ', 'Policy Essay: Rent Control', at(12, 4, '17:00'), 20, 10, 'In progress', {
-      subtasks: [sub('Read Diamond, McQuade & Qian (2019)', true), sub('Outline argument', true), sub('Draft 2,000 words', false, toDateInput(addDays(s, 12 * 7 + 1))), sub('Proofread and format references')],
-      links: ['https://www.aeaweb.org/articles?id=10.1257/aer.20181289']
-    }),
-    A('econ', 'Final Exam', at(13, 3, '09:00'), 35, 12),
-    // HIST 230
-    A('hist', 'Response Paper 1: The Terror', at(1, 3, '17:00'), 5, 3, 'Submitted'),
-    A('hist', 'Source Analysis: Congress of Vienna', at(6, 2, '17:00'), 15, 5, 'Submitted'),
-    A('hist', 'Research Essay Proposal', at(9, 4, '17:00'), 5, 3, 'Not started', { notes: 'One page. Topic, question, five sources (at least two primary).' })
-  ];
+  const start = new Date(TERM.start + 'T00:00:00');
+  const courses = TIMETABLE.map(([code, name, colour]) => ({
+    id: code.toLowerCase(), code, name, colour, instructor: '',
+    weightings: [['Coursework', 50], ['Final exam', 50]].map(([label, pct]) => ({ id: uid(), label, pct }))
+  }));
   return {
-    version: 1,
+    version: 2,
     courses,
-    assignments,
+    assignments: [],
     settings: {
       dailyCapacityHrs: 4,
-      semesterStart: toDateInput(s),
-      semesterEnd: toDateInput(addDays(s, 14 * 7 - 1)),
+      semesterStart: toDateInput(start),
+      semesterEnd: toDateInput(addDays(start, TERM.weeks * 7 - 1)),
       theme: document.documentElement.getAttribute('data-theme') || 'light'
     },
-    archive: [
-      { name: `Spring ${s.getFullYear()}`, courses: [
-        ['BIO 102', 'Cell Biology', 4, 'A-'], ['CHEM 102', 'General Chemistry II', 4, 'B+'],
-        ['MATH 142', 'Calculus II', 4, 'A'], ['ECON 101', 'Principles of Economics', 3, 'A-'], ['WRIT 110', 'Academic Writing', 3, 'B+']
-      ] },
-      { name: `Autumn ${s.getFullYear() - 1}`, courses: [
-        ['BIO 101', 'Foundations of Biology', 4, 'B+'], ['CHEM 101', 'General Chemistry I', 4, 'B'],
-        ['MATH 141', 'Calculus I', 4, 'A-'], ['HIST 120', 'The Early Modern World', 3, 'A'], ['STAT 110', 'Introduction to Statistics', 3, 'A-']
-      ] }
-    ]
+    archive: []
   };
 }
 
@@ -823,6 +770,7 @@ function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (!s || !Array.isArray(s.courses) || !Array.isArray(s.assignments) || !s.settings) return null;
+    if (s.version === 1 && s.courses.some(c => c.id === 'bio')) return null; // old demo data
     s.archive = s.archive || [];
     return s;
   } catch (e) { return null; }
@@ -1133,14 +1081,13 @@ function viewToday() {
     <h2 class="serif">Welcome to Ledger</h2>
     <p>Track assignments and see what to work on first.</p>
     <ol>
-      <li>Tap <b>Add</b> and type like <i>“Lab report chem fri 11:59pm 15% 3h”</i> to add one.</li>
+      <li>Tap <b>Add</b> and type like <i>“Lab report ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15% 3h”</i> to add one.</li>
       <li>Tap an assignment to edit it, add steps or notes. Tick the box when it’s handed in.</li>
       <li>Use the bar at the bottom: <b>Today</b> = what to do now, <b>Week</b> = plan your week, <b>Term</b> = the whole semester, <b>Past</b> = finished terms. <b>Menu</b> (top right on phones) has courses and settings.</li>
     </ol>
-    <p class="muted">The courses and assignments below are sample data.</p>
+    <p class="muted">Your courses are set up from your timetable. Add assignments as you get them.</p>
     <div class="welcome-acts">
-      <button class="btn primary" data-action="welcome-dismiss">Got it</button>
-      <button class="btn quiet" data-action="clear-sample">Clear sample data &amp; start fresh</button>
+      <button class="btn primary" data-action="welcome-dismiss">Got it</button>
     </div>
   </aside>`;
   return `
@@ -1536,7 +1483,7 @@ function openQuick(defaults = {}) {
   const q = $('#quick');
   q.innerHTML = `
     <label class="sr-only" for="q-in">Describe the assignment</label>
-    <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="Lab report 3 chem fri 11:59pm 15% 3h">
+    <input id="q-in" class="quick-input" autocomplete="off" spellcheck="false" placeholder="Lab report 3 ${h(S.courses[0]?.code || 'ABC123')} fri 11:59pm 15% 3h">
     <div class="chips" id="q-chips">
       <label class="chip" data-chip="title"><span>Title</span><input type="text" data-q="title"></label>
       <label class="chip" data-chip="courseId"><span>Course</span><select data-q="courseId">${S.courses.map(c => `<option value="${h(c.id)}">${h(c.code)}</option>`).join('')}</select></label>
