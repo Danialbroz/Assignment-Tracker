@@ -1519,7 +1519,7 @@ function openQuick(defaults = {}) {
     </div>
     <div class="quick-foot">
       <span class="mono">Enter to save · Esc to cancel · unparsed words stay in the title</span>
-      <span class="acts"><button class="btn quiet small" data-action="quick-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
+      <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
     </div>`;
   q.classList.add('open');
   if (!S.courses.length) { q.querySelector('[data-chip="courseId"] select').innerHTML = '<option value="">No courses</option>'; }
