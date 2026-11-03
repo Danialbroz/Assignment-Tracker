@@ -2212,6 +2212,11 @@ setRoute();
   function place(el, pull = 0, pressed = false) {
     if (!el) { blob.classList.remove('on'); return; }
     const w = el.offsetWidth;
+    if (!firstPlace && el !== lit) { // new tab: swing the beam in the direction of travel
+      blob.style.setProperty('--dir', (el.offsetLeft > (lit ? lit.offsetLeft : 0) ? 25 : -25) + 'deg');
+      blob.classList.remove('swing'); void blob.offsetWidth; blob.classList.add('swing');
+    }
+    lit = el;
     blob.style.width = w + 'px'; blob.style.height = el.offsetHeight + 'px';
     blob.style.top = el.offsetTop + 'px';
     blob.style.setProperty('--x', (el.offsetLeft + pull) + 'px');
