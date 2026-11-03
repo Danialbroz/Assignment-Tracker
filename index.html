@@ -2121,6 +2121,15 @@ document.addEventListener('change', e => {
   // drawer selects / dates
   if (t.closest('#drawer')) drawerField(t, true);
 });
+// Dock-style course hover: hovered row pops out most, neighbours partly, far rows stay put.
+$('#rail-dyn').addEventListener('pointermove', e => {
+  const ul = e.target.closest('.courses');
+  for (const a of $('#rail-dyn').querySelectorAll('.courses a')) {
+    const r = a.getBoundingClientRect();
+    a.style.setProperty('--m', ul ? Math.max(0, 1 - Math.abs(e.clientY - (r.top + r.height / 2)) / 60).toFixed(3) : 0);
+  }
+});
+$('#rail-dyn').addEventListener('pointerleave', () => $('#rail-dyn').querySelectorAll('.courses a').forEach(a => a.style.setProperty('--m', 0)));
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'search') { ui.search = t.value; renderRail(); renderMain(); return; }
