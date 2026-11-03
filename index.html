@@ -1255,14 +1255,6 @@ function viewToday() {
     </div>
     <aside aria-label="Overview">
       <div class="side-block">
-        <h2 class="side-h">Next 7 days · ${cap}h a day</h2>
-        <ul class="load-mini">${days.map((d, i) => `
-          <li class="${i === 0 ? 'is-today' : ''}"><span class="mono">${i === 0 ? 'Today' : WDS[d.date.getDay()] + ' ' + d.date.getDate()}</span>
-            <span class="track" aria-hidden="true"><span class="fill ${d.load > cap ? 'over' : ''}" style="width:${(d.load / max * 100).toFixed(1)}%"></span><span class="capmark" style="left:${(cap / max * 100).toFixed(1)}%"></span></span>
-            <span class="mono h ${d.load > cap ? 'accent' : ''}">${d.load ? fmtH(d.load) : '–'}</span></li>`).join('')}
-        </ul>
-      </div>
-      <div class="side-block">
         <h2 class="side-h">Recently submitted</h2>
         ${recent.length ? `<ul class="done-list">${recent.map(a => `<li><span class="sq" style="--c:${col(course(a.courseId)?.colour)}"></span><span class="t">${h(a.title)}</span><button class="link-btn mono" style="font-size:11px" data-action="toggle-btn" data-id="${a.id}">Undo</button></li>`).join('')}</ul>` : `<p class="muted" style="margin:0;font-size:13px">Nothing submitted in the last three weeks.</p>`}
       </div>
