@@ -975,6 +975,7 @@ function load() {
     if (!s || !Array.isArray(s.courses) || !Array.isArray(s.assignments) || !s.settings) return null;
     if (s.version === 1 && s.courses.some(c => c.id === 'bio')) return null; // old demo data
     s.archive = s.archive || [];
+    s.timetable = Array.isArray(s.timetable) ? s.timetable : [];
     return s;
   } catch (e) { return null; }
 }
