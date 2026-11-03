@@ -1745,7 +1745,7 @@ function syncQuick() {
   const o = ui.quick.overrides; const set = (k, v) => { if (o[k]) return; const el = $(`[data-q="${k}"]`); if (el) el.value = v; };
   set('title', p.title || '');
   set('courseId', p.courseId || ui.quick.courseDefault || S.courses[0]?.id || '');
-  set('due', toInput(d));
+  set('due', toInput(!p.date && ui.quick.dueDefault ? ui.quick.dueDefault : d)); // calendar "+" pre-fills the picked day
   set('weight', p.weight ?? '');
   const mark = (k, on) => $(`[data-chip="${k}"]`)?.classList.toggle('parsed', !!on || !!o[k]);
   mark('title', p.title); mark('courseId', p.courseId); mark('due', p.date || p.time); mark('weight', p.weight != null);
