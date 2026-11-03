@@ -1085,7 +1085,9 @@ function renderRail() {
     profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>'
   };
   const tabs = [['today', 'Today', 'What to do now'], ['week', 'Week', 'Plan your week'], ['new', 'Add', 'Add an assignment'], ['semester', 'Term', 'Whole semester'], ['profile', 'Profile', 'Your details']];
-  $('#tabbar').innerHTML = tabs.map(([k, l, tip]) => k === 'new'
+  // keep the spotlight element in the bar: detaching it kills its slide transition (desktop teleport)
+  const bar = $('#tabbar'); bar.querySelectorAll(':scope > :not(.lg-blob)').forEach(n => n.remove());
+  bar.insertAdjacentHTML('beforeend', tabs.map(([k, l, tip]) => k === 'new'
     ? `<button class="tab-new" data-action="new" title="${tip}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>${l}</span></button>`
     : `<a href="#/${k}" title="${tip}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${TI[k]}</svg><span>${l}</span></a>`).join('');
   $('#rail-dyn').innerHTML = `
