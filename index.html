@@ -1460,17 +1460,31 @@ function updateCourseCalc() {
 /* ---------- ARCHIVE ---------- */
 function viewProfile() {
   const p = S.profile || {};
-  const f = (key, label, ph) => `<label>${label}<input data-pfield="${key}" value="${h(p[key] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
+  const ic = {
+    name: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
+    studentId: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.5-1.5 1.7-2 3-2s2.5.5 3 2M15 10h3M15 14h3"/>',
+    classGroup: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 14.7c2.9-.3 5 1.4 5 4.3"/>',
+    programme: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5"/>'
+  };
+  const f = (key, label, ph) => `<label class="pf-row"><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ic[key]}</svg><span>${label}</span><input data-pfield="${key}" value="${h(p[key] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
+  const ini = (p.name || '').trim().charAt(0).toUpperCase();
   return `
   <header class="page-head">
     <p class="eyebrow mono">${h(termName())}</p>
-    <h1 class="display">${h(p.name || 'Your profile')}</h1>
+    <h1 class="display">Profile</h1>
   </header>
   <section class="profile" aria-label="Your details">
-    ${f('name', 'Name', 'e.g. Danial')}
-    ${f('studentId', 'Student ID', 'e.g. 52213125123')}
-    ${f('classGroup', 'Class', 'e.g. L01')}
-    ${f('programme', 'Course name', 'e.g. Bachelor of IT')}
+    <div class="pf-card">
+      <div class="pf-avatar" aria-hidden="true">${ini || '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'}</div>
+      <div><div class="pf-name">${h(p.name || 'Your name')}</div><div class="pf-sub">${h(p.studentId || 'Add your details below')}</div></div>
+    </div>
+    <h2 class="pf-h">Details</h2>
+    <div class="pf-list">
+      ${f('name', 'Name', 'e.g. Danial')}
+      ${f('studentId', 'Student ID', 'e.g. 52213125123')}
+      ${f('classGroup', 'Class', 'e.g. L01')}
+      ${f('programme', 'Course name', 'e.g. Bachelor of IT')}
+    </div>
     <p class="muted" style="margin:0;font-size:13px">Saved on this device as you type.</p>
   </section>`;
 }
