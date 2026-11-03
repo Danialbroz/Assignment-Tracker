@@ -1319,7 +1319,8 @@ function viewToday() {
         ${recent.length ? `<ul class="done-list">${recent.map(a => `<li><span class="sq" style="--c:${col(course(a.courseId)?.colour)}"></span><span class="t">${h(a.title)}</span><button class="link-btn mono" style="font-size:11px" data-action="toggle-btn" data-id="${a.id}">Undo</button></li>`).join('')}</ul>` : `<p class="muted" style="margin:0;font-size:13px">Nothing submitted in the last three weeks.</p>`}
       </div>
     </aside>
-  </div>`;
+  </div>
+  ${calendarHTML(now)}`;
 }
 
 /* ---------- CALENDAR (Today page) ---------- */
