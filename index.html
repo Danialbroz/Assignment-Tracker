@@ -744,8 +744,8 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .lg-blob.snap { transition: none; }
 /* Icon + label light up once the spotlight lands */
 .tabbar a svg.i, .tabbar a span { transition: filter .35s ease .15s, color .35s ease .15s; }
-.tabbar a[aria-current="page"] svg.i { filter: drop-shadow(0 0 5px var(--accent)); }
-[data-theme="dark"] .lg-blob { box-shadow: inset 0 1px 1px rgba(255,255,255,.35), 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent); }
+.tabbar a[aria-current="page"] svg.i { filter: drop-shadow(0 0 6px var(--accent)); }
+[data-theme="dark"] .tabbar a[aria-current="page"] { color: #fff; }
 @media (prefers-reduced-motion: reduce) { .lg-blob { transition: opacity .2s; } .lg-blob.swing::before { animation: none; } }
 .nav { display: none; } /* the glass bar replaces the sidebar view list */
 .rail-sec:has(> .nav) { display: none; }
