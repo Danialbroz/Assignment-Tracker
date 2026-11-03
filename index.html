@@ -1612,6 +1612,8 @@ function closeQuick() {
 function askCancelQuick() {
   const q = $('#quick');
   if (!ui.quick || ui.quick.saving || q.querySelector('.q-confirm')) return;
+  // nothing typed or chosen yet: close without asking
+  if (!$('#q-in').value.trim() && !Object.keys(ui.quick.overrides).length && !q.querySelector('[data-q="weight"]').value) return closeQuick();
   const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
   el.innerHTML = `<div><h3>Are you sure?</h3><p>Your assignment won’t be saved.</p>
     <span class="acts"><button class="btn quiet" data-action="quick-keep">Keep editing</button><button class="btn primary" data-action="quick-cancel">Yes, discard</button></span></div>`;
