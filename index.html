@@ -2205,7 +2205,6 @@ document.addEventListener('keydown', e => {
   const rowEl = t.closest ? t.closest('[data-row]') : null;
   switch (k) {
     case 'n': case 'N': e.preventDefault(); closeDrawer(); openQuick(ui.route === 'course' ? { courseId: ui.courseId } : {}); break;
-    case '/': e.preventDefault(); if (matchMedia('(max-width:760px)').matches) $('#rail').classList.add('open'); $('#search').focus(); $('#search').select(); break;
     case 'g': case 'G': ui.gPending = true; ui.gTimer = setTimeout(() => ui.gPending = false, 1200); break;
     case '?': e.preventDefault(); openKeys(); break;
     case 'j': case 'k': case 'J': case 'K': case 'ArrowDown': case 'ArrowUp': {
