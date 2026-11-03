@@ -657,8 +657,18 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .set-menu .link-btn:hover { color: var(--accent-ink); }
 /* Profile page */
 .profile { display: grid; gap: 18px; max-width: 520px; margin-top: 8px; }
-.profile label { display: grid; gap: 6px; font: 600 14px var(--sans); color: var(--ink-2); }
-.profile input { font: 500 16px var(--sans); border: 1px solid var(--rule-strong); border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--paper) 60%, transparent); }
+.pf-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--glass-edge); border-radius: 20px; background: color-mix(in srgb, var(--paper) 70%, transparent); box-shadow: 0 8px 28px rgba(20,12,40,.12), inset 0 1px 0 var(--glass-hi); }
+.pf-avatar { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font: 600 24px var(--sans); background: var(--accent-btn); color: var(--on-accent); }
+.pf-avatar svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.pf-name { font: 600 18px var(--sans); color: var(--ink); }
+.pf-sub { font: 500 13px var(--sans); color: var(--muted); margin-top: 2px; }
+.pf-h { font: 600 20px var(--sans); margin: 14px 0 0; color: var(--ink); }
+.pf-list { border-top: 1px solid var(--rule); }
+.pf-row { display: grid; grid-template-columns: 22px minmax(90px, 140px) 1fr; align-items: center; gap: 14px; padding: 14px 2px; border-bottom: 1px solid var(--rule); font: 500 15px var(--sans); color: var(--ink); cursor: text; }
+.pf-row svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.pf-row input { min-width: 0; border: 0; background: none; padding: 4px 0; text-align: right; font: 500 15px var(--sans); color: var(--ink-2); outline-offset: 4px; }
+.pf-row input::placeholder { color: var(--muted); opacity: .6; }
+.pf-row:focus-within { border-bottom-color: var(--accent); }
 /* Date + time picker */
 .dtp-scrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 14px; background: rgba(24,18,40,.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: qFade .2s ease both; }
 .dtp-scrim.out { opacity: 0; transition: opacity .2s ease; }
