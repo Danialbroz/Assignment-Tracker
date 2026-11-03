@@ -2077,7 +2077,7 @@ document.addEventListener('click', e => {
     case 'delete-course': {
       const c = course(ui.courseId); const n = S.assignments.filter(a => a.courseId === c.id).length;
       if (!confirm(`Delete ${c.code} and its ${n} ${n === 1 ? 'assignment' : 'assignments'}? This cannot be undone.`)) break;
-      S.courses = S.courses.filter(x => x.id !== c.id); S.assignments = S.assignments.filter(a => a.courseId !== c.id); save(); go('today'); break;
+      S.courses = S.courses.filter(x => x.id !== c.id); S.assignments = S.assignments.filter(a => a.courseId !== c.id); S.timetable = S.timetable.filter(x => x.courseId !== c.id); save(); go('today'); break;
     }
     case 'delete-asg': {
       const a = asg(ui.drawerId); const idx = S.assignments.indexOf(a);
