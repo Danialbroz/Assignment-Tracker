@@ -1622,11 +1622,11 @@ function viewProfile() {
     <h1 class="display">Profile</h1>
   </header>
   <div class="pf-grid">
+  <div class="pf-card">
+    <div class="pf-avatar" aria-hidden="true">${ini || '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'}</div>
+    <div><div class="pf-name">${h(p.name || 'Your name')}</div><div class="pf-sub">${h(p.studentId || 'Add your details below')}</div></div>
+  </div>
   <section class="profile" aria-label="Your details">
-    <div class="pf-card">
-      <div class="pf-avatar" aria-hidden="true">${ini || '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'}</div>
-      <div><div class="pf-name">${h(p.name || 'Your name')}</div><div class="pf-sub">${h(p.studentId || 'Add your details below')}</div></div>
-    </div>
     <h2 class="pf-h">Details</h2>
     <div class="pf-list">
       ${PF.map(([k, l]) => f(k, l)).join('')}
