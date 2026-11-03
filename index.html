@@ -2204,7 +2204,7 @@ setRoute();
   const bar = document.getElementById('tabbar');
   const blob = document.createElement('div');
   blob.className = 'lg-blob'; blob.setAttribute('aria-hidden', 'true');
-  let target = null, down = false, firstPlace = true, relax = 0;
+  let target = null, down = false, firstPlace = true, relax = 0, lit = null;
 
   const items = () => [...bar.querySelectorAll('a')];
   const current = () => bar.querySelector('a[aria-current="page"]');
