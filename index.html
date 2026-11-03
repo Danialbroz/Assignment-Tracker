@@ -1690,7 +1690,7 @@ function updateDrawerStatus() {
    QUICK ADD
    ========================================================= */
 function openQuick(defaults = {}) {
-  ui.quick = { overrides: {}, courseDefault: defaults.courseId || null };
+  ui.quick = { overrides: {}, courseDefault: defaults.courseId || null, dueDefault: defaults.due || null };
   const q = $('#quick');
   clearTimeout(ui.quickClear); q.classList.remove('saved');
   q.innerHTML = `
