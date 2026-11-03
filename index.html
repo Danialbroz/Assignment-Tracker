@@ -1820,7 +1820,7 @@ function closeQuick() {
 function askCancelQuick() {
   const q = $('#quick');
   if (!ui.quick || ui.quick.saving || q.querySelector('.q-confirm')) return;
-  if (ui.quick.profile) return closeQuick();
+  if (ui.quick.profile || ui.quick.cls) return closeQuick();
   // nothing typed or chosen yet: close without asking
   if (!$('#q-in').value.trim() && !Object.keys(ui.quick.overrides).length && !q.querySelector('[data-q="weight"]').value) return closeQuick();
   const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
