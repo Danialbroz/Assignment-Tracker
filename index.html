@@ -642,7 +642,7 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .set-btn svg { width: 20px; height: 20px; stroke-width: 1.6; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
 .rail-foot.open .set-btn svg { transform: rotate(120deg); }
 /* Everything lives inside one card that unfolds smoothly */
-.set-menu { display: grid; grid-template-rows: 0fr; margin-bottom: 0; border: 1px solid transparent; border-radius: 16px; background: color-mix(in srgb, var(--paper) 70%, transparent); opacity: 0; transition: grid-template-rows .45s cubic-bezier(.22,1,.36,1), opacity .3s ease, margin .45s ease, border-color .3s ease; }
+.set-menu { position: absolute; left: 0; right: 0; bottom: calc(100% - 18px); z-index: 20; box-shadow: 0 12px 32px rgba(0,0,0,.25); display: grid; grid-template-rows: 0fr; border: 1px solid transparent; border-radius: 16px; background: var(--paper); opacity: 0; transition: grid-template-rows .45s cubic-bezier(.22,1,.36,1), opacity .3s ease, margin .45s ease, border-color .3s ease; }
 .set-menu > * { min-height: 0; overflow: hidden; }
 .set-menu-in { display: grid; gap: 2px; padding: 0 12px; transition: padding .45s cubic-bezier(.22,1,.36,1); }
 .rail-foot.open .set-menu { grid-template-rows: 1fr; opacity: 1; margin-bottom: 8px; border-color: var(--rule-strong); }
