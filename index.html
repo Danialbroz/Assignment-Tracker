@@ -1302,7 +1302,6 @@ function viewToday() {
     <p class="meta mono">${open.length} open · ${within48} due within 48h · ~${fmtH(weekHrs)} of work in the next 7 days${overdue.length ? ` · <span class="accent">${overdue.length} overdue</span>` : ''}</p>
   </header>
   ${welcome}
-  ${calendarHTML(now)}
   <div class="today-grid">
     <div>
       <section aria-labelledby="h-now">
