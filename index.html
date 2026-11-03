@@ -1496,7 +1496,18 @@ function viewProfile() {
       ${f('programme', 'Course name', 'e.g. Bachelor of IT')}
     </div>
     <p class="muted" style="margin:0;font-size:13px">Saved on this device as you type.</p>
-  </section>`;
+  </section>
+  <aside class="pf-side" aria-label="Your progress">
+    <h2 class="pf-h" style="margin-top:0">Overview</h2>
+    <div class="pf-stats">
+      ${[['Courses', S.courses.length], ['Assignments', all.length], ['Completed', done], ['Overdue', late]].map(([l, n]) => `<div class="pf-stat${l === 'Overdue' && n ? ' warn' : ''}"><b>${n}</b><span>${l}</span></div>`).join('')}
+    </div>
+    <h2 class="pf-h">Progress by course</h2>
+    <div class="pf-list">
+      ${S.courses.map(c => { const a = all.filter(x => x.courseId === c.id); const d = a.filter(isDone).length; const pct = a.length ? Math.round(d / a.length * 100) : 0;
+        return `<div class="pf-course"><i style="background:${h(c.color || 'var(--accent)')}"></i><div><b class="mono">${h(c.code)}</b><div class="pf-bar"><u style="width:${pct}%"></u></div></div><span class="mono muted">${d}/${a.length}</span></div>`; }).join('') || '<p class="muted" style="padding:14px 2px;margin:0">No courses yet.</p>'}
+    </div>
+  </aside>`;
 }
 
 /* ---------- SEARCH ---------- */
