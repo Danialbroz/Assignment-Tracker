@@ -657,6 +657,19 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .set-menu .link-btn:hover { color: var(--accent-ink); }
 /* Profile page */
 .profile { display: grid; gap: 18px; max-width: 520px; margin-top: 8px; }
+.pf-grid { display: grid; gap: 40px; align-items: start; margin-top: 8px; }
+.pf-grid .profile { margin-top: 0; width: 100%; }
+@media (min-width: 1000px) { .pf-grid { grid-template-columns: minmax(0, 520px) minmax(0, 520px); } }
+.pf-side { display: grid; gap: 14px; max-width: 520px; }
+.pf-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.pf-stat { display: grid; gap: 2px; padding: 16px 18px; border: 1px solid var(--glass-edge); border-radius: 18px; background: color-mix(in srgb, var(--paper) 70%, transparent); box-shadow: inset 0 1px 0 var(--glass-hi); }
+.pf-stat b { font: 600 30px var(--serif, var(--sans)); color: var(--ink); }
+.pf-stat span { font: 500 13px var(--sans); color: var(--muted); }
+.pf-stat.warn b { color: var(--accent-ink); }
+.pf-course { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 14px; padding: 14px 2px; border-bottom: 1px solid var(--rule); }
+.pf-course i { width: 10px; height: 10px; border-radius: 2px; }
+.pf-bar { height: 5px; margin-top: 7px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.pf-bar u { display: block; height: 100%; border-radius: 99px; background: var(--accent-btn); text-decoration: none; }
 .pf-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--glass-edge); border-radius: 20px; background: color-mix(in srgb, var(--paper) 70%, transparent); box-shadow: 0 8px 28px rgba(20,12,40,.12), inset 0 1px 0 var(--glass-hi); }
 .pf-avatar { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font: 600 24px var(--sans); background: var(--accent-btn); color: var(--on-accent); }
 .pf-avatar svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; }
