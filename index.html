@@ -918,7 +918,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e
 save();
 
 const ui = {
-  route: 'today', courseId: null, search: '', drawerId: null, weekOffset: 0,
+  route: 'today', courseId: null, search: '', drawerId: null, weekOffset: 0, calMonth: 0, calSel: null,
   sort: { key: 'dueAt', dir: 1 }, gPending: false, gTimer: null,
   quick: null, target: {}, importTab: 'text', importRows: null, toastTimer: null
 };
