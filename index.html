@@ -1634,7 +1634,7 @@ function viewProfile() {
     <button class="btn primary pf-edit" data-action="profile-edit">Edit my details</button>
   </section>
   <aside class="pf-side" aria-label="Your progress">
-    <h2 class="pf-h" style="margin-top:0">Overview</h2>
+    <h2 class="pf-h">Overview</h2>
     <div class="pf-stats">
       ${[['Courses', S.courses.length], ['Assignments', all.length], ['Completed', done], ['Overdue', late]].map(([l, n]) => `<div class="pf-stat${l === 'Overdue' && n ? ' warn' : ''}"><b>${n}</b><span>${l}</span></div>`).join('')}
     </div>
