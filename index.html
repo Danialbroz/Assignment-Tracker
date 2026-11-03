@@ -1299,7 +1299,7 @@ function viewToday() {
   <header class="page-head">
     <p class="eyebrow mono">${termName()} · Week ${Math.min(Math.max(wk, 1), semWeeks())} of ${semWeeks()}</p>
     <h1 class="display">${fmtLong(now)}</h1>
-    <p class="meta mono">${open.length} open · ${within48} due within 48h${overdue.length ? ` · <span class="accent">${overdue.length} overdue</span>` : ''}</p>
+    <p class="meta mono">${open.length} open · ${within48} due within 48h · ~${fmtH(weekHrs)} of work in the next 7 days${overdue.length ? ` · <span class="accent">${overdue.length} overdue</span>` : ''}</p>
   </header>
   ${welcome}
   <div class="today-grid">
