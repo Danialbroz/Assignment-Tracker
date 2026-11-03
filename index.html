@@ -738,6 +738,10 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .pf-row svg { width: 22px; height: 22px; fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pf-row input { min-width: 0; border: 0; background: none; padding: 4px 0; text-align: right; font: 500 15px var(--sans); color: var(--ink-2); outline-offset: 4px; }
 .pf-row input::placeholder { color: var(--muted); opacity: .6; }
+.pf-val { font: 500 15px var(--sans); color: var(--ink-2); text-align: right; overflow-wrap: anywhere; }
+.pf-val.empty { color: var(--muted); font-weight: 400; opacity: .7; }
+.pf-edit { margin-top: 18px; padding: 12px 26px; border-radius: 99px; box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 35%, transparent); }
+.pf-modal { margin-top: 14px !important; }
 .pf-row:focus-within { border-bottom-color: var(--accent); }
 /* Date + time picker */
 .dtp-scrim { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 14px; background: rgba(24,18,40,.35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: qFade .2s ease both; }
@@ -1597,6 +1601,7 @@ function updateCourseCalc() {
 }
 
 /* ---------- ARCHIVE ---------- */
+const PF = [['name', 'Name', 'e.g. Danial'], ['studentId', 'Student ID', 'e.g. 52213125123'], ['classGroup', 'Class', 'e.g. L01'], ['programme', 'Course name', 'e.g. Bachelor of IT']];
 function viewProfile() {
   const p = S.profile || {};
   const ic = {
@@ -1605,7 +1610,7 @@ function viewProfile() {
     classGroup: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 14.7c2.9-.3 5 1.4 5 4.3"/>',
     programme: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5"/>'
   };
-  const f = (key, label, ph) => `<label class="pf-row"><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ic[key]}</svg><span>${label}</span><input data-pfield="${key}" value="${h(p[key] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
+  const f = (key, label) => `<div class="pf-row"><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ic[key]}</svg><span>${label}</span><b class="pf-val${p[key] ? '' : ' empty'}">${h(p[key] || 'Not set')}</b></div>`;
   const ini = (p.name || '').trim().charAt(0).toUpperCase();
   const all = S.assignments, now = new Date(); const done = all.filter(isDone).length;
   const late = all.filter(a => !isDone(a) && new Date(a.dueAt) < now).length;
@@ -1622,12 +1627,9 @@ function viewProfile() {
     </div>
     <h2 class="pf-h">Details</h2>
     <div class="pf-list">
-      ${f('name', 'Name', 'e.g. Danial')}
-      ${f('studentId', 'Student ID', 'e.g. 52213125123')}
-      ${f('classGroup', 'Class', 'e.g. L01')}
-      ${f('programme', 'Course name', 'e.g. Bachelor of IT')}
+      ${PF.map(([k, l]) => f(k, l)).join('')}
     </div>
-    <p class="muted" style="margin:0;font-size:13px">Saved on this device as you type.</p>
+    <button class="btn primary pf-edit" data-action="profile-edit">Edit my details</button>
   </section>
   <aside class="pf-side" aria-label="Your progress">
     <h2 class="pf-h" style="margin-top:0">Overview</h2>
@@ -1772,6 +1774,27 @@ function openQuick(defaults = {}) {
   syncQuick();
   q.tabIndex = -1; q.focus({ preventScroll: true }); // no auto-focus on the title: the user taps it first
 }
+function openProfile() {
+  ui.quick = { profile: true, overrides: {} };
+  const q = $('#quick'), p = S.profile || {};
+  clearTimeout(ui.quickClear); q.classList.remove('saved');
+  q.innerHTML = `
+    <h2 class="quick-title">Your details</h2>
+    <p class="quick-tip" style="margin:0 0 4px">Shown on your profile. Stays on this device.</p>
+    <div class="chips pf-modal">
+      ${PF.map(([k, l, ph]) => `<label class="chip"${k === 'name' || k === 'programme' ? ' style="grid-column:1/-1"' : ''}><span>${l}</span><input type="text" data-pm="${k}" value="${h(p[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`).join('')}
+    </div>
+    <div class="quick-foot">
+      <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
+    </div>`;
+  q.classList.add('open'); $('#quick-scrim').classList.add('open');
+  q.querySelector('[data-pm="name"]').focus({ preventScroll: true });
+}
+function saveProfile() {
+  const pr = S.profile ||= {};
+  $$('[data-pm]').forEach(i => { pr[i.dataset.pm] = i.value.trim(); });
+  save(); closeQuick(); renderMain(); toast('Details saved.');
+}
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
   clearTimeout(ui.quickClear); ui.quickClear = setTimeout(() => { q.innerHTML = ''; q.classList.remove('saved'); }, 400); // let the exit animation finish
@@ -1779,6 +1802,7 @@ function closeQuick() {
 function askCancelQuick() {
   const q = $('#quick');
   if (!ui.quick || ui.quick.saving || q.querySelector('.q-confirm')) return;
+  if (ui.quick.profile) return closeQuick();
   // nothing typed or chosen yet: close without asking
   if (!$('#q-in').value.trim() && !Object.keys(ui.quick.overrides).length && !q.querySelector('[data-q="weight"]').value) return closeQuick();
   const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
@@ -1812,6 +1836,7 @@ function syncQuick() {
   $('[data-chip="due"]')?.classList.toggle('assumed', assumed && !o.due && !!text.trim());
 }
 function saveQuick() {
+  if (ui.quick?.profile) return saveProfile();
   const v = k => $(`[data-q="${k}"]`)?.value ?? '';
   const title = v('title').trim() || $('#q-in').value.trim();
   if (!title) { $('#q-in').focus(); return; }
@@ -2016,6 +2041,7 @@ document.addEventListener('click', e => {
       rows.forEach(r => S.assignments.push({ id: uid(), courseId: r.courseId, title: r.title.trim(), dueAt: fromInput(r.due).toISOString(), weightPct: num(r.weight, 0), estimateHrs: num(r.estimate, 3), status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() }));
       save(); $('#dlg-import').close(); renderRail(); renderMain(); toast(`Imported ${rows.length} ${rows.length === 1 ? 'item' : 'items'}.`); break;
     }
+    case 'profile-edit': openProfile(); break;
     case 'quick-save': saveQuick(); break;
     case 'quick-ask-cancel': askCancelQuick(); break;
     case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
