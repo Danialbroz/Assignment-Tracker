@@ -1089,7 +1089,7 @@ function renderRail() {
   const bar = $('#tabbar'); bar.querySelectorAll(':scope > :not(.lg-blob)').forEach(n => n.remove());
   bar.insertAdjacentHTML('beforeend', tabs.map(([k, l, tip]) => k === 'new'
     ? `<button class="tab-new" data-action="new" title="${tip}"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>${l}</span></button>`
-    : `<a href="#/${k}" title="${tip}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${TI[k]}</svg><span>${l}</span></a>`).join('');
+    : `<a href="#/${k}" title="${tip}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${TI[k]}</svg><span>${l}</span></a>`).join(''));
   $('#rail-dyn').innerHTML = `
     <nav class="rail-sec" aria-label="Views"><ul class="nav">
       ${nav.map(([k, l, s]) => `<li><a href="#/${k}" ${ui.route === k && !ui.search ? 'aria-current="page"' : ''}><span>${l}</span><span class="mono">${s}</span></a></li>`).join('')}
