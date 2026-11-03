@@ -1478,11 +1478,14 @@ function viewProfile() {
   };
   const f = (key, label, ph) => `<label class="pf-row"><svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ic[key]}</svg><span>${label}</span><input data-pfield="${key}" value="${h(p[key] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
   const ini = (p.name || '').trim().charAt(0).toUpperCase();
+  const all = S.assignments, now = new Date(); const done = all.filter(isDone).length;
+  const late = all.filter(a => !isDone(a) && new Date(a.dueAt) < now).length;
   return `
   <header class="page-head">
     <p class="eyebrow mono">${h(termName())}</p>
     <h1 class="display">Profile</h1>
   </header>
+  <div class="pf-grid">
   <section class="profile" aria-label="Your details">
     <div class="pf-card">
       <div class="pf-avatar" aria-hidden="true">${ini || '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>'}</div>
