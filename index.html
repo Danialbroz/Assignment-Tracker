@@ -1262,6 +1262,64 @@ function viewToday() {
   </div>`;
 }
 
+/* ---------- CALENDAR (Today page) ---------- */
+function calendarHTML(now) {
+  const base = new Date(now.getFullYear(), now.getMonth() + ui.calMonth, 1);
+  const start = startOfWeek(base);
+  const sel = ui.calSel ? fromDateInput(ui.calSel) : sod(now);
+  const byDay = {};
+  S.assignments.forEach(a => { (byDay[toDateInput(new Date(a.dueAt))] ||= []).push(a); });
+  const isLate = a => !isDone(a) && new Date(a.dueAt) < now;
+  const cells = Array.from({ length: 42 }, (_, i) => {
+    const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
+    const cls = [d.getMonth() !== base.getMonth() && 'out', +d === +sod(now) && 'today', +d === +sel && 'sel', items.some(isLate) && 'late', items.length && 'has'].filter(Boolean).join(' ');
+    return `<button class="cal-day ${cls}" data-action="cal-pick" data-date="${k}" aria-pressed="${+d === +sel}" aria-label="${fmtLong(d)}, ${items.length ? items.length + ' due' : 'nothing due'}">
+      <span class="cal-n">${d.getDate()}</span>
+      <span class="cal-items">${items.slice(0, 2).map(a => `<span class="cal-chip ${isDone(a) ? 'done' : ''} ${isLate(a) ? 'late' : ''}" style="--c:${col(course(a.courseId)?.colour)}">${h(a.title)}</span>`).join('')}${items.length > 2 ? `<span class="cal-more">+${items.length - 2} more</span>` : ''}</span>
+      <span class="cal-dots" aria-hidden="true">${items.slice(0, 3).map(a => `<i style="--c:${col(course(a.courseId)?.colour)}"></i>`).join('')}</span>
+    </button>`;
+  }).join('');
+  const list = (byDay[toDateInput(sel)] || []).sort(byDue);
+  const monthCount = S.assignments.filter(a => { const d = new Date(a.dueAt); return d.getMonth() === base.getMonth() && d.getFullYear() === base.getFullYear() && !isDone(a); }).length;
+  return `
+  <section class="cal" id="cal" aria-label="Calendar">
+    <div class="cal-main">
+      <div class="cal-head">
+        <h2 class="cal-title">${MO[base.getMonth()]} <span>${base.getFullYear()}</span></h2>
+        <span class="cal-sub mono">${monthCount} open due this month</span>
+        <div class="cal-nav">
+          <button class="cal-ic" data-action="cal-step" data-n="-1" aria-label="Previous month"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <button class="cal-today-btn" data-action="cal-now">Today</button>
+          <button class="cal-ic" data-action="cal-step" data-n="1" aria-label="Next month"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-dow" aria-hidden="true">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+    </div>
+    <aside class="cal-side" aria-live="polite">
+      <div class="cal-side-head">
+        <div><h3>${+sel === +sod(now) ? 'Due today' : 'Due'}</h3><p class="mono">${fmtLong(sel)} ${sel.getFullYear()}</p></div>
+        <button class="cal-ic" data-action="cal-add" aria-label="Add assignment due ${fmtLong(sel)}"><svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </div>
+      ${list.length ? list.map(a => {
+        const c = course(a.courseId), d = new Date(a.dueAt);
+        return `<button class="cal-card ${isDone(a) ? 'done' : ''} ${isLate(a) ? 'late' : ''}" style="--c:${col(c?.colour)}" data-action="open" data-id="${a.id}">
+          <span class="cal-card-bar"></span>
+          <b>${h(a.title)}</b>
+          <span class="cal-card-sub">${h(c?.code || '')}${c?.name ? ' · ' + h(c.name) : ''}</span>
+          <span class="cal-card-row"><span><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Due ${fmtTime(d)}</span><span class="${isLate(a) ? 'accent' : ''}">${isDone(a) ? h(a.status) : dueIn(d, now)}</span></span>
+          <span class="cal-card-row muted"><span>${a.weightPct ? fmtPct(a.weightPct) + ' of grade' : 'No mark set'}</span><span>${isDone(a) ? '' : '~' + fmtH(remainingHrs(a)) + ' left'}</span></span>
+        </button>`;
+      }).join('') : `<p class="cal-empty">Nothing due this day.</p>`}
+    </aside>
+  </section>`;
+}
+function renderCal(focusDate) {
+  const el = $('#cal'); if (!el) return;
+  el.outerHTML = calendarHTML(new Date());
+  if (focusDate) $(`.cal-day[data-date="${focusDate}"]`)?.focus();
+}
+
 /* ---------- WEEK ---------- */
 function viewWeek() {
   const now = new Date();
