@@ -721,7 +721,7 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .lg-blob {
   --x: 0px; --sx: 1; --sy: 1;
   position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 999px; pointer-events: none; z-index: 0; opacity: 0;
-  transform: translate3d(var(--x), 0, 0) scale(var(--sx), var(--sy));
+  transform: translate3d(var(--x), 0, 0);
   /* Spotlight: a lamp on the bar's top edge (::after) shining a purple cone (::before) down onto the icon */
   background: none; border: 0; box-shadow: none;
   transition: transform .9s cubic-bezier(.45,.05,.2,1), width .9s cubic-bezier(.45,.05,.2,1), opacity .4s ease;
