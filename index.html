@@ -267,6 +267,24 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .week-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .week-tools label { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; color: var(--ink-2); font-size: 13px; }
 .week-tools input[type="number"] { width: 58px; }
+/* Timetable: one row per day, 30-minute columns; overlapping classes stack via grid auto-placement */
+.tt-wrap { overflow-x: auto; margin-top: 8px; border: 1px solid var(--rule); border-radius: 16px; background: color-mix(in srgb, var(--paper) 55%, transparent); }
+.tt { min-width: 880px; }
+.tt-row { display: grid; grid-template-columns: 64px minmax(0, 1fr); border-bottom: 1px solid var(--rule); }
+.tt-row:last-child { border-bottom: 0; }
+.tt-dl { padding: 12px 14px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--rule); }
+.tt-row.is-today .tt-dl { color: var(--accent-ink); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent); }
+.tt-hours { display: grid; grid-template-columns: repeat(calc(var(--slots) / 2), minmax(0, 1fr)); }
+.tt-hours span { padding: 10px 6px; font-size: 11px; color: var(--muted); border-left: 1px solid var(--rule); }
+.tt-lane { display: grid; grid-template-columns: repeat(var(--slots), minmax(0, 1fr)); grid-auto-rows: minmax(88px, auto); row-gap: 6px; padding: 6px 0; min-height: 100px;
+  background-image: repeating-linear-gradient(to right, var(--rule) 0 1px, transparent 1px calc(200% / var(--slots))); }
+.tt-cls { display: grid; align-content: start; gap: 2px; margin: 0 3px; padding: 8px 10px; border: 0; border-radius: 10px; text-align: left; cursor: pointer; overflow: hidden;
+  background: var(--c); color: #fff; font: 500 12px/1.35 var(--sans); box-shadow: 0 4px 14px color-mix(in srgb, var(--c) 30%, transparent); transition: transform .2s ease, box-shadow .2s ease; }
+.tt-cls:hover, .tt-cls:focus-visible { transform: translateY(-2px); box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 45%, transparent); }
+.tt-cls b { font: 600 12.5px var(--mono); }
+.tt-cls em { font-style: normal; opacity: .85; }
+.tt-cls span { opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (prefers-reduced-motion: reduce) { .tt-cls { transition: none; } .tt-cls:hover { transform: none; } }
 .strip-wrap { margin-bottom: 4px; }
 .strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); height: 120px; position: relative; border-bottom: 1px solid var(--ink); }
 .strip-col { position: relative; display: flex; align-items: flex-end; justify-content: center; border-right: 1px solid var(--rule); }
