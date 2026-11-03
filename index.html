@@ -1523,7 +1523,7 @@ function viewProfile() {
       ${S.courses.map(c => { const a = all.filter(x => x.courseId === c.id); const d = a.filter(isDone).length; const pct = a.length ? Math.round(d / a.length * 100) : 0;
         return `<div class="pf-course"><i style="background:${h(c.color || 'var(--accent)')}"></i><div><b class="mono">${h(c.code)}</b><div class="pf-bar"><u style="width:${pct}%"></u></div></div><span class="mono muted">${d}/${a.length}</span></div>`; }).join('') || '<p class="muted" style="padding:14px 2px;margin:0">No courses yet.</p>'}
     </div>
-  </aside>`;
+  </aside></div>`;
 }
 
 /* ---------- SEARCH ---------- */
