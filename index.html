@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Ledger">
 <title>Ledger</title>
 <link rel="icon" type="image/svg+xml" href="logo.svg">
-<link rel="apple-touch-icon" href="logo.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
@@ -641,8 +641,17 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .set-btn:hover { color: var(--ink); }
 .set-btn svg { width: 20px; height: 20px; stroke-width: 1.6; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
 .rail-foot.open .set-btn svg { transform: rotate(120deg); }
-.set-menu { display: grid; gap: 2px; margin-bottom: 6px; max-height: 0; overflow: hidden; opacity: 0; transform: translateY(6px); transition: max-height .3s ease, opacity .2s ease, transform .3s ease; }
-.rail-foot.open .set-menu { max-height: 260px; opacity: 1; transform: none; }
+/* Everything lives inside one card that unfolds smoothly */
+.set-menu { display: grid; grid-template-rows: 0fr; margin-bottom: 0; border: 1px solid transparent; border-radius: 16px; background: color-mix(in srgb, var(--paper) 70%, transparent); opacity: 0; transition: grid-template-rows .45s cubic-bezier(.22,1,.36,1), opacity .3s ease, margin .45s ease, border-color .3s ease; }
+.set-menu > * { min-height: 0; overflow: hidden; }
+.set-menu-in { display: grid; gap: 2px; padding: 0 12px; transition: padding .45s cubic-bezier(.22,1,.36,1); }
+.rail-foot.open .set-menu { grid-template-rows: 1fr; opacity: 1; margin-bottom: 8px; border-color: var(--rule-strong); }
+.rail-foot.open .set-menu-in { padding: 10px 12px; }
+.theme-sw { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 6px 0 4px; padding: 3px; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); cursor: pointer; font: 600 12.5px var(--sans); color: var(--muted); }
+.ts-opt { position: relative; z-index: 1; padding: 7px 0; text-align: center; transition: color .3s; }
+.ts-thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 999px; background: var(--accent-btn); box-shadow: 0 3px 10px color-mix(in srgb, var(--accent-btn) 45%, transparent); transition: transform .5s cubic-bezier(.34,1.35,.64,1); }
+.theme-sw[aria-checked="true"] .ts-thumb { transform: translateX(100%); }
+.theme-sw[aria-checked="false"] .ts-opt:nth-of-type(2), .theme-sw[aria-checked="true"] .ts-opt:nth-of-type(3) { color: var(--on-accent); }
 .set-menu .link-btn { text-align: left; padding: 6px 2px; font-size: 13.5px; color: var(--ink-2); text-decoration: none; }
 .set-menu .link-btn:hover { color: var(--accent-ink); }
 /* Profile page */
@@ -1080,13 +1089,13 @@ function renderRail() {
       : `<p class="muted" style="margin:0;font-size:13px">No reminders.</p>`}
     </section>
     <section class="rail-sec rail-foot ${ui.settingsOpen ? 'open' : ''}" aria-label="Settings">
-      <div class="set-menu" id="set-menu" ${ui.settingsOpen ? '' : 'inert'}>
+      <div class="set-menu" id="set-menu" ${ui.settingsOpen ? '' : 'inert'}><div class="set-menu-in">
         <button class="link-btn" data-action="import">Import syllabus / .ics</button>
         <button class="link-btn" data-action="export">Export JSON</button>
         <button class="link-btn" data-action="import-json">Import JSON</button>
-        <button class="link-btn" data-action="theme">${S.settings.theme === 'dark' ? 'Light theme' : 'Dark theme'}</button>
+        <button class="theme-sw" data-action="theme" role="switch" aria-checked="${S.settings.theme === 'dark'}" aria-label="Dark theme"><span class="ts-thumb"></span><span class="ts-opt">Light</span><span class="ts-opt">Dark</span></button>
         <button class="link-btn" data-action="keys">Shortcuts <kbd>?</kbd></button>
-      </div>
+      </div></div>
       <button class="set-btn" data-action="settings" aria-expanded="${!!ui.settingsOpen}" aria-controls="set-menu">
         <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
         <span>Settings</span>
@@ -1782,7 +1791,8 @@ function setRoute() {
 }
 let prevRoute = null;
 function setTheme(t) {
-  S.settings.theme = t; document.documentElement.setAttribute('data-theme', t); save(); renderRail();
+  S.settings.theme = t; document.documentElement.setAttribute('data-theme', t); save();
+  const sw = $(".theme-sw"); if (sw) sw.setAttribute("aria-checked", t === "dark"); // update in place so the thumb slides
 }
 function openKeys() {
   $('#dlg-keys').innerHTML = `
