@@ -594,12 +594,9 @@ body {
 .tab-new:active { transform: scale(.95); }
 /* Liquid bubble that slides under the active/hovered tab */
 /* Desktop only: phones keep the original per-tab glass pill */
-.lg-blob { display: none; }
-@media (min-width: 761px) {
-  .lg-blob { display: block; }
-  .tabbar a, .tab-new { position: relative; z-index: 1; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .tabbar a:hover, .tabbar a[aria-current="page"] { background: transparent; border-color: transparent; box-shadow: none; }
-}
+.tabbar a, .tab-new { position: relative; z-index: 1; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.tabbar a[aria-current="page"] { background: transparent; border-color: transparent; box-shadow: none; }
+@media (hover: hover) { .tabbar a:hover { background: transparent; border-color: transparent; box-shadow: none; } }
 /* Clearer, more see-through bar */
 .tabbar {
   background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.1));
