@@ -2218,7 +2218,7 @@ setRoute();
     const w = el.offsetWidth;
     const id = el.getAttribute('href'); // tabs are re-rendered, so compare by href
     if (!firstPlace && id !== lit) { // new tab: swing the beam in the direction of travel
-      blob.style.setProperty('--dir', (el.offsetLeft > blob.offsetLeft + (parseFloat(blob.style.getPropertyValue('--x')) || 0) ? 25 : -25) + 'deg');
+      blob.style.setProperty('--dir', (el.offsetLeft > (parseFloat(blob.style.getPropertyValue('--x')) || 0) ? 18 : -18) + 'deg');
       blob.classList.remove('swing'); void blob.offsetWidth; blob.classList.add('swing');
     }
     lit = id;
