@@ -713,8 +713,9 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) { .cal-card { animation: none; } .cal-day, .cal-card { transition: none; } }
 /* Profile page */
-.profile { display: grid; gap: 18px; max-width: 520px; margin-top: 8px; }
-.pf-grid { display: grid; gap: 40px; align-items: start; margin-top: 8px; }
+.profile { display: grid; gap: 16px; align-content: start; max-width: 520px; margin-top: 8px; }
+.pf-grid { display: grid; gap: 24px 40px; align-items: start; margin-top: 8px; }
+.pf-grid > .pf-card { grid-column: 1 / -1; }
 .pf-grid .profile { margin-top: 0; width: 100%; }
 @media (min-width: 1000px) { .pf-grid { grid-template-columns: minmax(0, 520px) minmax(0, 520px); } }
 .pf-side { display: grid; gap: 14px; max-width: 520px; }
