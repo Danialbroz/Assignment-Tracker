@@ -2222,10 +2222,10 @@ setRoute();
       blob.classList.remove('swing'); void blob.offsetWidth; blob.classList.add('swing');
     }
     lit = id;
-    blob.style.width = w + 'px'; blob.style.height = el.offsetHeight + 'px';
-    blob.style.top = el.offsetTop + 'px';
+    blob.style.width = w + 'px'; blob.style.height = bar.clientHeight + 'px'; // full bar height: lamp sits on the top edge
+    blob.style.top = '0px';
     blob.style.setProperty('--x', (el.offsetLeft + pull) + 'px');
-    blob.style.setProperty('--sx', pressed ? 1.14 : 1); blob.style.setProperty('--sy', pressed ? 1.1 : 1);
+    blob.style.setProperty('--sx', 1); blob.style.setProperty('--sy', 1); // no squish: it would stretch the beam
     if (firstPlace) { blob.classList.add('snap'); requestAnimationFrame(() => requestAnimationFrame(() => blob.classList.remove('snap'))); firstPlace = false; }
     blob.classList.add('on');
   }
