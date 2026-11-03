@@ -1855,6 +1855,7 @@ function syncQuick() {
 }
 function saveQuick() {
   if (ui.quick?.profile) return saveProfile();
+  if (ui.quick?.cls) return saveClass();
   const v = k => $(`[data-q="${k}"]`)?.value ?? '';
   const title = v('title').trim() || $('#q-in').value.trim();
   if (!title) { $('#q-in').focus(); return; }
