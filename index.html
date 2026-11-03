@@ -2109,7 +2109,7 @@ document.addEventListener('change', e => {
       const d = JSON.parse(txt);
       if (!d || !Array.isArray(d.courses) || !Array.isArray(d.assignments) || !d.settings) throw new Error('shape');
       if (!confirm(`Replace your current data with ${d.courses.length} courses and ${d.assignments.length} assignments from ${f.name}?`)) return;
-      d.archive = d.archive || []; S = d; save(); setTheme(S.settings.theme || 'light'); ui.drawerId = null; renderDrawer(); go('today'); renderRail(); renderMain();
+      d.archive = d.archive || []; d.timetable = Array.isArray(d.timetable) ? d.timetable : []; S = d; save(); setTheme(S.settings.theme || 'light'); ui.drawerId = null; renderDrawer(); go('today'); renderRail(); renderMain();
       toast('Data imported.');
     }).catch(() => toast('That file is not a Ledger export.')).finally(() => { t.value = ''; });
     return;
