@@ -1388,61 +1388,44 @@ function renderCal(focusDate) {
 }
 
 /* ---------- WEEK ---------- */
+const TT_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const TT_TYPES = { L: 'Lecture', T: 'Tutorial', B: 'Lab', W: 'Workshop' };
+const toMin = s => { const [a, b] = String(s || '0:0').split(':').map(Number); return (a || 0) * 60 + (b || 0); };
 function viewWeek() {
-  const now = new Date();
-  const ws = addDays(startOfWeek(now), ui.weekOffset * 7);
-  const cap = +S.settings.dailyCapacityHrs || 4;
-  const days = Array.from({ length: 7 }, (_, i) => dayLoad(addDays(ws, i)));
-  const max = Math.max(cap * 1.6, ...days.map(d => d.load), 1);
-  const total = days.reduce((s, d) => s + d.load, 0);
-  const sg = weekSuggestion(days, cap, now);
-  const label = ui.weekOffset === 0 ? 'This week' : ui.weekOffset === 1 ? 'Next week' : ui.weekOffset === -1 ? 'Last week' : `Week ${weekOfSem(ws)}`;
-  let sgHTML = '';
-  if (sg) {
-    const dn = WD[sg.from.date.getDay()];
-    sgHTML = sg.a
-      ? `<div class="suggest" role="status"><p>${dn} is ${fmtH(sg.over)} over. Move <strong>${h(sg.a.title)}</strong> to ${WDS[sg.to.date.getDay()]}?</p>
-         <button class="btn small" data-action="apply-move" data-id="${sg.a.id}" data-to="${+sg.to.date}">Apply</button></div>`
-      : `<div class="suggest" role="status"><p>${dn} is ${fmtH(sg.over)} over, and no earlier day this week has room. Consider starting sooner.</p></div>`;
-  }
+  const tt = S.timetable || [];
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  // hour range grows to fit the classes; 08:00-18:00 when empty
+  const lo = Math.min(8, ...tt.map(x => Math.floor(toMin(x.start) / 60)));
+  const hi = Math.max(18, ...tt.map(x => Math.ceil(toMin(x.end) / 60)));
+  const slots = (hi - lo) * 2; // 30-minute columns
+  const colOf = m => Math.round((m - lo * 60) / 30) + 1;
+  const days = TT_DAYS.map((_, i) => i).filter(i => i < 5 || tt.some(x => +x.day === i)); // weekend only if used
+  const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
   return `
   <header class="page-head">
     <div class="head-row">
       <div>
-        <p class="eyebrow mono">${label} · W${weekOfSem(ws)} of ${semWeeks()} · ~${fmtH(total)} planned</p>
-        <h1 class="display">${fmtDM(ws)} – ${fmtDM(addDays(ws, 6))}</h1>
+        <p class="eyebrow mono">${h(termName())} · ${tt.length} ${tt.length === 1 ? 'class' : 'classes'} a week</p>
+        <h1 class="display">Timetable</h1>
       </div>
-      <div class="week-tools">
-        <button class="btn quiet small" data-action="week-prev" aria-label="Previous week">${icon('left')}Prev</button>
-        <button class="btn quiet small" data-action="week-now" ${ui.weekOffset === 0 ? 'disabled' : ''}>This week</button>
-        <button class="btn quiet small" data-action="week-next" aria-label="Next week">Next${icon('right')}</button>
-        <label for="cap">Daily capacity <input type="number" id="cap" min="0.5" max="16" step="0.5" value="${cap}"> h</label>
-      </div>
+      <div class="week-tools"><button class="btn primary small" data-action="tt-add">+ Add class</button></div>
     </div>
   </header>
-  <div class="strip-wrap" role="img" aria-label="Estimated hours per day against a ${cap} hour capacity: ${days.map(d => `${WD[d.date.getDay()]} ${fmtH(d.load)}`).join(', ')}">
-    <div class="strip">
-      ${days.map(d => `<div class="strip-col"><div class="strip-bar ${d.load > cap ? 'over' : ''}" style="height:${(d.load / max * 100).toFixed(1)}%"></div></div>`).join('')}
-      <div class="cap-line" style="bottom:${(cap / max * 100).toFixed(1)}%"><span>${cap}h capacity</span></div>
-    </div>
-    <div class="strip-labels">${days.map(d => `<div class="${d.load > cap ? 'over' : ''}">${d.load ? fmtH(d.load) : '–'}</div>`).join('')}</div>
-  </div>
-  ${sgHTML || '<div style="height:22px"></div>'}
-  <div class="week-cols">
-    ${days.map(d => {
-      const isT = sameDay(d.date, now); const past = d.date < sod(now);
-      const items = d.items.slice().sort(byDue);
-      return `<div class="w-col ${isT ? 'is-today' : ''} ${past ? 'past' : ''}" data-drop="${+d.date}" aria-label="${fmtLong(d.date)}">
-        <div class="w-head"><span class="wd">${isT ? 'Today' : WDS[d.date.getDay()]}</span><span class="d">${d.date.getDate()}</span></div>
-        ${items.length ? items.map(a => {
-          const c = course(a.courseId); const dt = new Date(a.dueAt); const late = !isDone(a) && dt < now;
-          return `<div class="w-entry ${isDone(a) ? 'done' : ''} ${late ? 'overdue' : ''}" draggable="true" data-row data-id="${a.id}" tabindex="0" style="--c:${col(c?.colour)}" aria-label="${h(c?.code || '')} ${h(a.title)}, due ${fmtTime(dt)}">
-            <span class="mono">${fmtTime(dt)} · ${h(c?.code || '')}</span><span class="t">${h(a.title)}</span></div>`;
-        }).join('') : `<div class="w-empty">—</div>`}
-      </div>`;
-    }).join('')}
-  </div>
-  <p class="mono muted" style="margin-top:12px">Drag an entry to another day to change its due date. Time of day is kept.</p>`;
+  <div class="tt-wrap"><div class="tt" style="--slots:${slots}">
+    <div class="tt-row tt-headrow"><div class="tt-dl"></div><div class="tt-hours">${hours.map(x => `<span class="mono">${pad(x)}:00</span>`).join('')}</div></div>
+    ${days.map(d => `<div class="tt-row${d === todayIdx ? ' is-today' : ''}">
+      <div class="tt-dl mono">${TT_DAYS[d]}</div>
+      <div class="tt-lane" data-day="${d}">${tt.filter(x => +x.day === d).sort((a, b) => toMin(a.start) - toMin(b.start)).map(x => {
+        const c = course(x.courseId);
+        return `<button class="tt-cls" data-action="tt-edit" data-id="${h(x.id)}" style="--c:${col(c?.colour)};grid-column:${colOf(toMin(x.start))} / ${colOf(toMin(x.end))}">
+          <b>${h(c?.code || '?')} <em>(${h(x.type || 'L')})</em></b>
+          <span>${h(x.start)}–${h(x.end)}</span>
+          ${x.room ? `<span>Room: ${h(x.room)}</span>` : ''}${x.group ? `<span>Group: ${h(x.group)}</span>` : ''}${x.lecturer ? `<span>${h(x.lecturer)}</span>` : ''}
+        </button>`; }).join('')}</div>
+    </div>`).join('')}
+  </div></div>
+  <p class="mono muted" style="margin-top:12px">${Object.entries(TT_TYPES).map(([k, v]) => `${k} = ${v}`).join(', ')}. Tap a class to edit it. Colours come from each course.</p>
+  ${tt.length ? '' : `<p class="empty">No classes yet. Add them from your university timetable with <button class="link-btn" data-action="tt-add">+ Add class</button>.</p>`}`;
 }
 
 /* ---------- SEMESTER ---------- */
@@ -1796,6 +1779,39 @@ function saveProfile() {
   const pr = S.profile ||= {};
   $$('[data-pm]').forEach(i => { pr[i.dataset.pm] = i.value.trim(); });
   save(); closeQuick(); renderMain(); toast('Details saved.');
+}
+function openClass(id) {
+  const x = S.timetable.find(k => k.id === id) || { courseId: S.courses[0]?.id, type: 'L', day: (new Date().getDay() + 6) % 7, start: '08:30', end: '10:30' };
+  ui.quick = { cls: id || 'new', overrides: {} };
+  const q = $('#quick'); clearTimeout(ui.quickClear); q.classList.remove('saved');
+  const opt = (pairs, v) => pairs.map(([k, l]) => `<option value="${h(k)}" ${String(k) === String(v) ? 'selected' : ''}>${h(l)}</option>`).join('');
+  const txt = (k, l, ph) => `<label class="chip"><span>${l}</span><input type="text" data-tt="${k}" value="${h(x[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
+  q.innerHTML = `
+    <h2 class="quick-title">${id ? 'Edit class' : 'New class'}</h2>
+    <div class="chips pf-modal">
+      <label class="chip"><span>Course</span><select data-tt="courseId">${opt(S.courses.map(c => [c.id, c.code]), x.courseId)}</select></label>
+      <label class="chip"><span>Type</span><select data-tt="type">${opt(Object.entries(TT_TYPES), x.type)}</select></label>
+      <label class="chip" style="grid-column:1/-1"><span>Day</span><select data-tt="day">${opt(TT_DAYS.map((d, i) => [i, d]), x.day)}</select></label>
+      <label class="chip"><span>Starts</span><input type="time" data-tt="start" value="${h(x.start)}" step="300"></label>
+      <label class="chip"><span>Ends</span><input type="time" data-tt="end" value="${h(x.end)}" step="300"></label>
+      ${txt('room', 'Room', 'e.g. 1-608')}${txt('group', 'Group', 'e.g. L01-B02')}
+      <label class="chip" style="grid-column:1/-1"><span>Lecturer</span><input type="text" data-tt="lecturer" value="${h(x.lecturer || '')}" placeholder="e.g. SHADIL" autocomplete="off"></label>
+    </div>
+    <div class="quick-foot">
+      ${id ? '<button class="btn quiet small" data-action="tt-delete">Delete</button>' : ''}
+      <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
+    </div>`;
+  q.classList.add('open'); $('#quick-scrim').classList.add('open');
+  q.tabIndex = -1; q.focus({ preventScroll: true });
+}
+function saveClass() {
+  const v = {}; $$('[data-tt]').forEach(i => { v[i.dataset.tt] = i.value.trim(); });
+  if (!v.courseId) { toast('Add a course first.'); return; }
+  if (!v.start || !v.end || toMin(v.end) <= toMin(v.start)) { toast('End time must be after start time.'); $('[data-tt="end"]').focus(); return; }
+  v.day = +v.day;
+  const old = S.timetable.find(k => k.id === ui.quick.cls);
+  if (old) Object.assign(old, v); else S.timetable.push({ id: uid(), ...v });
+  save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
 }
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
