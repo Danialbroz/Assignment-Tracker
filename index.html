@@ -1960,6 +1960,14 @@ document.addEventListener('click', e => {
     case 'quick-ask-cancel': askCancelQuick(); break;
     case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
     case 'quick-cancel': closeQuick(); break;
+    case 'cal-step': ui.calMonth += +t.dataset.n; renderCal(); break;
+    case 'cal-now': ui.calMonth = 0; ui.calSel = null; renderCal(); break;
+    case 'cal-pick': {
+      const d = fromDateInput(t.dataset.date), now = new Date();
+      ui.calSel = t.dataset.date; ui.calMonth = (d.getFullYear() - now.getFullYear()) * 12 + d.getMonth() - now.getMonth();
+      renderCal(t.dataset.date); break;
+    }
+    case 'cal-add': { const d = ui.calSel ? fromDateInput(ui.calSel) : new Date(); d.setHours(23, 59, 0, 0); closeDrawer(); openQuick({ due: d }); break; }
     case 'week-prev': ui.weekOffset--; renderMain(); break;
     case 'week-next': ui.weekOffset++; renderMain(); break;
     case 'week-now': ui.weekOffset = 0; renderMain(); break;
