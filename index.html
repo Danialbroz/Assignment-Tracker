@@ -718,9 +718,9 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .pf-grid > .pf-card { grid-column: 1 / -1; }
 .pf-grid .profile { margin-top: 0; width: 100%; }
 @media (min-width: 1000px) { .pf-grid { grid-template-columns: minmax(0, 520px) minmax(0, 520px); } }
-.pf-side { display: grid; gap: 14px; max-width: 520px; }
-.pf-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.pf-stat { display: grid; gap: 2px; padding: 16px 18px; border: 1px solid var(--glass-edge); border-radius: 18px; background: color-mix(in srgb, var(--paper) 70%, transparent); box-shadow: inset 0 1px 0 var(--glass-hi); }
+.pf-side { display: grid; gap: 16px; align-content: start; max-width: 520px; }
+.pf-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.pf-stat { display: grid; gap: 2px; padding: 16px 20px; border: 1px solid var(--glass-edge); border-radius: 20px; background: color-mix(in srgb, var(--paper) 70%, transparent); box-shadow: inset 0 1px 0 var(--glass-hi); }
 .pf-stat b { font: 600 30px var(--serif, var(--sans)); color: var(--ink); }
 .pf-stat span { font: 500 13px var(--sans); color: var(--muted); }
 .pf-stat.warn b { color: var(--accent-ink); }
