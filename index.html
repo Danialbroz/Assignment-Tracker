@@ -1148,7 +1148,7 @@ function renderRail() {
     semester: '<path d="M4 7h10M4 12h16M4 17h8"/>',
     profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>'
   };
-  const tabs = [['today', 'Today', 'What to do now'], ['week', 'Week', 'Plan your week'], ['new', 'Add', 'Add an assignment'], ['semester', 'Term', 'Whole semester'], ['profile', 'Profile', 'Your details']];
+  const tabs = [['today', 'Today', 'What to do now'], ['week', 'Timetable', 'Your class timetable'], ['new', 'Add', 'Add an assignment'], ['semester', 'Term', 'Whole semester'], ['profile', 'Profile', 'Your details']];
   // keep the spotlight element in the bar: detaching it kills its slide transition (desktop teleport)
   const bar = $('#tabbar'); bar.querySelectorAll(':scope > :not(.lg-blob)').forEach(n => n.remove());
   bar.insertAdjacentHTML('beforeend', tabs.map(([k, l, tip]) => k === 'new'
