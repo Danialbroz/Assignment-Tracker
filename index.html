@@ -722,25 +722,27 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
   --x: 0px; --sx: 1; --sy: 1;
   position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 999px; pointer-events: none; z-index: 0; opacity: 0;
   transform: translate3d(var(--x), 0, 0) scale(var(--sx), var(--sy));
-  background:
-    radial-gradient(90% 70% at 30% 8%, rgba(255,255,255,.95), rgba(255,255,255,0) 60%),
-    radial-gradient(80% 60% at 75% 100%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 70%),
-    var(--glass-hi);
+  /* Spotlight: soft pool of light under the icon; ::before is the beam that swings on arrival */
+  background: radial-gradient(70% 90% at 50% 100%, color-mix(in srgb, var(--accent) 38%, transparent), transparent 75%), var(--glass-hi);
   border: 1px solid var(--glass-edge);
-  box-shadow: inset 0 1px 1px rgba(255,255,255,.95), inset 0 -8px 14px rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.12), 0 8px 22px rgba(27,27,24,.2);
-  -webkit-backdrop-filter: blur(4px) saturate(220%) brightness(1.1); backdrop-filter: blur(4px) saturate(220%) brightness(1.1);
-  transition: transform .5s cubic-bezier(.34,1.56,.64,1), width .5s cubic-bezier(.34,1.56,.64,1), height .3s ease, opacity .25s ease;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.9), 0 0 22px color-mix(in srgb, var(--accent) 45%, transparent);
+  transition: transform .55s cubic-bezier(.3,1.2,.5,1), width .55s cubic-bezier(.3,1.2,.5,1), height .3s ease, opacity .25s ease;
   will-change: transform, width;
 }
+.lg-blob::before {
+  content: ""; position: absolute; left: 50%; bottom: 70%; width: 150%; height: 260%; margin-left: -75%;
+  background: conic-gradient(from 165deg at 50% 100%, transparent 0deg, color-mix(in srgb, var(--accent) 35%, transparent) 15deg, transparent 30deg);
+  transform-origin: 50% 100%; opacity: 0; pointer-events: none; border-radius: 0;
+}
+.lg-blob.swing::before { animation: spotSwing .9s ease-out; }
+@keyframes spotSwing { 0% { opacity: 1; transform: rotate(var(--dir, 25deg)); } 35% { opacity: 1; transform: rotate(calc(var(--dir, 25deg) * -.55)); } 65% { opacity: .7; transform: rotate(calc(var(--dir, 25deg) * .25)); } 100% { opacity: 0; transform: rotate(0); } }
 .lg-blob.on { opacity: 1; }
 .lg-blob.snap { transition: none; }
-[data-theme="dark"] .lg-blob { box-shadow: inset 0 1px 1px rgba(255,255,255,.4), inset 0 -8px 14px rgba(255,255,255,.08), 0 8px 22px rgba(0,0,0,.5); }
-/* Phones: a plain, flat bubble with no gradients that glides to the new tab */
-@media (max-width: 760px) {
-  .lg-blob { background: var(--glass-hi); border: 1px solid var(--glass-edge); box-shadow: 0 2px 8px rgba(27,27,24,.14); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  [data-theme="dark"] .lg-blob { box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-}
-@media (prefers-reduced-motion: reduce) { .lg-blob { transition: opacity .2s; } }
+/* Icon + label light up once the spotlight lands */
+.tabbar a svg.i, .tabbar a span { transition: filter .35s ease .15s, color .35s ease .15s; }
+.tabbar a[aria-current="page"] svg.i { filter: drop-shadow(0 0 5px var(--accent)); }
+[data-theme="dark"] .lg-blob { box-shadow: inset 0 1px 1px rgba(255,255,255,.35), 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent); }
+@media (prefers-reduced-motion: reduce) { .lg-blob { transition: opacity .2s; } .lg-blob.swing::before { animation: none; } }
 .nav { display: none; } /* the glass bar replaces the sidebar view list */
 .rail-sec:has(> .nav) { display: none; }
 main { padding-bottom: 130px; }
