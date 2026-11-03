@@ -274,7 +274,7 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .tt-row:last-child { border-bottom: 0; }
 .tt-dl { padding: 12px 14px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--rule); }
 .tt-row.is-today .tt-dl { color: var(--accent-ink); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent); }
-.tt-hours { display: grid; grid-template-columns: repeat(calc(var(--slots) / 2), minmax(0, 1fr)); }
+.tt-hours { display: grid; grid-template-columns: repeat(var(--hrs), minmax(0, 1fr)); }
 .tt-hours span { padding: 10px 6px; font-size: 11px; color: var(--muted); border-left: 1px solid var(--rule); }
 .tt-lane { display: grid; grid-template-columns: repeat(var(--slots), minmax(0, 1fr)); grid-auto-rows: minmax(88px, auto); row-gap: 6px; padding: 6px 0; min-height: 100px;
   background-image: repeating-linear-gradient(to right, var(--rule) 0 1px, transparent 1px calc(200% / var(--slots))); }
@@ -1429,7 +1429,7 @@ function viewWeek() {
       <div class="week-tools"><button class="btn primary small" data-action="tt-add">+ Add class</button></div>
     </div>
   </header>
-  <div class="tt-wrap"><div class="tt" style="--slots:${slots}">
+  <div class="tt-wrap"><div class="tt" style="--slots:${slots};--hrs:${hi - lo}">
     <div class="tt-row tt-headrow"><div class="tt-dl"></div><div class="tt-hours">${hours.map(x => `<span class="mono">${pad(x)}:00</span>`).join('')}</div></div>
     ${days.map(d => `<div class="tt-row${d === todayIdx ? ' is-today' : ''}">
       <div class="tt-dl mono">${TT_DAYS[d]}</div>
