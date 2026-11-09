@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F4F1EA">
 <meta name="mobile-web-app-capable" content="yes">
@@ -453,6 +453,16 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .q-confirm h3 { margin: 0 0 8px; font: 500 30px var(--serif); } .q-confirm p { margin: 0 0 22px; font-size: 18px; color: var(--muted); }
 .q-confirm .btn { font-size: 16px; padding: 12px 22px; }
 .q-confirm .acts { display: flex; gap: 8px; justify-content: center; }
+.q-confirm.fx { position: fixed; z-index: 90; border-radius: 0; }
+.q-confirm.fx h3 { font-size: 26px; } .q-confirm.fx p { font-size: 16px; }
+.cal-pop { display: none; }
+@media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  .cal-pop { position: fixed; inset: 0; z-index: 45; display: grid; align-items: end; background: rgba(10,8,20,.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s .4s; }
+  .cal-pop.open { opacity: 1; visibility: visible; transition: opacity .25s ease; }
+  .cal-pop-sheet { display: flex; flex-direction: column; gap: 12px; max-height: 78vh; overflow-y: auto; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); background: var(--paper); border: 1px solid var(--glass-edge); border-bottom: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -18px 50px rgba(20,12,40,.35); transform: translateY(100%); transition: transform .5s cubic-bezier(.22,1,.36,1); overscroll-behavior: contain; }
+  .cal-pop.open .cal-pop-sheet { transform: none; }
+  .cal-pop-grab { width: 40px; height: 5px; border-radius: 99px; background: var(--rule-strong); margin: -6px auto 2px; flex: none; }
+}
 @keyframes qFade { from { opacity: 0; } } @keyframes qPop { from { opacity: 0; transform: scale(.85) translateY(10px); } }
 /* Save celebration */
 .q-done { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 10px; border-radius: inherit; background: var(--paper); animation: qFade .25s ease both; }
@@ -882,6 +892,8 @@ main { padding-bottom: 130px; }
   .toast { bottom: calc(96px + env(safe-area-inset-bottom)); }
   .drawer, dialog { padding-bottom: env(safe-area-inset-bottom); }
 }
+/* Touch devices: page is fixed-scale. pan-only touch-action blocks pinch and double-tap zoom */
+@media (max-width: 760px), (hover: none) and (pointer: coarse) { html, body { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } }
 @media (max-width: 760px) and (display-mode: standalone) { .rail { padding-top: max(env(safe-area-inset-top), 8px); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -897,6 +909,7 @@ main { padding-bottom: 130px; }
 <noscript><p style="padding:24px">Ledger needs JavaScript to run.</p></noscript>
 
 <div class="set-pop" id="set-pop" inert></div>
+<div class="cal-pop" id="cal-pop" inert><div class="cal-pop-sheet" id="cal-pop-sheet" role="dialog" aria-label="Due on this day"></div></div>
 <div class="app">
   <aside class="rail" id="rail" aria-label="Sidebar">
     <div class="rail-top">
@@ -1437,7 +1450,8 @@ function calendarHTML(now) {
       <span class="cal-dots" aria-hidden="true">${items.slice(0, 3).map(a => `<i style="--c:${col(course(a.courseId)?.colour)}"></i>`).join('')}</span>
     </button>`;
   }).join('');
-  const list = (byDay[toDateInput(sel)] || []).sort(byDue);
+  const selK = toDateInput(sel);
+  const list = S.assignments.filter(a => toDateInput(new Date(a.dueAt)) === selK || (a.startAt && toDateInput(new Date(a.startAt)) <= selK && selK <= toDateInput(new Date(a.dueAt)))).sort(byDue); // due that day, or running through it
   const monthCount = S.assignments.filter(a => { const d = new Date(a.dueAt); return d.getMonth() === base.getMonth() && d.getFullYear() === base.getFullYear() && !isDone(a); }).length;
   return `
   <section class="cal" id="cal" aria-label="Calendar">
@@ -1466,7 +1480,7 @@ function calendarHTML(now) {
           <span class="cal-card-bar"></span>
           <b>${h(a.title)}</b>
           <span class="cal-card-sub">${h(c?.code || '')}${c?.name ? ' · ' + h(c.name) : ''}</span>
-          <span class="cal-card-row"><span><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Due ${fmtTime(d)}</span><span class="${isLate(a) ? 'accent' : ''}">${isDone(a) ? h(a.status) : dueIn(d, now)}</span></span>
+          <span class="cal-card-row"><span><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Due ${toDateInput(d) === selK ? '' : fmtShort(d) + ' '}${fmtTime(d)}</span><span class="${isLate(a) ? 'accent' : ''}">${isDone(a) ? h(a.status) : dueIn(d, now)}</span></span>
           <span class="cal-card-row muted"><span>${a.weightPct ? fmtPct(a.weightPct) + ' of grade' : 'No mark set'}</span><span>${isDone(a) ? '' : '~' + fmtH(remainingHrs(a)) + ' left'}</span></span>
         </button>`;
       }).join('') : `<p class="cal-empty">Nothing due this day.</p>`}
@@ -2272,6 +2286,34 @@ document.addEventListener('click', e => { // runs first: close on any outside ta
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#set-pop').classList.contains('open')) setPop(false); });
 
+/* ---------- mobile calendar popup: same Due list as the PC side panel ---------- */
+const touchUI = () => matchMedia('(max-width: 760px), (hover: none) and (pointer: coarse)').matches;
+function calPop(open) {
+  const p = $('#cal-pop');
+  if (open) {
+    const side = $('.cal-side'); if (!side) return;
+    $('#cal-pop-sheet').innerHTML = '<div class="cal-pop-grab" aria-hidden="true"></div>' + side.innerHTML;
+    $('#cal-pop-sheet').scrollTop = 0;
+  }
+  p.classList.toggle('open', open); p.inert = !open;
+}
+$('#cal-pop').addEventListener('click', e => { if (e.target.id === 'cal-pop' || e.target.closest('[data-action="open"]')) calPop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#cal-pop').classList.contains('open')) calPop(false); });
+// iOS Safari ignores user-scalable=no: block pinch gestures by hand
+['gesturestart', 'gesturechange', 'gestureend'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+/* ---------- confirm before marking submitted ---------- */
+function askSubmit(a, rowEl) {
+  $('.q-confirm.fx')?.remove();
+  const el = document.createElement('div'); el.className = 'q-confirm fx'; el.setAttribute('role', 'alertdialog'); el.setAttribute('aria-label', 'Confirm submission');
+  el.innerHTML = `<div><h3>Submitted?</h3><p>Are you sure “${h(a.title)}” has been submitted?</p>
+    <span class="acts"><button class="btn quiet" data-action="submit-no">Not yet</button><button class="btn primary" data-action="submit-yes">Yes, submitted</button></span></div>`;
+  el._ok = () => { el.remove(); toggleSubmitted(a.id, rowEl); };
+  document.body.appendChild(el); el.querySelector('[data-action="submit-yes"]').focus();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('.q-confirm.fx')?.remove(); });
+
 /* ---------- click delegation ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-action]'); if (!t) return;
@@ -2287,6 +2329,8 @@ document.addEventListener('click', e => {
       renderRail(); $('[data-action="add-course"]').click(); break; // quick-add needs at least one course
     case 'open': e.preventDefault(); openDrawer(id); break;
     case 'toggle': break; // handled on change
+    case 'submit-no': t.closest('.q-confirm').remove(); break;
+    case 'submit-yes': t.closest('.q-confirm')._ok(); break;
     case 'toggle-btn': toggleSubmitted(id); break;
     case 'close-drawer': closeDrawer(); break;
     case 'set-pop': setPop(!$('#set-pop').classList.contains('open')); break;
@@ -2324,9 +2368,9 @@ document.addEventListener('click', e => {
     case 'cal-pick': {
       const d = fromDateInput(t.dataset.date), now = new Date();
       ui.calSel = t.dataset.date; ui.calMonth = (d.getFullYear() - now.getFullYear()) * 12 + d.getMonth() - now.getMonth();
-      renderCal(t.dataset.date); break;
+      renderCal(t.dataset.date); if (touchUI()) calPop(true); break;
     }
-    case 'cal-add': { const d = ui.calSel ? fromDateInput(ui.calSel) : new Date(); d.setHours(23, 59, 0, 0); closeDrawer(); openQuick({ due: d }); break; }
+    case 'cal-add': calPop(false); { const d = ui.calSel ? fromDateInput(ui.calSel) : new Date(); d.setHours(23, 59, 0, 0); closeDrawer(); openQuick({ due: d }); break; }
     case 'week-prev': ui.weekOffset--; renderMain(); break;
     case 'week-next': ui.weekOffset++; renderMain(); break;
     case 'week-now': ui.weekOffset = 0; renderMain(); break;
@@ -2366,7 +2410,7 @@ document.addEventListener('click', e => {
 /* ---------- change / input delegation ---------- */
 document.addEventListener('change', e => {
   const t = e.target;
-  if (t.matches('[data-action="toggle"]')) { toggleSubmitted(t.dataset.id, t); return; }
+  if (t.matches('[data-action="toggle"]')) { const a = asg(t.dataset.id); if (a && !isDone(a)) { t.checked = false; askSubmit(a, t); } else toggleSubmitted(t.dataset.id, t); return; } // ticking asks first; un-ticking undoes directly
   if (t.id === 'cap') { S.settings.dailyCapacityHrs = Math.max(0.5, num(t.value, 4)); save(); renderMain(); return; }
   if (t.id === 'sem-start' || t.id === 'sem-end') {
     if (!t.value) return;
