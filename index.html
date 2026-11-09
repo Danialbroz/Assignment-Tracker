@@ -1018,82 +1018,24 @@ const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[
 /* =========================================================
    STARTING DATA: this term's timetable. Edit this table (or the courses in the app) to change it.
    ========================================================= */
-const SUBJECTS = {   // UniKL study plan: subject code -> official name (used by the timetable scanner)
-  IGB12102: 'MATHEMATICS FOR TECHNOLOGIST 1',
-  INB23503: 'IT ESSENTIALS',
-  ISB10103: 'PRINCIPLES OF COMPUTER PROGRAMMING',
-  MPU3142: 'BAHASA MELAYU KOMUNIKASI 2',
-  MPU3182: 'PENGHAYATAN ETIKA DAN PERADABAN',
-  MPU3192: 'PHILOSOPHY AND CURRENT ISSUES',
-  MPU34112: 'HUFFAZ PROFESSIONAL 2',
-  MPU3412: 'CAREER GUIDANCE 2',
-  MPU3422: 'COMMUNITY SERVICE 2',
-  MPU3432: 'CULTURE 2',
-  MPU3442: 'RAKAN MASJID 2',
-  MPU3452: 'SISWA SISWI BOMBA DAN PENYELAMAT 2',
-  MPU3462: 'KOR SISWA SISWI PERTAHANAN AWAM 2',
-  MPU3472: 'SPORTS MANAGEMENT 2',
-  MPU3482: 'PERSONAL FINANCIAL MANAGEMENT 2',
-  MPU3492: 'ASKAR WATANIAH 2',
-  WEB10302: 'FUNDAMENTAL ENGLISH',
-  IBB12704: 'ELECTRICAL CIRCUIT ANALYSIS',
-  IEB20603: 'DATABASE MANAGEMENT SYSTEMS',
-  IGB12202: 'MATHEMATICS FOR TECHNOLOGIST 2',
-  INB12604: 'NETWORK FUNDAMENTALS',
-  ISB16003: 'OBJECT-ORIENTED PROGRAMMING',
-  MPU3352: 'KURSUS INTEGRITI DAN ANTIRASUAH 2',
-  WEB20202: 'PROFESSIONAL ENGLISH 1',
-  IBB30104: 'DIGITAL PRINCIPLES',
-  IGB10003: 'ENGINEERING MATHEMATICS 1',
-  INB23804: 'NETWORK ROUTING AND SWITCHING',
-  INB24703: 'INDUSTRIAL REVOLUTION TECHNOLOGY',
-  ISB30503: 'DATA STRUCTURES AND ALGORITHMS',
-  IBB20204: 'MICROPROCESSOR AND MICROCONTROLLER SYSTEMS',
-  IBB22403: 'OPERATING SYSTEM ADMINISTRATION',
-  INB23304: 'NETWORK SECURITY',
-  INB24804: 'SCALABLE NETWORK',
-  MPU3222: 'ISU-ISU KONTEMPORARI MUSLIM',
-  MPU3242: 'INNOVATION MANAGEMENT',
-  MPU3252: 'CULTURE AND LIFESTYLE 2',
-  WEB20302: 'PROFESSIONAL ENGLISH 2',
-  WKD10101: 'KOREAN LANGUAGE 1',
-  WMD10101: 'MANDARIN 1',
-  IDB30402: 'ENGINEERING ETHICS AND SOCIETY',
-  IDB30503: 'DESIGN PROJECT',
-  INB35504: 'NETWORK INTERCONNECTIONS',
-  INB35604: 'WIRELESS NETWORKS',
-  WBB20103: 'TECHNOPRENEURSHIP',
-  WKD10201: 'KOREAN LANGUAGE 2',
-  WMD10201: 'MANDARIN 2',
-  INB35404: 'NETWORK SYSTEMS MANAGEMENT',
-  INB35605: 'ADVANCED ROUTING',
-  INB35705: 'MULTILAYER SWITCHING',
-  IPB49804: 'FINAL YEAR PROJECT 1',
-  INB47605: 'NETWORK TROUBLESHOOTING',
-  IPB49906: 'FINAL YEAR PROJECT 2',
-  WIB41012: 'INDUSTRIAL TRAINING',
-  IBB22703: 'EMBEDDED SYSTEM',
-  IBB31803: 'SYSTEM PERFORMANCE AND MODELLING',
-  IBB32203: 'NETWORK OPERATING SYSTEM',
-  INB33103: 'TELECOMMUNICATIONS',
-  INB48603: 'SELECTED TOPICS IN COMMUNICATION SYSTEMS',
-  INB48703: 'INTERNET OF THINGS',
-  ISB26603: 'MOBILE AND UBIQUITOUS COMPUTING',
-  ISB46703: 'PRINCIPLES OF ARTIFICIAL INTELLIGENCE',
-  MPU3212: 'BAHASA KEBANGSAAN A',
-  WAD10101: 'ARABIC 1',
-  WAD10201: 'ARABIC 2'
+const SUBJECTS = {   // subject code -> official name (used by the timetable scanner). Add your own.
+  WEB101: 'WEB DEVELOPMENT',
+  NET201: 'COMPUTER NETWORKS',
+  DBS202: 'DATABASE SYSTEMS',
+  SEC301: 'CYBER SECURITY',
+  ETH101: 'PROFESSIONAL ETHICS',
+  MOB302: 'MOBILE APPS'
 };
 const GENERIC_NAME = /^(lecture|tutorial|lab|workshop)/i;   // placeholder names from the class types
 const subjectName = (code, cur) => SUBJECTS[String(code).toUpperCase().trim()] || cur;
 const TERM = { name: 'October 2026', start: '2026-10-12', weeks: 14 };   // start = Monday of week 1
-const TIMETABLE = [   // [code, name, colour]; names are the class types from the timetable, rename them in the app
-  ['MPU3242', 'Lecture & Tutorial', 'ochre'],
-  ['INB23304', 'Lecture & Lab', 'sage'],
-  ['ISB16003', 'Lecture & Lab', 'slate'],
-  ['IEB20603', 'Lecture & Lab', 'clay'],
-  ['IDB30402', 'Lecture', 'plum'],
-  ['INB33103', 'Lecture & Lab', 'teal']
+const TIMETABLE = [   // [code, name, colour]; sample data, edit it or the courses in the app
+  ['WEB101', 'Lecture & Lab', 'coral'],
+  ['NET201', 'Lecture & Lab', 'sky'],
+  ['DBS202', 'Lecture & Lab', 'emerald'],
+  ['SEC301', 'Lecture', 'violet'],
+  ['ETH101', 'Lecture & Tutorial', 'tangerine'],
+  ['MOB302', 'Lecture & Lab', 'magenta']
 ];
 function seed() {
   const start = new Date(TERM.start + 'T00:00:00');
@@ -2126,7 +2068,7 @@ async function runScan(btn, label, work) {
 }
 function scanTimetable(files) {
   runScan($('#tt-scan-btn'), '✨ AI timetable scanner', async () => {
-    const rows = await aiRows(files, `These images are a class timetable from any school, college or university, in any layout (grid, list, per-day columns, 12h or 24h clock, merged cells). Read every class slot. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": subject code exactly as printed (e.g. "INB23304"), "name": subject name if printed, else "", "type": "L" lecture, "T" tutorial, "B" lab/practical, or "W" workshop (use the marker or word printed next to the subject; default "L"), "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. A slot spanning several time columns is ONE object from its first start to its last end. Use "" for unknown text fields.`);
+    const rows = await aiRows(files, `These images are a class timetable from any school, college or university, in any layout (grid, list, per-day columns, 12h or 24h clock, merged cells). Read every class slot. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": subject code exactly as printed (e.g. "NET201"), "name": subject name if printed, else "", "type": "L" lecture, "T" tutorial, "B" lab/practical, or "W" workshop (use the marker or word printed next to the subject; default "L"), "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. A slot spanning several time columns is ONE object from its first start to its last end. Use "" for unknown text fields.`);
     const norm = x => String(x || '').toLowerCase().replace(/\s+/g, '');
     let added = 0, dup = 0, bad = 0;
     rows.forEach(r => {
