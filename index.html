@@ -678,10 +678,11 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 /* Settings button + dropdown beside "Add assignment": phones and iPads (touch) only */
 .set-top, .set-pop { display: none; }
 @media (max-width: 760px), (hover: none) and (pointer: coarse) {
-  .set-top { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; padding: 8px; }
-  .set-top svg { width: 22px; height: 22px; stroke-width: 1.6; }
-  .set-pop { position: fixed; z-index: 60; width: min(280px, calc(100vw - 24px)); display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: 16px; background: var(--paper); box-shadow: 0 12px 32px rgba(0,0,0,.25); }
-  .set-pop[hidden] { display: none; }
+  .set-top { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 8px; background: none; border: 0; cursor: pointer; color: var(--ink-2); }
+  .set-top svg { width: 22px; height: 22px; stroke-width: 1.6; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
+  .set-top[aria-expanded="true"] svg { transform: rotate(120deg); }
+  .set-pop { position: fixed; z-index: 60; width: min(280px, calc(100vw - 24px)); display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: 16px; background: var(--paper); box-shadow: 0 12px 32px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transform: translateY(-8px) scale(.97); transform-origin: top right; transition: opacity .3s ease, transform .45s cubic-bezier(.22,1,.36,1), visibility 0s .45s; }
+  .set-pop.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
   .set-pop .link-btn { text-align: left; padding: 6px 2px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
   .set-pop .link-btn:hover { color: var(--accent-ink); }
   .set-pop .theme-sw { margin: 6px 0 4px; }
@@ -889,7 +890,7 @@ main { padding-bottom: 130px; }
 <a class="skip" href="#main">Skip to content</a>
 <noscript><p style="padding:24px">Ledger needs JavaScript to run.</p></noscript>
 
-<div class="set-pop" id="set-pop" hidden></div>
+<div class="set-pop" id="set-pop" inert></div>
 <div class="app">
   <aside class="rail" id="rail" aria-label="Sidebar">
     <div class="rail-top">
@@ -900,7 +901,7 @@ main { padding-bottom: 130px; }
         </div>
         <div class="rail-actions">
           <button class="btn primary" data-action="new" title="Add a new assignment (shortcut: N)">+ Add assignment</button>
-          <button class="btn quiet set-top" data-action="set-pop" aria-label="Settings" aria-expanded="false" aria-controls="set-pop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+          <button class="set-top" data-action="set-pop" aria-label="Settings" aria-expanded="false" aria-controls="set-pop"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
           <button class="btn quiet menu-btn" data-action="menu" aria-expanded="false" aria-controls="rail-body">Menu</button>
         </div>
       </div>
@@ -2246,13 +2247,13 @@ function openKeys() {
 function setPop(open) {
   const p = $('#set-pop'), b = $('.set-top');
   if (open) { const r = b.getBoundingClientRect(); p.style.top = (r.bottom + 8) + 'px'; p.style.right = Math.max(12, innerWidth - r.right) + 'px'; }
-  p.hidden = !open; b.setAttribute('aria-expanded', open);
+  p.classList.toggle('open', open); p.inert = !open; b.setAttribute('aria-expanded', open);
 }
 document.addEventListener('click', e => { // runs first: close on any outside tap or after picking an option (theme stays open)
-  if ($('#set-pop').hidden || e.target.closest('[data-action="set-pop"], #set-pop [data-action="theme"]')) return;
+  if (!$('#set-pop').classList.contains('open') || e.target.closest('[data-action="set-pop"], #set-pop [data-action="theme"]')) return;
   setPop(false);
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#set-pop').hidden) setPop(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#set-pop').classList.contains('open')) setPop(false); });
 
 /* ---------- click delegation ---------- */
 document.addEventListener('click', e => {
@@ -2271,7 +2272,7 @@ document.addEventListener('click', e => {
     case 'toggle': break; // handled on change
     case 'toggle-btn': toggleSubmitted(id); break;
     case 'close-drawer': closeDrawer(); break;
-    case 'set-pop': setPop($('#set-pop').hidden); break;
+    case 'set-pop': setPop(!$('#set-pop').classList.contains('open')); break;
     case 'theme': setTheme(S.settings.theme === 'dark' ? 'light' : 'dark'); break;
     case 'keys': openKeys(); break;
     case 'close-dlg': t.closest('dialog').close(); break;
