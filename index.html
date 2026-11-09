@@ -1969,6 +1969,28 @@ function saveProfile() {
   $$('[data-pm]').forEach(i => { pr[i.dataset.pm] = i.value.trim(); });
   save(); closeQuick(); renderMain(); toast('Details saved.');
 }
+function viewClass(id) {
+  const x = S.timetable.find(k => k.id === id); if (!x) return;
+  const c = course(x.courseId), mins = toMin(x.end) - toMin(x.start);
+  ui.quick = { cls: id, overrides: {} };
+  const q = $('#quick'); clearTimeout(ui.quickClear); q.classList.remove('saved');
+  q.style.setProperty('--tc', col(c?.colour));
+  const row = (l, v) => v ? `<div class="tv-row"><span>${l}</span><b>${h(v)}</b></div>` : '';
+  q.innerHTML = `
+    <div class="tt-view">
+      <p class="quick-title"><span class="sq" style="--c:var(--tc)"></span> ${h(TT_TYPES[x.type] || 'Lecture')}</p>
+      <h2 class="tv-name">${h(c?.name || c?.code || 'Class')}</h2>
+      <p class="mono tv-code">${h(c?.code || '')}</p>
+      <div class="tv-grid">
+        ${row('Day', WD[(+x.day + 1) % 7])}${row('Time', `${x.start} – ${x.end}`)}
+        ${row('Length', `${Math.floor(mins / 60)}h${mins % 60 ? ' ' + (mins % 60) + 'm' : ''}`)}${row('Room', x.room)}
+        ${row('Group', x.group)}${row('Lecturer', x.lecturer)}${row('Instructor', c?.instructor)}
+      </div>
+    </div>
+    <div class="quick-foot"><span class="acts"><button class="btn quiet" data-action="quick-cancel">Done</button><button class="btn primary" data-action="tt-edit" data-id="${h(id)}">Edit</button></span></div>`;
+  q.classList.add('open'); $('#quick-scrim').classList.add('open');
+  q.tabIndex = -1; q.focus({ preventScroll: true });
+}
 function openClass(id) {
   const x = S.timetable.find(k => k.id === id) || { courseId: S.courses[0]?.id, type: 'L', day: (new Date().getDay() + 6) % 7, start: '08:30', end: '10:30' };
   ui.quick = { cls: id || 'new', overrides: {} };
