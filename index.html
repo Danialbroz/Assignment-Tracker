@@ -675,6 +675,17 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .theme-sw[aria-checked="false"] .ts-opt:nth-of-type(2), .theme-sw[aria-checked="true"] .ts-opt:nth-of-type(3) { color: var(--on-accent); }
 .set-menu .link-btn { text-align: left; padding: 6px 2px; font-size: 13.5px; color: var(--ink-2); text-decoration: none; }
 .set-menu .link-btn:hover { color: var(--accent-ink); }
+/* Settings button + dropdown beside "Add assignment": phones and iPads (touch) only */
+.set-top, .set-pop { display: none; }
+@media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  .set-top { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; padding: 8px; }
+  .set-top svg { width: 22px; height: 22px; stroke-width: 1.6; }
+  .set-pop { position: fixed; z-index: 60; width: min(280px, calc(100vw - 24px)); display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: 16px; background: var(--paper); box-shadow: 0 12px 32px rgba(0,0,0,.25); }
+  .set-pop[hidden] { display: none; }
+  .set-pop .link-btn { text-align: left; padding: 6px 2px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
+  .set-pop .link-btn:hover { color: var(--accent-ink); }
+  .set-pop .theme-sw { margin: 6px 0 4px; }
+}
 /* Today calendar */
 .cal { display: grid; grid-template-columns: minmax(0, 1fr) 300px; margin: 8px 0 34px; border: 1px solid var(--glass-edge); border-radius: 26px; background: color-mix(in srgb, var(--paper) 65%, transparent); box-shadow: 0 18px 50px rgba(20,12,40,.14), inset 0 1px 0 var(--glass-hi); overflow: hidden; }
 .cal button { font: inherit; color: inherit; cursor: pointer; }
