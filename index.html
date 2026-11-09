@@ -941,7 +941,8 @@ main { padding-bottom: 130px; }
   .rail, .drawer, .quick { display: none !important; }
   .app { grid-template-columns: 1fr; }
 }
-@media (max-width: 760px), (hover: none) and (pointer: coarse) { .pf-course { cursor: pointer; } }
+.pf-name-m { display: none; }
+@media (max-width: 760px), (hover: none) and (pointer: coarse) { .pf-course { cursor: pointer; } .pf-code { display: none; } .pf-name-m { display: block; font: 600 15px var(--sans); overflow-wrap: anywhere; } }
 /* every popup: soft purple outline */
 .q-confirm > div, .col-pop, .dtp, .cal-pop-sheet, .drawer {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge));
