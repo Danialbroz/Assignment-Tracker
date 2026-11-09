@@ -2271,6 +2271,7 @@ document.addEventListener('click', e => {
     case 'toggle': break; // handled on change
     case 'toggle-btn': toggleSubmitted(id); break;
     case 'close-drawer': closeDrawer(); break;
+    case 'set-pop': setPop($('#set-pop').hidden); break;
     case 'theme': setTheme(S.settings.theme === 'dark' ? 'light' : 'dark'); break;
     case 'keys': openKeys(); break;
     case 'close-dlg': t.closest('dialog').close(); break;
