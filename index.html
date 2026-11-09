@@ -2542,7 +2542,7 @@ document.addEventListener('click', e => {
     case 'quick-save': saveQuick(); break;
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-view': viewClass(t.dataset.id); break;
-    case 'pf-course': if (touchUI()) viewCourse(t.dataset.id); break;
+    case 'pf-course': if (touchUI()) courseDetails(t.dataset.id); break;
     case 'pf-courses': pickCourse(); break;
     case 'pf-course-edit': closeQuick(); go('course/' + t.dataset.id); break;
     case 'tt-edit': openClass(t.dataset.id); break;
