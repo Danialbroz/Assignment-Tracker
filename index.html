@@ -2026,7 +2026,7 @@ function pfShell(inner) {
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
   q.tabIndex = -1; q.focus({ preventScroll: true });
 }
-function viewCourse(id) {
+function courseDetails(id) {
   const c = course(id); if (!c) return;
   const a = S.assignments.filter(x => x.courseId === id), d = a.filter(isDone).length;
   const late = a.filter(x => !isDone(x) && new Date(x.dueAt) < new Date()).length;
