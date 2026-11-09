@@ -2115,6 +2115,7 @@ document.addEventListener('click', e => {
     case 'quick-save': saveQuick(); break;
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-edit': openClass(t.dataset.id); break;
+    case 'tt-scan': $('#tt-scan-file').click(); break;
     case 'tt-delete': if (!confirm('Delete this class from your timetable?')) break; S.timetable = S.timetable.filter(k => k.id !== ui.quick.cls); save(); closeQuick(); renderMain(); toast('Class deleted.'); break;
     case 'quick-ask-cancel': askCancelQuick(); break;
     case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
