@@ -724,7 +724,7 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .cal-dots { display: none; }
 .cal-spans { display: grid; gap: 2px; width: calc(100% + 18px); margin: auto -9px 0; order: 3; }
 .cal-span { position: relative; height: 11px; padding-left: 8px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 60%, #fff 12%), color-mix(in srgb, var(--c) 40%, transparent)); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); font: 600 9px/11px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; }
-.cal-span::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); transform: translateX(-120%); animation: var(--g, calGlint) var(--per, 5s) linear infinite; animation-delay: var(--del, 0s); pointer-events: none; }
+.cal-span::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 18%, rgba(255,255,255,.07) 28%, rgba(255,255,255,.28) 40%, rgba(255,255,255,.62) 50%, rgba(255,255,255,.28) 60%, rgba(255,255,255,.07) 72%, transparent 82%); transform: translateX(-120%); will-change: transform; animation: var(--g, calGlint) var(--per, 5s) linear infinite; animation-delay: var(--del, 0s); pointer-events: none; }
 @keyframes calGlint { 0% { transform: translateX(-120%); } 10%, 100% { transform: translateX(120%); } }
 .cal-span.first { margin-left: 9px; border-radius: 99px 0 0 99px; } .cal-span.last { margin-right: 9px; border-radius: 0 99px 99px 0; } .cal-span.first.last { border-radius: 99px; }
 .cal-span.done { opacity: .4; }
@@ -1413,12 +1413,13 @@ function calendarHTML(now) {
   const byDay = {};
   S.assignments.forEach(a => { (byDay[toDateInput(new Date(a.dueAt))] ||= []).push(a); });
   const isLate = a => !isDone(a) && new Date(a.dueAt) < now;
-  // shine runs day by day from the assignment's start date to its due date, rests 2s, repeats
+  // one soft light travels at constant speed (STEP s per day) from the start date to the due date, rests 2s, repeats.
+  // Each day cell shows the band while its centre is within 0.8 cell of the cell centre, so neighbours hand it over seamlessly.
   const STEP = 0.5, kf = [], kfIdx = new Map();
   const glint = a => {
     if (kfIdx.has(a.id)) return kfIdx.get(a.id);
-    const n = Math.round((sod(new Date(a.dueAt)) - sod(new Date(a.startAt))) / 864e5) + 1, per = n * STEP + 2, g = 'g' + kfIdx.size;
-    kf.push(`@keyframes ${g}{0%{transform:translateX(-120%)}${(STEP / per * 100).toFixed(2)}%,100%{transform:translateX(120%)}}`);
+    const n = Math.round((sod(new Date(a.dueAt)) - sod(new Date(a.startAt))) / 864e5) + 1, per = (n + 0.6) * STEP + 2, g = 'g' + kfIdx.size;
+    kf.push(`@keyframes ${g}{0%{transform:translateX(-80%)}${(1.6 * STEP / per * 100).toFixed(2)}%,100%{transform:translateX(80%)}}`);
     const r = { g, per }; kfIdx.set(a.id, r); return r;
   };
   const cells = Array.from({ length: 42 }, (_, i) => {
