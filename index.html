@@ -392,7 +392,7 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .colour-custom[aria-pressed="true"] i { background: var(--c); }
 .colour-pick button:not(.colour-custom) { width: 22px; height: 22px; border: 0; padding: 0; background: linear-gradient(145deg, color-mix(in srgb, var(--c) 70%, #fff), var(--c)); cursor: pointer; border-radius: 50%; box-shadow: 0 2px 6px color-mix(in srgb, var(--c) 45%, transparent); transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
 .colour-pick button:not(.colour-custom):hover { transform: scale(1.18); }
-.colour-pick button[aria-pressed="true"] { outline: 1px solid var(--ink); outline-offset: 2px; }
+.colour-pick button:not(.colour-custom)[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
 .course-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 56px; align-items: start; }
 .wt-table input[type="text"] { width: 100%; border-color: transparent; padding-left: 0; }
 .wt-table input[type="text"]:hover, .wt-table input[type="text"]:focus { border-color: var(--rule-strong); padding-left: 7px; }
