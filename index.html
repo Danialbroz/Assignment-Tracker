@@ -1610,7 +1610,7 @@ function viewWeek() {
       <div class="tt-dl mono">${TT_DAYS[d]}</div>
       <div class="tt-lane" data-day="${d}">${tt.filter(x => +x.day === d).sort((a, b) => toMin(a.start) - toMin(b.start)).map(x => {
         const c = course(x.courseId);
-        return `<button class="tt-cls" data-action="tt-edit" data-id="${h(x.id)}" style="--c:${col(c?.colour)};grid-column:${colOf(toMin(x.start))} / ${colOf(toMin(x.end))}">
+        return `<button class="tt-cls" data-action="tt-view"data-id="${h(x.id)}" style="--c:${col(c?.colour)};grid-column:${colOf(toMin(x.start))} / ${colOf(toMin(x.end))}">
           <b>${h(c?.name || c?.code || '?')}</b>
           <span class="mono">${h(c?.code || '')}</span>
           <span>${h(x.start)}–${h(x.end)}</span>
