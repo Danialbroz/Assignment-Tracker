@@ -2484,6 +2484,7 @@ document.addEventListener('click', e => {
     case 'profile-edit': openProfile(); break;
     case 'quick-save': saveQuick(); break;
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
+    case 'tt-view': viewClass(t.dataset.id); break;
     case 'tt-edit': openClass(t.dataset.id); break;
     case 'tt-scan': $('#tt-scan-file').click(); break;
     case 'puter': openPuter(); break;
