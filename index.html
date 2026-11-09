@@ -1155,7 +1155,41 @@ const ui = {
 
 const course = id => S.courses.find(c => c.id === id);
 const asg = id => S.assignments.find(a => a.id === id);
-const col = key => `var(--c-${key || 'ochre'})`;
+const col = key => /^#[0-9a-f]{6}$/i.test(key) ? key : `var(--c-${key || 'ochre'})`;
+const hexToHsv = x => { const r = parseInt(x.slice(1, 3), 16) / 255, g = parseInt(x.slice(3, 5), 16) / 255, b = parseInt(x.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); let hu = 0;
+  if (d) hu = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [hu * 60, mx ? d / mx : 0, mx]; };
+const hsvToHex = (hu, s, v) => { const f = n => { const k = (n + hu / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return '#' + [f(5), f(3), f(1)].map(z => pad(Math.round(z * 255).toString(16))).join('').toUpperCase(); };
+function colourPop(anchor, start, apply) {
+  $('#col-pop')?.remove();
+  let [hu, s, v] = hexToHsv(/^#[0-9a-f]{6}$/i.test(start) ? start : '#7C4DDB');
+  const el = document.createElement('div'); el.id = 'col-pop'; el.className = 'col-pop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Custom colour');
+  el.innerHTML = '<div class="cp-wheel"><i class="cp-dot"></i></div><input class="cp-v" type="range" min="0" max="100" aria-label="Brightness"><div class="cp-row"><span class="cp-prev"></span><input class="cp-hex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Hex colour code"><button class="btn primary small cp-ok">Use</button></div>';
+  document.body.appendChild(el);
+  const wheel = $('.cp-wheel', el), dot = $('.cp-dot', el), rng = $('.cp-v', el), hex = $('.cp-hex', el), prev = $('.cp-prev', el);
+  const paint = (skipHex) => { const c = hsvToHex(hu, s, v); const r = wheel.clientWidth / 2, a = hu * Math.PI / 180;
+    dot.style.left = (r + Math.sin(a) * s * r) + 'px'; dot.style.top = (r - Math.cos(a) * s * r) + 'px'; dot.style.background = c;
+    wheel.style.setProperty('--dim', 1 - v); rng.value = Math.round(v * 100); rng.style.setProperty('--hue', hsvToHex(hu, s, 1)); prev.style.background = c; if (!skipHex) hex.value = c; return c; };
+  const pick = e => { const b = wheel.getBoundingClientRect(), r = b.width / 2, dx = e.clientX - b.left - r, dy = e.clientY - b.top - r;
+    hu = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360; s = Math.min(1, Math.hypot(dx, dy) / r); paint(); };
+  wheel.addEventListener('pointerdown', e => { wheel.setPointerCapture(e.pointerId); pick(e); wheel.onpointermove = pick; });
+  wheel.addEventListener('pointerup', () => { wheel.onpointermove = null; });
+  rng.addEventListener('input', () => { v = rng.value / 100; paint(); });
+  hex.addEventListener('input', () => { let x = hex.value.trim(); if (x[0] !== '#') x = '#' + x; if (/^#[0-9a-f]{6}$/i.test(x)) { [hu, s, v] = hexToHsv(x); paint(true); } });
+  const close = () => { el.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
+  const away = e => { if (!el.contains(e.target) && !anchor.contains(e.target)) close(); };
+  const esc = e => { if (e.key === 'Escape') close(); };
+  const go = () => { const x = hex.value.trim(), c = /^#?[0-9a-f]{6}$/i.test(x) ? (x[0] === '#' ? x : '#' + x).toUpperCase() : null; if (!c) { hex.focus(); hex.select(); return; } close(); apply(c); };
+  $('.cp-ok', el).addEventListener('click', go);
+  hex.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true);
+  const a = anchor.getBoundingClientRect(), w = el.offsetWidth, ht = el.offsetHeight;
+  el.style.left = Math.max(8, Math.min(a.left, innerWidth - w - 8)) + 'px';
+  el.style.top = (a.bottom + ht + 12 > innerHeight ? Math.max(8, a.top - ht - 8) : a.bottom + 8) + 'px';
+  paint(); hex.focus();
+}
 const isDone = a => a.status === 'Submitted' || a.status === 'Graded';
 const byDue = (a, b) => new Date(a.dueAt) - new Date(b.dueAt);
 const semStart = () => fromDateInput(S.settings.semesterStart);
