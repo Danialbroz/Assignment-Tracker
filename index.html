@@ -1841,6 +1841,7 @@ function viewProfile() {
       ${S.courses.map(c => { const a = all.filter(x => x.courseId === c.id); const d = a.filter(isDone).length; const pct = a.length ? Math.round(d / a.length * 100) : 0;
         return `<div class="pf-course" data-action="pf-course" data-id="${h(c.id)}"><i style="background:${col(c.colour)}"></i><div><b class="mono">${h(c.code)}</b><div class="pf-bar"><u style="width:${pct}%"></u></div></div><span class="mono muted">${d}/${a.length}</span></div>`; }).join('') || '<p class="muted" style="padding:14px 2px;margin:0">No courses yet.</p>'}
     </div>
+    ${S.courses.length ? '<button class="btn primary pf-edit pf-edit-course" data-action="pf-courses">Edit course</button>' : ''}
   </aside></div>`;
 }
 
