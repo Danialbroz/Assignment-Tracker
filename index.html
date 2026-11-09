@@ -678,7 +678,7 @@ input, select, textarea { transition: border-color .2s ease, box-shadow .25s eas
 .quick .quick-input { font-family: var(--sans) !important; font-size: 18px !important; border: 1px solid var(--rule-strong) !important; border-radius: 14px !important; padding: 14px 16px !important; background: color-mix(in srgb, var(--paper) 60%, transparent); }
 .quick .quick-input:focus { border-color: var(--accent) !important; }
 .quick-tip { margin: 8px 2px 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
-.quick .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 22px; }
+.quick .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 22px; }
 .quick .chip { display: flex; flex-direction: column; align-items: stretch; gap: 6px; border: 0; padding: 0; font-size: 15px; box-shadow: none; }
 .quick .chip[data-chip="due"] { grid-column: 1 / -1; }
 .quick .chip > span { font: 600 13px var(--sans); text-transform: none; letter-spacing: 0; color: var(--ink-2); }
@@ -687,7 +687,7 @@ input, select, textarea { transition: border-color .2s ease, box-shadow .25s eas
 .quick .chip.parsed input, .quick .chip.parsed select { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule-strong)) !important; }
 .quick .chip:focus-within { box-shadow: none; }
 input[readonly][type="datetime-local"] { cursor: pointer; }
-@media (max-width: 760px) { .quick .chips { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .quick .chips { grid-template-columns: minmax(0, 1fr); } }
 /* iOS gives date inputs a fixed minimum width, which pushed the due box past the edge */
 .quick .chip { min-width: 0; }
 .quick .chip input[type="datetime-local"] { min-width: 0; box-sizing: border-box; -webkit-appearance: none; appearance: none; text-align: left; }
