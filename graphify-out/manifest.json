@@ -1,0 +1,26 @@
+{
+  "README.md": {
+    "mtime": 1793547497.772097,
+    "seen": 1794243949.916515,
+    "ast_hash": "7b8e5c68f3ba30f735dd10a05252b58e",
+    "semantic_hash": "7b8e5c68f3ba30f735dd10a05252b58e"
+  },
+  "index.html": {
+    "mtime": 1794238930.1646483,
+    "seen": 1794243949.916515,
+    "ast_hash": "48a6c0dd1d8ee4047f181d53ab246a73",
+    "semantic_hash": "48a6c0dd1d8ee4047f181d53ab246a73"
+  },
+  "apple-touch-icon.png": {
+    "mtime": 1793707953.5748265,
+    "seen": 1794243949.916515,
+    "ast_hash": "097d52a17932a676360b96762bcfe67d",
+    "semantic_hash": "097d52a17932a676360b96762bcfe67d"
+  },
+  "logo.svg": {
+    "mtime": 1793647710.5333576,
+    "seen": 1794243949.916515,
+    "ast_hash": "3fa512bbb89f16cb3b69439c3faa31be",
+    "semantic_hash": "3fa512bbb89f16cb3b69439c3faa31be"
+  }
+}
