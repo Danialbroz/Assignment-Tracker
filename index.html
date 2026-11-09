@@ -1436,10 +1436,10 @@ function calendarHTML(now) {
     kf.push(`@keyframes ${g}{0%{transform:translateX(-80%)}${(1.6 * STEP / per * 100).toFixed(2)}%,100%{transform:translateX(80%)}}`);
     const r = { g, per }; kfIdx.set(a.id, r); return r;
   };
-  // Lanes: each assignment keeps ONE row for its whole span, so its bar runs straight to the deadline. Newest gets the top lane.
+  // Lanes: each assignment keeps ONE row for its whole span, so its bar runs straight to the deadline. Oldest gets lane 0 = the very bottom row.
   const kS = a => toDateInput(new Date(a.startAt)), kE = a => toDateInput(new Date(a.dueAt));
   const lane = new Map(), placed = [];
-  S.assignments.filter(a => a.startAt).sort((x, y) => (new Date(y.createdAt || y.startAt) - new Date(x.createdAt || x.startAt)) || (new Date(y.startAt) - new Date(x.startAt))).forEach(a => {
+  S.assignments.filter(a => a.startAt).sort((x, y) => (new Date(x.startAt) - new Date(y.startAt)) || (new Date(x.createdAt || x.startAt) - new Date(y.createdAt || y.startAt))).forEach(a => {
     let l = 0; while (placed.some(p => p.l === l && kS(p.a) <= kE(a) && kS(a) <= kE(p.a))) l++;
     lane.set(a.id, l); placed.push({ a, l });
   });
@@ -1451,7 +1451,7 @@ function calendarHTML(now) {
   const cells = Array.from({ length: 42 }, (_, i) => {
     const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
     const byLane = new Map(S.assignments.filter(a => a.startAt && kS(a) <= k && k <= kE(a)).map(a => [lane.get(a.id), a]));
-    const spans = Array.from({ length: weekRows[Math.floor(i / 7)] + 1 }, (_, l) => byLane.get(l)).map(a => {
+    const spans = Array.from({ length: weekRows[Math.floor(i / 7)] + 1 }, (_, l) => byLane.get(l)).reverse().map(a => {
       if (!a) return '<span class="cal-span gap" aria-hidden="true"></span>';
       const first = k === kS(a), last = k === kE(a);
       const gl = glint(a), idx = Math.max(0, Math.round((d - sod(new Date(a.startAt))) / 864e5));
