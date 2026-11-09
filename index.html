@@ -2542,7 +2542,7 @@ document.addEventListener('click', e => {
       confirmPop(`Delete ${c.name || c.code}?`, `${c.code}, its ${n} ${n === 1 ? 'assignment' : 'assignments'} and its classes will be removed. This cannot be undone.`, 'delete-course-yes', 'Yes, delete'); break;
     }
     case 'delete-course-yes': {
-      const c = course(ui.courseId); closeQuick();
+      const c = course(ui.courseId); $('.q-confirm')?.remove();
       S.courses = S.courses.filter(x => x.id !== c.id); S.assignments = S.assignments.filter(a => a.courseId !== c.id); S.timetable = S.timetable.filter(x => x.courseId !== c.id); save(); go('today'); break;
     }
     case 'delete-asg': {
