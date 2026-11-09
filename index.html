@@ -1763,7 +1763,7 @@ function viewCourse() {
           <label class="sr-only" for="c-inst">Instructor</label>
           <input id="c-inst" class="plain-input inst-in" data-cfield="instructor" value="${h(c.instructor)}" placeholder="Instructor">
           <span class="colour-pick" role="group" aria-label="Course colour">
-            ${COLOURS.map(k => `<button style="--c:${col(k.key)}" data-action="colour" data-colour="${k.key}" aria-pressed="${c.colour === k.key}" aria-label="${k.name}" title="${k.name}"></button>`).join('')}
+            ${COLOURS.map(k => `<button style="--c:${col(k.key)}" data-action="colour" data-colour="${k.key}" aria-pressed="${c.colour === k.key}" aria-label="${k.name}" title="${k.name}"></button>`).join('')}<button class="colour-custom" style="--c:${col(c.colour)}" data-action="colour-custom" aria-pressed="${c.colour[0] === '#'}"><i></i>Custom</button>
           </span>
         </div>
       </div>
