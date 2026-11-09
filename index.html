@@ -2004,6 +2004,7 @@ async function puterLogin(switching) {
   try {
     if (switching) puter.auth.signOut();
     await puter.auth.signIn(); toast('Logged in to Puter.');
+    syncPull();
   } catch (e) { toast('Puter login was cancelled.'); }
   openPuter();
 }
