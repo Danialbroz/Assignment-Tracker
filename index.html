@@ -2014,6 +2014,42 @@ function viewClass(id) {
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
   q.tabIndex = -1; q.focus({ preventScroll: true });
 }
+function pfShell(inner) {
+  const q = $('#quick'); clearTimeout(ui.quickClear); q.classList.remove('saved'); q.style.removeProperty('--tc');
+  ui.quick = { profile: true };
+  q.innerHTML = inner;
+  q.classList.add('open'); $('#quick-scrim').classList.add('open');
+  q.tabIndex = -1; q.focus({ preventScroll: true });
+}
+function viewCourse(id) {
+  const c = course(id); if (!c) return;
+  const a = S.assignments.filter(x => x.courseId === id), d = a.filter(isDone).length;
+  const late = a.filter(x => !isDone(x) && new Date(x.dueAt) < new Date()).length;
+  const classes = S.timetable.filter(k => k.courseId === id).length;
+  const row = (l, v) => v ? `<div class="tv-row"><span>${l}</span><b>${h(v)}</b></div>` : '';
+  pfShell(`
+    <div class="tt-view" style="--tc:${col(c.colour)}">
+      <p class="quick-title"><span class="sq" style="--c:var(--tc)"></span> Course</p>
+      <h2 class="tv-name">${h(c.name || c.code)}</h2>
+      <p class="mono tv-code">${h(c.code)}</p>
+      <div class="tv-grid">
+        ${row('Progress', `${d}/${a.length} done${a.length ? ` (${Math.round(d / a.length * 100)}%)` : ''}`)}${row('Overdue', String(late))}
+        ${row('Assignments', String(a.length))}${row('Classes', String(classes))}
+        ${row('Instructor', c.instructor)}
+      </div>
+    </div>
+    <div class="quick-foot"><span class="acts"><button class="btn quiet" data-action="quick-cancel">Done</button><button class="btn primary" data-action="pf-course-edit" data-id="${h(id)}">Edit subject</button></span></div>`);
+  $('#quick').style.setProperty('--tc', col(c.colour));
+}
+function pickCourse() {
+  pfShell(`
+    <div class="tt-view">
+      <p class="quick-title">Edit course</p>
+      <h2 class="tv-name">Pick a course</h2>
+      <div class="pf-pick">${S.courses.map(c => `<button class="btn quiet" data-action="pf-course-edit" data-id="${h(c.id)}"><span class="sq" style="--c:${col(c.colour)}"></span> <span class="mono">${h(c.code)}</span> ${h(c.name)}</button>`).join('')}</div>
+    </div>
+    <div class="quick-foot"><span class="acts"><button class="btn quiet" data-action="quick-cancel">Done</button></span></div>`);
+}
 function openClass(id) {
   const x = S.timetable.find(k => k.id === id) || { courseId: S.courses[0]?.id, type: 'L', day: (new Date().getDay() + 6) % 7, start: '08:30', end: '10:30' };
   ui.quick = { cls: id || 'new', overrides: {} };
