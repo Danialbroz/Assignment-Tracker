@@ -1424,7 +1424,7 @@ function calendarHTML(now) {
   };
   const cells = Array.from({ length: 42 }, (_, i) => {
     const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
-    const spans = S.assignments.filter(a => a.startAt && toDateInput(new Date(a.startAt)) <= k && k <= toDateInput(new Date(a.dueAt))).map(a => {
+    const spans = S.assignments.filter(a => a.startAt && toDateInput(new Date(a.startAt)) <= k && k <= toDateInput(new Date(a.dueAt))).sort((x, y) => (new Date(y.createdAt || y.startAt) - new Date(x.createdAt || x.startAt)) || (new Date(y.startAt) - new Date(x.startAt))).map(a => { // newest on top, oldest at the bottom
       const first = k === toDateInput(new Date(a.startAt)), last = k === toDateInput(new Date(a.dueAt));
       const gl = glint(a), idx = Math.max(0, Math.round((d - sod(new Date(a.startAt))) / 864e5));
       return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)};--g:${gl.g};--per:${gl.per}s;--del:${(idx * STEP - T).toFixed(3)}s">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
