@@ -2498,6 +2498,8 @@ setInterval(() => {
 }, 60000);
 if (!location.hash) history.replaceState(null, '', '#/today');
 setRoute();
+syncPull();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncPull(); });
 </script>
 <script>
 /* Apple-style date + time picker: month grid and spinning wheels. Replaces the browser's datetime-local popup. */
