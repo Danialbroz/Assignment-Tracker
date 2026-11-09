@@ -2176,13 +2176,12 @@ async function openPuter() {
   q.tabIndex = -1; q.focus({ preventScroll: true });
 }
 function confirmPop(title, text, yes, label) {
-  const q = $('#quick');
-  if (q.querySelector('.q-confirm')) return;
-  if (!q.classList.contains('open')) { clearTimeout(ui.quickClear); q.innerHTML = ''; ui.quick = { solo: true }; q.classList.add('open'); $('#quick-scrim').classList.add('open'); }
-  const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
+  const q = $('#quick'), inQuick = q.classList.contains('open');
+  if ($('.q-confirm')) return;
+  const el = document.createElement('div'); el.className = inQuick ? 'q-confirm' : 'q-confirm fx'; el.setAttribute('role', 'alertdialog');
   el.innerHTML = `<div><h3>${h(title)}</h3><p>${h(text)}</p>
     <span class="acts"><button class="btn quiet" data-action="confirm-no">Cancel</button><button class="btn primary" data-action="${yes}">${h(label)}</button></span></div>`;
-  q.appendChild(el); el.querySelector('[data-action="confirm-no"]').focus();
+  (inQuick ? q : document.body).appendChild(el); el.querySelector('[data-action="confirm-no"]').focus();
 }
 function puterLogout() {
   const q = $('#quick');
