@@ -1423,7 +1423,6 @@ function viewToday() {
   const overdue = open.filter(a => new Date(a.dueAt) < now).sort(byDue);
   const upcoming = open.filter(a => { const d = new Date(a.dueAt); return d >= now && d - now <= 14 * DAY; }).sort(byDue); // Coming up: next 14 days only
   const within48 = upcoming.filter(a => new Date(a.dueAt) - now <= 48 * HOUR).length;
-  const weekHrs = open.filter(a => new Date(a.dueAt) - now <= 7 * DAY).reduce((s, a) => s + remainingHrs(a), 0);
   const ranked = [...open].sort((a, b) => priority(b, now) - priority(a, now)).slice(0, 3);
   const wk = weekOfSem(now);
 
