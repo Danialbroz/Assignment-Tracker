@@ -1834,6 +1834,36 @@ function saveClass() {
   if (old) Object.assign(old, v); else S.timetable.push({ id: uid(), ...v });
   save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
 }
+/* AI timetable scanner: sends the picture to Puter's vision model, adds the classes it reads */
+async function scanTimetable(file) {
+  const btn = $('#tt-scan-btn');
+  if (!window.puter) { toast('Puter failed to load. Check your connection.'); return; }
+  btn.disabled = true; btn.textContent = 'Scanning…';
+  try {
+    const url = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(file); });
+    const codes = S.courses.map(c => c.code).join(', ');
+    const res = await puter.ai.chat(
+      `This image is a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`,
+      url, { model: 'gpt-4o' });
+    const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
+    const rows = JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0]);
+    let added = 0;
+    rows.forEach(r => {
+      const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim());
+      if (!c || !/^\d\d:\d\d$/.test(r.start) || !/^\d\d:\d\d$/.test(r.end) || toMin(r.end) <= toMin(r.start) || !(r.day >= 0 && r.day <= 6)) return;
+      if (S.timetable.some(k => k.courseId === c.id && k.day === +r.day && k.start === r.start)) return; // already there
+      S.timetable.push({ id: uid(), courseId: c.id, type: TT_TYPES[r.type] ? r.type : 'L', day: +r.day, start: r.start, end: r.end, room: r.room || '', group: r.group || '', lecturer: r.lecturer || '' });
+      added++;
+    });
+    if (!added) throw new Error('none');
+    save(); closeQuick(); renderMain(); toast(`Scanned ${added} ${added === 1 ? 'class' : 'classes'} from your timetable.`);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '✨ AI timetable scanner';
+    toast('Could not read that timetable. Try a clearer picture.');
+  }
+}
+$('#tt-scan-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanTimetable(f); });
+
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
   clearTimeout(ui.quickClear); ui.quickClear = setTimeout(() => { q.innerHTML = ''; q.classList.remove('saved'); }, 400); // let the exit animation finish
