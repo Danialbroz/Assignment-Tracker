@@ -704,6 +704,10 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .cal-day.today .cal-chip { color: var(--on-accent); }
 .cal-more { font: 500 10.5px var(--sans); color: var(--muted); padding-left: 9px; }
 .cal-dots { display: none; }
+.cal-spans { display: grid; gap: 3px; margin: 8px -9px 0; }
+.cal-span { height: 15px; padding-left: 8px; background: color-mix(in srgb, var(--c) 45%, transparent); font: 600 10px/15px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; }
+.cal-span.first { margin-left: 9px; border-radius: 99px 0 0 99px; } .cal-span.last { margin-right: 9px; border-radius: 0 99px 99px 0; } .cal-span.first.last { border-radius: 99px; }
+.cal-span.done { opacity: .4; }
 .cal-side { padding: 22px 20px; border-left: 1px solid var(--rule); display: flex; flex-direction: column; gap: 12px; min-width: 0; max-height: 720px; overflow-y: auto; }
 .cal-side-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .cal-side-head h3 { font: 600 19px var(--sans); margin: 0; }
@@ -726,6 +730,7 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
   .cal-day { min-height: 52px; padding: 6px; border-radius: 12px; align-items: center; }
   .cal-day:hover { transform: none; }
   .cal-n { font-size: 15px; }
+  .cal-spans { margin: 5px -5px 0; } .cal-span.first { margin-left: 5px; } .cal-span.last { margin-right: 5px; } .cal-span { font-size: 0; }
   .cal-items { display: none; }
   .cal-dots { display: flex; gap: 3px; justify-content: center; margin-top: auto; padding-top: 5px; }
   .cal-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--c); }
@@ -902,6 +907,7 @@ main { padding-bottom: 130px; }
 <dialog id="dlg-import" aria-labelledby="imp-h"></dialog>
 <input type="file" id="json-file" accept="application/json,.json" hidden>
 <input type="file" id="tt-scan-file" accept="image/*" hidden>
+<input type="file" id="as-scan-file" accept="image/*" hidden>
 <script src="https://js.puter.com/v2/"></script>
 
 <script>
@@ -1266,7 +1272,7 @@ function viewToday() {
   const now = new Date();
   const open = S.assignments.filter(a => !isDone(a));
   const overdue = open.filter(a => new Date(a.dueAt) < now).sort(byDue);
-  const upcoming = open.filter(a => new Date(a.dueAt) >= now).sort(byDue);
+  const upcoming = open.filter(a => { const d = new Date(a.dueAt); return d >= now && d - now <= 14 * DAY; }).sort(byDue); // Coming up: next 14 days only
   const within48 = upcoming.filter(a => new Date(a.dueAt) - now <= 48 * HOUR).length;
   const weekHrs = open.filter(a => new Date(a.dueAt) - now <= 7 * DAY).reduce((s, a) => s + remainingHrs(a), 0);
   const ranked = [...open].sort((a, b) => priority(b, now) - priority(a, now)).slice(0, 3);
@@ -1359,9 +1365,14 @@ function calendarHTML(now) {
   const isLate = a => !isDone(a) && new Date(a.dueAt) < now;
   const cells = Array.from({ length: 42 }, (_, i) => {
     const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
+    const spans = S.assignments.filter(a => a.startAt && toDateInput(new Date(a.startAt)) <= k && k <= toDateInput(new Date(a.dueAt))).map(a => {
+      const first = k === toDateInput(new Date(a.startAt)), last = k === toDateInput(new Date(a.dueAt));
+      return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)}">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
+    }).join('');
     const cls = [d.getMonth() !== base.getMonth() && 'out', +d === +sod(now) && 'today', +d === +sel && 'sel', items.some(isLate) && 'late', items.length && 'has'].filter(Boolean).join(' ');
     return `<button class="cal-day ${cls}" data-action="cal-pick" data-date="${k}" aria-pressed="${+d === +sel}" aria-label="${fmtLong(d)}, ${items.length ? items.length + ' due' : 'nothing due'}">
       <span class="cal-n">${d.getDate()}</span>
+      ${spans ? `<span class="cal-spans">${spans}</span>` : ''}
       <span class="cal-items">${items.slice(0, 2).map(a => `<span class="cal-chip ${isDone(a) ? 'done' : ''} ${isLate(a) ? 'late' : ''}" style="--c:${col(course(a.courseId)?.colour)}">${h(a.title)}</span>`).join('')}${items.length > 2 ? `<span class="cal-more">+${items.length - 2} more</span>` : ''}</span>
       <span class="cal-dots" aria-hidden="true">${items.slice(0, 3).map(a => `<i style="--c:${col(course(a.courseId)?.colour)}"></i>`).join('')}</span>
     </button>`;
@@ -1771,6 +1782,7 @@ function openQuick(defaults = {}) {
       <label class="chip" data-chip="due"><span>Due date &amp; time</span><input type="datetime-local" data-q="due" readonly></label>
       <label class="chip" data-chip="weight"><span>Mark (% of grade)</span><input type="number" data-q="weight" min="0" max="100" step="0.5" placeholder="e.g. 15"></label>
     </div>
+    <button class="btn primary" id="as-scan-btn" data-action="as-scan" style="width:100%;margin-top:14px">✨ AI Assignment scanner</button>
     <div class="quick-foot">
       <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
     </div>`;
@@ -1808,7 +1820,6 @@ function openClass(id) {
   const txt = (k, l, ph) => `<label class="chip"><span>${l}</span><input type="text" data-tt="${k}" value="${h(x[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
   q.innerHTML = `
     <h2 class="quick-title">${id ? 'Edit class' : 'New class'}</h2>
-    ${id ? '' : '<button class="btn quiet" id="tt-scan-btn" data-action="tt-scan" style="width:100%;margin-top:14px">✨ AI timetable scanner</button>'}
     <div class="chips pf-modal">
       <label class="chip"><span>Course</span><select data-tt="courseId">${opt(S.courses.map(c => [c.id, c.code]), x.courseId)}</select></label>
       <label class="chip"><span>Type</span><select data-tt="type">${opt(Object.entries(TT_TYPES), x.type)}</select></label>
@@ -1818,6 +1829,7 @@ function openClass(id) {
       ${txt('room', 'Room', 'e.g. 1-608')}${txt('group', 'Group', 'e.g. L01-B02')}
       <label class="chip" style="grid-column:1/-1"><span>Lecturer</span><input type="text" data-tt="lecturer" value="${h(x.lecturer || '')}" placeholder="e.g. SHADIL" autocomplete="off"></label>
     </div>
+    ${id ? '' : '<button class="btn primary" id="tt-scan-btn" data-action="tt-scan" style="width:100%;margin-top:14px">✨ AI timetable scanner</button>'}
     <div class="quick-foot">
       ${id ? '<button class="btn quiet small" data-action="tt-delete">Delete</button>' : ''}
       <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
@@ -1834,19 +1846,23 @@ function saveClass() {
   if (old) Object.assign(old, v); else S.timetable.push({ id: uid(), ...v });
   save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
 }
-/* AI timetable scanner: sends the picture to Puter's vision model, adds the classes it reads */
-async function scanTimetable(file) {
-  const btn = $('#tt-scan-btn');
-  if (!window.puter) { toast('Puter failed to load. Check your connection.'); return; }
+/* AI scanners: send the picture to Puter's vision model, get a JSON array back */
+async function aiRows(file, prompt) {
+  if (!window.puter) throw new Error('Puter failed to load');
+  const url = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(file); });
+  const res = await puter.ai.chat(prompt, url, { model: 'claude-haiku-5-5' });
+  const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
+  return JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0]);
+}
+async function runScan(btn, label, work) {
   btn.disabled = true; btn.textContent = 'Scanning…';
-  try {
-    const url = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(file); });
+  try { await work(); }
+  catch (e) { btn.disabled = false; btn.textContent = label; toast(e.message === 'Puter failed to load' ? 'Puter failed to load. Check your connection.' : 'Could not read that picture. Try a clearer one.'); }
+}
+function scanTimetable(file) {
+  runScan($('#tt-scan-btn'), '✨ AI timetable scanner', async () => {
     const codes = S.courses.map(c => c.code).join(', ');
-    const res = await puter.ai.chat(
-      `This image is a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`,
-      url, { model: 'gpt-4o' });
-    const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
-    const rows = JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0]);
+    const rows = await aiRows(file, `This image is a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`);
     let added = 0;
     rows.forEach(r => {
       const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim());
@@ -1857,12 +1873,33 @@ async function scanTimetable(file) {
     });
     if (!added) throw new Error('none');
     save(); closeQuick(); renderMain(); toast(`Scanned ${added} ${added === 1 ? 'class' : 'classes'} from your timetable.`);
-  } catch (e) {
-    btn.disabled = false; btn.textContent = '✨ AI timetable scanner';
-    toast('Could not read that timetable. Try a clearer picture.');
-  }
+  });
+}
+function scanAssignment(file) {
+  runScan($('#as-scan-btn'), '✨ AI Assignment scanner', async () => {
+    const picked = $('[data-q="courseId"]')?.value || S.courses[0]?.id;
+    const list = S.courses.map(c => `${c.code} (${c.name})`).join('; ');
+    const rows = await aiRows(file, `This image shows one or more university assignments (brief, outline, or deadline list). Today is ${toDateInput(new Date())}. My courses: ${list}. Return ONLY a JSON array, no prose, no code fences. One object per assignment: {"code": the course code from my list this assignment belongs to (use the subject name, code or lecturer in the image to decide; "" if unsure), "title": short assignment name, "start": "YYYY-MM-DDTHH:MM" when work/issue starts or "" if not shown, "due": "YYYY-MM-DDTHH:MM" 24h deadline (use 23:59 if no time), "weight": number, percent of the final grade or 0}. Use the year ${new Date().getFullYear()} or later if the image shows no year.`);
+    const dt = /^\d{4}-\d\d-\d\dT\d\d:\d\d$/;
+    let added = 0, last;
+    rows.forEach(r => {
+      if (!r.title || !dt.test(r.due)) return;
+      const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim()) || S.courses.find(x => x.id === picked);
+      if (!c) return;
+      const dueAt = fromInput(r.due).toISOString();
+      if (S.assignments.some(x => x.courseId === c.id && x.title === r.title && x.dueAt === dueAt)) return; // already there
+      let startAt = dt.test(r.start) ? fromInput(r.start).toISOString() : null;
+      if (startAt && startAt > dueAt) startAt = null;
+      S.assignments.push({ id: uid(), courseId: c.id, title: String(r.title).trim(), dueAt, startAt, weightPct: num(r.weight, 0), estimateHrs: 1, status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() });
+      added++; last = c;
+    });
+    if (!added) throw new Error('none');
+    save(); chime(); closeQuick(); renderRail(); renderMain();
+    toast(`Scanned ${added} ${added === 1 ? 'assignment for ' + last.code : 'assignments'}.`);
+  });
 }
 $('#tt-scan-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanTimetable(f); });
+$('#as-scan-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanAssignment(f); });
 
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
@@ -2116,6 +2153,7 @@ document.addEventListener('click', e => {
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-edit': openClass(t.dataset.id); break;
     case 'tt-scan': $('#tt-scan-file').click(); break;
+    case 'as-scan': $('#as-scan-file').click(); break;
     case 'tt-delete': if (!confirm('Delete this class from your timetable?')) break; S.timetable = S.timetable.filter(k => k.id !== ui.quick.cls); save(); closeQuick(); renderMain(); toast('Class deleted.'); break;
     case 'quick-ask-cancel': askCancelQuick(); break;
     case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
