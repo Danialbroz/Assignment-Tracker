@@ -15,7 +15,7 @@
 
 <br>
 
-<img src="docs/calendar.png" alt="Ledger calendar with overlapping assignment bars and the Due list" width="900">
+<img src="docs/preview.png" alt="Ledger calendar with overlapping assignment bars and the Due list" width="900">
 
 </div>
 
