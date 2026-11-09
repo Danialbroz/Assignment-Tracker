@@ -941,6 +941,10 @@ main { padding-bottom: 130px; }
   .rail, .drawer, .quick { display: none !important; }
   .app { grid-template-columns: 1fr; }
 }
+.pf-edit-course { display: none; }
+.pf-pick { display: grid; gap: 8px; margin-top: 18px; }
+.pf-pick .btn { justify-content: flex-start; text-align: left; }
+@media (max-width: 760px), (hover: none) and (pointer: coarse) { .pf-edit-course { display: block; } .pf-course { cursor: pointer; } }
 /* every popup: soft purple outline */
 .q-confirm > div, .col-pop, .dtp, .cal-pop-sheet, .drawer {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge));
