@@ -2219,7 +2219,7 @@ function setRoute() {
 let prevRoute = null;
 function setTheme(t) {
   S.settings.theme = t; document.documentElement.setAttribute('data-theme', t); save();
-  const sw = $(".theme-sw"); if (sw) sw.setAttribute("aria-checked", t === "dark"); // update in place so the thumb slides
+  document.querySelectorAll(".theme-sw").forEach(sw => sw.setAttribute("aria-checked", t === "dark")); // update in place so the thumb slides
 }
 function openKeys() {
   $('#dlg-keys').innerHTML = `
