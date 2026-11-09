@@ -715,15 +715,17 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
 .cal-day.today { background: linear-gradient(160deg, color-mix(in srgb, var(--accent-btn) 85%, transparent), color-mix(in srgb, var(--accent-btn) 25%, transparent)); border-color: transparent; color: var(--on-accent); box-shadow: 0 8px 22px color-mix(in srgb, var(--accent-btn) 35%, transparent); }
 .cal-day.sel { border: 1.5px dashed var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
 .cal-day.late:not(.today) .cal-n { color: var(--accent-ink); }
-.cal-items { display: grid; gap: 3px; margin-top: auto; padding-top: 8px; min-width: 0; }
+.cal-items { display: grid; gap: 3px; margin-top: 0; order: 1; padding-top: 8px; min-width: 0; }
 .cal-chip { display: block; padding-left: 7px; border-left: 2px solid var(--c); font: 500 11px/1.3 var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; opacity: .9; }
 .cal-chip.done { text-decoration: line-through; opacity: .5; }
 .cal-chip.late { color: var(--accent-ink); font-weight: 600; }
 .cal-day.today .cal-chip { color: var(--on-accent); }
 .cal-more { font: 500 10.5px var(--sans); color: var(--muted); padding-left: 9px; }
 .cal-dots { display: none; }
-.cal-spans { display: grid; gap: 3px; margin: 8px -9px 0; }
-.cal-span { height: 15px; padding-left: 8px; background: color-mix(in srgb, var(--c) 45%, transparent); font: 600 10px/15px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; }
+.cal-spans { display: grid; gap: 2px; width: calc(100% + 18px); margin: auto -9px 0; order: 3; }
+.cal-span { position: relative; height: 11px; padding-left: 8px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 60%, #fff 12%), color-mix(in srgb, var(--c) 40%, transparent)); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); font: 600 9px/11px var(--sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: inherit; }
+.cal-span::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%); transform: translateX(-120%); animation: calGlint 5s linear infinite; animation-delay: calc(var(--col, 0) * .5s); pointer-events: none; }
+@keyframes calGlint { 0% { transform: translateX(-120%); } 10%, 100% { transform: translateX(120%); } }
 .cal-span.first { margin-left: 9px; border-radius: 99px 0 0 99px; } .cal-span.last { margin-right: 9px; border-radius: 0 99px 99px 0; } .cal-span.first.last { border-radius: 99px; }
 .cal-span.done { opacity: .4; }
 .cal-side { padding: 22px 20px; border-left: 1px solid var(--rule); display: flex; flex-direction: column; gap: 12px; min-width: 0; max-height: 720px; overflow-y: auto; }
@@ -748,14 +750,14 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
   .cal-day { min-height: 52px; padding: 6px; border-radius: 12px; align-items: center; }
   .cal-day:hover { transform: none; }
   .cal-n { font-size: 15px; }
-  .cal-spans { margin: 5px -5px 0; } .cal-span.first { margin-left: 5px; } .cal-span.last { margin-right: 5px; } .cal-span { font-size: 0; }
+  .cal-spans { width: calc(100% + 10px); margin: auto -5px 0; } .cal-span { height: 6px; font-size: 0; } .cal-span.first { margin-left: 5px; } .cal-span.last { margin-right: 5px; }
   .cal-items { display: none; }
-  .cal-dots { display: flex; gap: 3px; justify-content: center; margin-top: auto; padding-top: 5px; }
+  .cal-dots { display: flex; gap: 3px; justify-content: center; margin-top: 0; padding-top: 5px; order: 1; }
   .cal-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--c); }
   .cal-day.today .cal-dots i { background: var(--on-accent); }
   .cal-sub { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .cal-card { animation: none; } .cal-day, .cal-card { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .cal-card, .cal-span::after { animation: none; } .cal-day, .cal-card { transition: none; } }
 /* Profile page */
 .profile { display: grid; gap: 16px; align-content: start; max-width: 520px; margin-top: 8px; }
 .pf-grid { display: grid; gap: 24px 40px; align-items: start; margin-top: 8px; }
@@ -1415,7 +1417,7 @@ function calendarHTML(now) {
     const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
     const spans = S.assignments.filter(a => a.startAt && toDateInput(new Date(a.startAt)) <= k && k <= toDateInput(new Date(a.dueAt))).map(a => {
       const first = k === toDateInput(new Date(a.startAt)), last = k === toDateInput(new Date(a.dueAt));
-      return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)}">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
+      return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)};--col:${(d.getDay() + 6) % 7}">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
     }).join('');
     const cls = [d.getMonth() !== base.getMonth() && 'out', +d === +sod(now) && 'today', +d === +sel && 'sel', items.some(isLate) && 'late', items.length && 'has'].filter(Boolean).join(' ');
     return `<button class="cal-day ${cls}" data-action="cal-pick" data-date="${k}" aria-pressed="${+d === +sel}" aria-label="${fmtLong(d)}, ${items.length ? items.length + ' due' : 'nothing due'}">
