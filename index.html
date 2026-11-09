@@ -1415,7 +1415,7 @@ function calendarHTML(now) {
   const isLate = a => !isDone(a) && new Date(a.dueAt) < now;
   // one soft light travels at constant speed (STEP s per day) from the start date to the due date, rests 2s, repeats.
   // Each day cell shows the band while its centre is within 0.8 cell of the cell centre, so neighbours hand it over seamlessly.
-  const STEP = 0.5, kf = [], kfIdx = new Map();
+  const STEP = 0.5, kf = [], kfIdx = new Map(), T = performance.now() / 1000; // T: page clock, so a re-render resumes the glint mid-sweep instead of restarting it
   const glint = a => {
     if (kfIdx.has(a.id)) return kfIdx.get(a.id);
     const n = Math.round((sod(new Date(a.dueAt)) - sod(new Date(a.startAt))) / 864e5) + 1, per = (n + 0.6) * STEP + 2, g = 'g' + kfIdx.size;
@@ -1427,7 +1427,7 @@ function calendarHTML(now) {
     const spans = S.assignments.filter(a => a.startAt && toDateInput(new Date(a.startAt)) <= k && k <= toDateInput(new Date(a.dueAt))).map(a => {
       const first = k === toDateInput(new Date(a.startAt)), last = k === toDateInput(new Date(a.dueAt));
       const gl = glint(a), idx = Math.max(0, Math.round((d - sod(new Date(a.startAt))) / 864e5));
-      return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)};--g:${gl.g};--per:${gl.per}s;--del:${idx * STEP}s">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
+      return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)};--g:${gl.g};--per:${gl.per}s;--del:${(idx * STEP - T).toFixed(3)}s">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
     }).join('');
     const cls = [d.getMonth() !== base.getMonth() && 'out', +d === +sod(now) && 'today', +d === +sel && 'sel', items.some(isLate) && 'late', items.length && 'has'].filter(Boolean).join(' ');
     return `<button class="cal-day ${cls}" data-action="cal-pick" data-date="${k}" aria-pressed="${+d === +sel}" aria-label="${fmtLong(d)}, ${items.length ? items.length + ' due' : 'nothing due'}">
