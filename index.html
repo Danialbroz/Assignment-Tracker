@@ -998,6 +998,74 @@ const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[
 /* =========================================================
    STARTING DATA: this term's timetable. Edit this table (or the courses in the app) to change it.
    ========================================================= */
+const SUBJECTS = {   // UniKL study plan: subject code -> official name (used by the timetable scanner)
+  IGB12102: 'MATHEMATICS FOR TECHNOLOGIST 1',
+  INB23503: 'IT ESSENTIALS',
+  ISB10103: 'PRINCIPLES OF COMPUTER PROGRAMMING',
+  MPU3142: 'BAHASA MELAYU KOMUNIKASI 2',
+  MPU3182: 'PENGHAYATAN ETIKA DAN PERADABAN',
+  MPU3192: 'PHILOSOPHY AND CURRENT ISSUES',
+  MPU34112: 'HUFFAZ PROFESSIONAL 2',
+  MPU3412: 'CAREER GUIDANCE 2',
+  MPU3422: 'COMMUNITY SERVICE 2',
+  MPU3432: 'CULTURE 2',
+  MPU3442: 'RAKAN MASJID 2',
+  MPU3452: 'SISWA SISWI BOMBA DAN PENYELAMAT 2',
+  MPU3462: 'KOR SISWA SISWI PERTAHANAN AWAM 2',
+  MPU3472: 'SPORTS MANAGEMENT 2',
+  MPU3482: 'PERSONAL FINANCIAL MANAGEMENT 2',
+  MPU3492: 'ASKAR WATANIAH 2',
+  WEB10302: 'FUNDAMENTAL ENGLISH',
+  IBB12704: 'ELECTRICAL CIRCUIT ANALYSIS',
+  IEB20603: 'DATABASE MANAGEMENT SYSTEMS',
+  IGB12202: 'MATHEMATICS FOR TECHNOLOGIST 2',
+  INB12604: 'NETWORK FUNDAMENTALS',
+  ISB16003: 'OBJECT-ORIENTED PROGRAMMING',
+  MPU3352: 'KURSUS INTEGRITI DAN ANTIRASUAH 2',
+  WEB20202: 'PROFESSIONAL ENGLISH 1',
+  IBB30104: 'DIGITAL PRINCIPLES',
+  IGB10003: 'ENGINEERING MATHEMATICS 1',
+  INB23804: 'NETWORK ROUTING AND SWITCHING',
+  INB24703: 'INDUSTRIAL REVOLUTION TECHNOLOGY',
+  ISB30503: 'DATA STRUCTURES AND ALGORITHMS',
+  IBB20204: 'MICROPROCESSOR AND MICROCONTROLLER SYSTEMS',
+  IBB22403: 'OPERATING SYSTEM ADMINISTRATION',
+  INB23304: 'NETWORK SECURITY',
+  INB24804: 'SCALABLE NETWORK',
+  MPU3222: 'ISU-ISU KONTEMPORARI MUSLIM',
+  MPU3242: 'INNOVATION MANAGEMENT',
+  MPU3252: 'CULTURE AND LIFESTYLE 2',
+  WEB20302: 'PROFESSIONAL ENGLISH 2',
+  WKD10101: 'KOREAN LANGUAGE 1',
+  WMD10101: 'MANDARIN 1',
+  IDB30402: 'ENGINEERING ETHICS AND SOCIETY',
+  IDB30503: 'DESIGN PROJECT',
+  INB35504: 'NETWORK INTERCONNECTIONS',
+  INB35604: 'WIRELESS NETWORKS',
+  WBB20103: 'TECHNOPRENEURSHIP',
+  WKD10201: 'KOREAN LANGUAGE 2',
+  WMD10201: 'MANDARIN 2',
+  INB35404: 'NETWORK SYSTEMS MANAGEMENT',
+  INB35605: 'ADVANCED ROUTING',
+  INB35705: 'MULTILAYER SWITCHING',
+  IPB49804: 'FINAL YEAR PROJECT 1',
+  INB47605: 'NETWORK TROUBLESHOOTING',
+  IPB49906: 'FINAL YEAR PROJECT 2',
+  WIB41012: 'INDUSTRIAL TRAINING',
+  IBB22703: 'EMBEDDED SYSTEM',
+  IBB31803: 'SYSTEM PERFORMANCE AND MODELLING',
+  IBB32203: 'NETWORK OPERATING SYSTEM',
+  INB33103: 'TELECOMMUNICATIONS',
+  INB48603: 'SELECTED TOPICS IN COMMUNICATION SYSTEMS',
+  INB48703: 'INTERNET OF THINGS',
+  ISB26603: 'MOBILE AND UBIQUITOUS COMPUTING',
+  ISB46703: 'PRINCIPLES OF ARTIFICIAL INTELLIGENCE',
+  MPU3212: 'BAHASA KEBANGSAAN A',
+  WAD10101: 'ARABIC 1',
+  WAD10201: 'ARABIC 2'
+};
+const GENERIC_NAME = /^(lecture|tutorial|lab|workshop)/i;   // placeholder names from the class types
+const subjectName = (code, cur) => SUBJECTS[String(code).toUpperCase().trim()] || cur;
 const TERM = { name: 'October 2026', start: '2026-10-12', weeks: 14 };   // start = Monday of week 1
 const TIMETABLE = [   // [code, name, colour]; names are the class types from the timetable, rename them in the app
   ['MPU3242', 'Lecture & Tutorial', 'ochre'],
@@ -1010,7 +1078,7 @@ const TIMETABLE = [   // [code, name, colour]; names are the class types from th
 function seed() {
   const start = new Date(TERM.start + 'T00:00:00');
   const courses = TIMETABLE.map(([code, name, colour]) => ({
-    id: code.toLowerCase(), code, name, colour, instructor: '',
+    id: code.toLowerCase(), code, name: subjectName(code, name), colour, instructor: '',
     weightings: [['Coursework', 50], ['Final exam', 50]].map(([label, pct]) => ({ id: uid(), label, pct }))
   }));
   return {
@@ -1038,6 +1106,7 @@ function load() {
     if (s.version === 1 && s.courses.some(c => c.id === 'bio')) return null; // old demo data
     s.archive = s.archive || [];
     s.timetable = Array.isArray(s.timetable) ? s.timetable : [];
+    s.courses.forEach(c => { if (GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name); });
     return s;
   } catch (e) { return null; }
 }
@@ -2000,6 +2069,7 @@ function scanTimetable(files) {
     let added = 0;
     rows.forEach(r => {
       const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim());
+      if (c && GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name);
       if (!c || !/^\d\d:\d\d$/.test(r.start) || !/^\d\d:\d\d$/.test(r.end) || toMin(r.end) <= toMin(r.start) || !(r.day >= 0 && r.day <= 6)) return;
       if (S.timetable.some(k => k.courseId === c.id && k.day === +r.day && k.start === r.start)) return; // already there
       S.timetable.push({ id: uid(), courseId: c.id, type: TT_TYPES[r.type] ? r.type : 'L', day: +r.day, start: r.start, end: r.end, room: r.room || '', group: r.group || '', lecturer: r.lecturer || '' });
