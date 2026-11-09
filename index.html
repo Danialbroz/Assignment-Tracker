@@ -2242,6 +2242,18 @@ function openKeys() {
   $('#dlg-keys').showModal();
 }
 
+/* ---------- touch settings dropdown ---------- */
+function setPop(open) {
+  const p = $('#set-pop'), b = $('.set-top');
+  if (open) { const r = b.getBoundingClientRect(); p.style.top = (r.bottom + 8) + 'px'; p.style.right = Math.max(12, innerWidth - r.right) + 'px'; }
+  p.hidden = !open; b.setAttribute('aria-expanded', open);
+}
+document.addEventListener('click', e => { // runs first: close on any outside tap or after picking an option (theme stays open)
+  if ($('#set-pop').hidden || e.target.closest('[data-action="set-pop"], #set-pop [data-action="theme"]')) return;
+  setPop(false);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#set-pop').hidden) setPop(false); });
+
 /* ---------- click delegation ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-action]'); if (!t) return;
