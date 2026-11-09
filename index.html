@@ -1981,7 +1981,7 @@ async function openPuter() {
   const q = $('#quick'); clearTimeout(ui.quickClear); q.classList.remove('saved');
   q.innerHTML = `
     <h2 class="quick-title">Puter account</h2>
-    <p class="quick-tip" style="margin:14px 0 4px">${user ? `Signed in as <b>${h(user)}</b>. The AI scanners use this account.` : 'Not signed in. Log in to use the AI scanners.'}</p>
+    <p class="quick-tip" style="margin:14px 0 4px">${user ? `Signed in as <b>${h(user)}</b>. The AI scanners use this account, and your data syncs to it.` : 'Not signed in. Log in to use the AI scanners.'}</p>
     <div class="quick-foot">
       <span class="acts">
         <button class="btn quiet small" data-action="quick-ask-cancel">Close</button>
