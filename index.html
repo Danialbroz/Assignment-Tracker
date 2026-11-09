@@ -2504,7 +2504,7 @@ document.addEventListener('click', e => {
     case 'puter-keep': $('.q-confirm')?.remove(); break;
     case 'puter-logout-yes': puter.auth.signOut(); toast('Logged out of Puter.'); openPuter(); break;
     case 'as-scan': $('#as-scan-file').click(); break;
-    case 'confirm-no': $('.q-confirm')?.remove(); if (ui.quick?.solo) closeQuick(); break;
+    case 'confirm-no': $('.q-confirm')?.remove(); break;
     case 'tt-delete': confirmPop('Delete this class?', 'It will be removed from your timetable.', 'tt-delete-yes', 'Yes, delete'); break;
     case 'tt-delete-yes': S.timetable = S.timetable.filter(k => k.id !== ui.quick.cls); save(); closeQuick(); renderMain(); toast('Class deleted.'); break;
     case 'quick-ask-cancel': askCancelQuick(); break;
