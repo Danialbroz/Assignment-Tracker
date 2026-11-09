@@ -906,8 +906,8 @@ main { padding-bottom: 130px; }
 <dialog id="dlg-keys" aria-labelledby="keys-h"></dialog>
 <dialog id="dlg-import" aria-labelledby="imp-h"></dialog>
 <input type="file" id="json-file" accept="application/json,.json" hidden>
-<input type="file" id="tt-scan-file" accept="image/*" hidden>
-<input type="file" id="as-scan-file" accept="image/*" hidden>
+<input type="file" id="tt-scan-file" accept="image/*,application/pdf" hidden>
+<input type="file" id="as-scan-file" accept="image/*,application/pdf" hidden>
 <script src="https://js.puter.com/v2/"></script>
 
 <script>
@@ -1848,17 +1848,55 @@ function saveClass() {
   save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
 }
 /* AI scanners: send the picture to Puter's vision model, get a JSON array back */
+const SCAN_MAX_MB = 15, SCAN_MAX_PAGES = 100, SCAN_BATCH = 4;
+const readURL = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(f); });
+function loadPdfJs() { // pdf.js loads on first PDF only
+  return window.pdfjsLib ? Promise.resolve() : new Promise((ok, no) => {
+    const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    sc.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; ok(); };
+    sc.onerror = () => no(new Error('pdfjs')); document.head.appendChild(sc);
+  });
+}
+/* Picture -> [[dataURL]]; PDF -> pages rendered to JPEG, grouped SCAN_BATCH per AI call */
+async function fileToBatches(file) {
+  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  if (!isPdf && !file.type.startsWith('image/')) throw new Error('type');
+  if (file.size > SCAN_MAX_MB * 1048576) throw new Error('size');
+  if (!isPdf) return [[await readURL(file)]];
+  await loadPdfJs();
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  if (pdf.numPages > SCAN_MAX_PAGES) throw new Error('pages');
+  const batches = [];
+  for (let n = 1; n <= pdf.numPages; n++) {
+    const page = await pdf.getPage(n), vp = page.getViewport({ scale: 1.5 });
+    const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    if (n % SCAN_BATCH === 1 || !batches.length) batches.push([]);
+    batches[batches.length - 1].push(cv.toDataURL('image/jpeg', 0.8));
+  }
+  return batches;
+}
 async function aiRows(file, prompt) {
   if (!window.puter) throw new Error('Puter failed to load');
-  const url = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(file); });
-  const res = await puter.ai.chat(prompt, url, { model: 'claude-haiku-5-5' });
-  const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
-  return JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0]);
+  const rows = [];
+  for (const imgs of await fileToBatches(file)) {
+    const res = await puter.ai.chat(prompt, imgs, { model: 'claude-haiku-5-5' });
+    const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
+    try { rows.push(...JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0])); } catch (e) { /* that batch had nothing readable */ }
+  }
+  return rows;
 }
+const SCAN_ERR = {
+  'Puter failed to load': 'Puter failed to load. Check your connection.',
+  type: 'Only PDF and image files can be uploaded.',
+  size: `That file is over ${SCAN_MAX_MB} MB.`,
+  pages: `That PDF has more than ${SCAN_MAX_PAGES} pages.`,
+  pdfjs: 'Could not load the PDF reader. Check your connection.'
+};
 async function runScan(btn, label, work) {
   btn.disabled = true; btn.textContent = 'Scanning…';
   try { await work(); }
-  catch (e) { btn.disabled = false; btn.textContent = label; toast(e.message === 'Puter failed to load' ? 'Puter failed to load. Check your connection.' : 'Could not read that picture. Try a clearer one.'); }
+  catch (e) { btn.disabled = false; btn.textContent = label; toast(SCAN_ERR[e.message] || 'Could not read that file. Try a clearer one.'); }
 }
 function scanTimetable(file) {
   runScan($('#tt-scan-btn'), '✨ AI timetable scanner', async () => {
