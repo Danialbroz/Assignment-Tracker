@@ -1808,6 +1808,7 @@ function openClass(id) {
   const txt = (k, l, ph) => `<label class="chip"><span>${l}</span><input type="text" data-tt="${k}" value="${h(x[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
   q.innerHTML = `
     <h2 class="quick-title">${id ? 'Edit class' : 'New class'}</h2>
+    ${id ? '' : '<button class="btn quiet" id="tt-scan-btn" data-action="tt-scan" style="width:100%;margin-top:14px">✨ AI timetable scanner</button>'}
     <div class="chips pf-modal">
       <label class="chip"><span>Course</span><select data-tt="courseId">${opt(S.courses.map(c => [c.id, c.code]), x.courseId)}</select></label>
       <label class="chip"><span>Type</span><select data-tt="type">${opt(Object.entries(TT_TYPES), x.type)}</select></label>
