@@ -681,8 +681,12 @@ input[readonly][type="datetime-local"] { cursor: pointer; }
   .set-top { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 8px; background: none; border: 0; cursor: pointer; color: var(--ink-2); }
   .set-top svg { width: 22px; height: 22px; stroke-width: 1.6; transition: transform .45s cubic-bezier(.34,1.56,.64,1); }
   .set-top[aria-expanded="true"] svg { transform: rotate(120deg); }
-  .set-pop { position: fixed; z-index: 60; width: min(280px, calc(100vw - 24px)); display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: 16px; background: var(--paper); box-shadow: 0 12px 32px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transform: translateY(-8px) scale(.97); transform-origin: top right; transition: opacity .3s ease, transform .45s cubic-bezier(.22,1,.36,1), visibility 0s .45s; }
-  .set-pop.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .set-pop { position: fixed; z-index: 60; width: min(280px, calc(100vw - 24px)); display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--rule-strong); border-radius: 16px; background: var(--paper); box-shadow: 0 12px 32px rgba(0,0,0,.25); opacity: 0; visibility: hidden; transform: translateY(-10px) scale(.4); transform-origin: calc(100% - 22px) 0; transition: opacity .18s ease, transform .22s ease-in, visibility 0s .22s; }
+  .set-pop.open { opacity: 1; visibility: visible; transform: none; transition: opacity .2s ease, transform .55s cubic-bezier(.34,1.7,.5,1), visibility 0s; }
+  .set-pop > * { opacity: 0; transform: translateY(-8px) scale(.94); transition: opacity .15s ease, transform .15s ease; }
+  .set-pop.open > * { opacity: 1; transform: none; transition: opacity .3s ease, transform .5s cubic-bezier(.34,1.56,.64,1); }
+  .set-pop.open > :nth-child(1) { transition-delay: .06s; } .set-pop.open > :nth-child(2) { transition-delay: .11s; } .set-pop.open > :nth-child(3) { transition-delay: .16s; }
+  .set-pop.open > :nth-child(4) { transition-delay: .21s; } .set-pop.open > :nth-child(5) { transition-delay: .26s; } .set-pop.open > :nth-child(6) { transition-delay: .31s; }
   .set-pop .link-btn { text-align: left; padding: 6px 2px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
   .set-pop .link-btn:hover { color: var(--accent-ink); }
   .set-pop .theme-sw { margin: 6px 0 4px; }
