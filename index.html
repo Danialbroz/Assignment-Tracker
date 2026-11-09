@@ -941,6 +941,11 @@ main { padding-bottom: 130px; }
   .rail, .drawer, .quick { display: none !important; }
   .app { grid-template-columns: 1fr; }
 }
+/* every popup: soft purple outline */
+.q-confirm > div, .col-pop, .dtp, .cal-pop-sheet, .drawer {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent), 0 0 30px color-mix(in srgb, var(--accent) 26%, transparent), 0 24px 60px rgba(20,12,40,.35), inset 0 1px 0 var(--glass-hi);
+}
 </style>
 </head>
 <body>
