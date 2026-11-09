@@ -906,8 +906,8 @@ main { padding-bottom: 130px; }
 <dialog id="dlg-keys" aria-labelledby="keys-h"></dialog>
 <dialog id="dlg-import" aria-labelledby="imp-h"></dialog>
 <input type="file" id="json-file" accept="application/json,.json" hidden>
-<input type="file" id="tt-scan-file" accept="image/*,application/pdf" hidden>
-<input type="file" id="as-scan-file" accept="image/*,application/pdf" hidden>
+<input type="file" id="tt-scan-file" accept="image/*,application/pdf" multiple hidden>
+<input type="file" id="as-scan-file" accept="image/*,application/pdf" multiple hidden>
 <script src="https://js.puter.com/v2/"></script>
 
 <script>
@@ -1848,7 +1848,8 @@ function saveClass() {
   save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
 }
 /* AI scanners: send the picture to Puter's vision model, get a JSON array back */
-const SCAN_MAX_MB = 15, SCAN_MAX_PAGES = 100, SCAN_BATCH = 4;
+const SCAN_MAX_MB = 15, SCAN_MAX_PAGES = 100, SCAN_BATCH = 4, SCAN_MAX_IMAGES = 20, SCAN_MAX_PDFS = 5;
+const isPdfFile = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
 const readURL = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(f); });
 function loadPdfJs() { // pdf.js loads on first PDF only
   return window.pdfjsLib ? Promise.resolve() : new Promise((ok, no) => {
@@ -1859,7 +1860,7 @@ function loadPdfJs() { // pdf.js loads on first PDF only
 }
 /* Picture -> [[dataURL]]; PDF -> pages rendered to JPEG, grouped SCAN_BATCH per AI call */
 async function fileToBatches(file) {
-  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+  const isPdf = isPdfFile(file);
   if (!isPdf && !file.type.startsWith('image/')) throw new Error('type');
   if (file.size > SCAN_MAX_MB * 1048576) throw new Error('size');
   if (!isPdf) return [[await readURL(file)]];
@@ -1876,10 +1877,13 @@ async function fileToBatches(file) {
   }
   return batches;
 }
-async function aiRows(file, prompt) {
+async function aiRows(files, prompt) {
   if (!window.puter) throw new Error('Puter failed to load');
+  const pdfs = files.filter(isPdfFile).length;
+  if (pdfs > SCAN_MAX_PDFS) throw new Error('pdfs');
+  if (files.length - pdfs > SCAN_MAX_IMAGES) throw new Error('images');
   const rows = [];
-  for (const imgs of await fileToBatches(file)) {
+  for (const file of files) for (const imgs of await fileToBatches(file)) {
     const res = await puter.ai.chat(prompt, imgs, { model: 'claude-haiku-5-5' });
     const raw = typeof res === 'string' ? res : (res?.message?.content?.[0]?.text ?? res?.message?.content ?? '');
     try { rows.push(...JSON.parse(String(raw).match(/\[[\s\S]*\]/)[0])); } catch (e) { /* that batch had nothing readable */ }
@@ -1891,6 +1895,8 @@ const SCAN_ERR = {
   type: 'Only PDF and image files can be uploaded.',
   size: `That file is over ${SCAN_MAX_MB} MB.`,
   pages: `That PDF has more than ${SCAN_MAX_PAGES} pages.`,
+  pdfs: `You can upload at most ${SCAN_MAX_PDFS} PDF files at once.`,
+  images: `You can upload at most ${SCAN_MAX_IMAGES} images at once.`,
   pdfjs: 'Could not load the PDF reader. Check your connection.'
 };
 async function runScan(btn, label, work) {
@@ -1898,10 +1904,10 @@ async function runScan(btn, label, work) {
   try { await work(); }
   catch (e) { btn.disabled = false; btn.textContent = label; toast(SCAN_ERR[e.message] || 'Could not read that file. Try a clearer one.'); }
 }
-function scanTimetable(file) {
+function scanTimetable(files) {
   runScan($('#tt-scan-btn'), '✨ AI timetable scanner', async () => {
     const codes = S.courses.map(c => c.code).join(', ');
-    const rows = await aiRows(file, `This image is a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`);
+    const rows = await aiRows(files, `These images are a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`);
     let added = 0;
     rows.forEach(r => {
       const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim());
@@ -1914,11 +1920,11 @@ function scanTimetable(file) {
     save(); closeQuick(); renderMain(); toast(`Scanned ${added} ${added === 1 ? 'class' : 'classes'} from your timetable.`);
   });
 }
-function scanAssignment(file) {
+function scanAssignment(files) {
   runScan($('#as-scan-btn'), '✨ AI Assignment scanner', async () => {
     const picked = $('[data-q="courseId"]')?.value || S.courses[0]?.id;
     const list = S.courses.map(c => `${c.code} (${c.name})`).join('; ');
-    const rows = await aiRows(file, `This image shows one or more university assignments (brief, outline, or deadline list). Today is ${toDateInput(new Date())}. My courses: ${list}. Return ONLY a JSON array, no prose, no code fences. One object per assignment: {"code": the course code from my list this assignment belongs to (use the subject name, code or lecturer in the image to decide; "" if unsure), "title": short assignment name, "start": "YYYY-MM-DDTHH:MM" when work/issue starts or "" if not shown, "due": "YYYY-MM-DDTHH:MM" 24h deadline (use 23:59 if no time), "weight": number, percent of the final grade or 0}. Use the year ${new Date().getFullYear()} or later if the image shows no year.`);
+    const rows = await aiRows(files, `These images show one or more university assignments (brief, outline, or deadline list). Today is ${toDateInput(new Date())}. My courses: ${list}. Return ONLY a JSON array, no prose, no code fences. One object per assignment: {"code": the course code from my list this assignment belongs to (use the subject name, code or lecturer in the image to decide; "" if unsure), "title": short assignment name, "start": "YYYY-MM-DDTHH:MM" when work/issue starts or "" if not shown, "due": "YYYY-MM-DDTHH:MM" 24h deadline (use 23:59 if no time), "weight": number, percent of the final grade or 0}. Use the year ${new Date().getFullYear()} or later if the image shows no year.`);
     const dt = /^\d{4}-\d\d-\d\dT\d\d:\d\d$/;
     let added = 0, last;
     rows.forEach(r => {
@@ -1974,8 +1980,8 @@ async function puterLogin(switching) {
   } catch (e) { toast('Puter login was cancelled.'); }
   openPuter();
 }
-$('#tt-scan-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanTimetable(f); });
-$('#as-scan-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) scanAssignment(f); });
+$('#tt-scan-file').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) scanTimetable(f); });
+$('#as-scan-file').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) scanAssignment(f); });
 
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
