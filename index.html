@@ -1008,8 +1008,33 @@ function load() {
   } catch (e) { return null; }
 }
 let S = load() || seed();
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-save();
+function save(stamp = true) {
+  if (stamp) S.updatedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  if (stamp) syncPush();
+}
+save(false); // seed/load write: no stamp, so a fresh device never beats the cloud copy
+
+/* Cloud sync via the signed-in Puter account (puter.kv). Last write wins by updatedAt. Signed out = local only. */
+const cloudOn = () => { try { return !!(window.puter && puter.auth.isSignedIn()); } catch (e) { return false; } };
+let pushTimer = null;
+function syncPush() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => { if (cloudOn()) puter.kv.set(KEY, JSON.stringify(S)).catch(() => {}); }, 1000);
+}
+async function syncPull() {
+  if (!cloudOn()) return;
+  try {
+    const raw = await puter.kv.get(KEY);
+    const r = raw ? JSON.parse(raw) : null;
+    if (!r || !Array.isArray(r.courses) || !Array.isArray(r.assignments) || !r.settings) { if (S.updatedAt) syncPush(); return; }
+    if ((r.updatedAt || 0) > (S.updatedAt || 0)) {
+      r.archive = r.archive || []; r.timetable = Array.isArray(r.timetable) ? r.timetable : [];
+      S = r; localStorage.setItem(KEY, JSON.stringify(S));
+      renderRail(); renderMain(); renderDrawer();
+    } else if ((r.updatedAt || 0) < (S.updatedAt || 0)) syncPush();
+  } catch (e) {}
+}
 
 const ui = {
   route: 'today', courseId: null, search: '', drawerId: null, weekOffset: 0, calMonth: 0, calSel: null,
