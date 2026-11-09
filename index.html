@@ -1297,6 +1297,7 @@ function resolveDue(p, now = new Date()) {
    RENDER: RAIL
    ========================================================= */
 function renderRail() {
+  S.courses.forEach(c => { if (GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name); });
   const now = new Date();
   $('#term').textContent = `${termName()} · Week ${Math.min(Math.max(weekOfSem(now), 1), semWeeks())} of ${semWeeks()}`;
   const nav = [['today', 'Today', 'G T'], ['week', 'Timetable', 'G W'], ['semester', 'Semester', 'G S'], ['profile', 'Profile', 'G P']];
@@ -1977,6 +1978,7 @@ function openClass(id) {
   const x = S.timetable.find(k => k.id === id) || { courseId: S.courses[0]?.id, type: 'L', day: (new Date().getDay() + 6) % 7, start: '08:30', end: '10:30' };
   ui.quick = { cls: id || 'new', overrides: {} };
   const q = $('#quick'); clearTimeout(ui.quickClear); q.classList.remove('saved');
+  const subjName = course(x.courseId)?.name || '';
   const opt = (pairs, v) => pairs.map(([k, l]) => `<option value="${h(k)}" ${String(k) === String(v) ? 'selected' : ''}>${h(l)}</option>`).join('');
   const txt = (k, l, ph) => `<label class="chip"><span>${l}</span><input type="text" data-tt="${k}" value="${h(x[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`;
   q.innerHTML = `
@@ -1984,6 +1986,7 @@ function openClass(id) {
     <div class="chips pf-modal">
       <label class="chip"><span>Course</span><select data-tt="courseId">${opt(S.courses.map(c => [c.id, c.code]), x.courseId)}</select></label>
       <label class="chip"><span>Type</span><select data-tt="type">${opt(Object.entries(TT_TYPES), x.type)}</select></label>
+      <label class="chip" style="grid-column:1/-1"><span>Subject name</span><input type="text" data-tt="name" data-orig="${h(subjName)}" value="${h(subjName)}" placeholder="e.g. Network Security" autocomplete="off"></label>
       <label class="chip" style="grid-column:1/-1"><span>Day</span><select data-tt="day">${opt(TT_DAYS.map((d, i) => [i, d]), x.day)}</select></label>
       <label class="chip"><span>Starts</span><input type="time" data-tt="start" value="${h(x.start)}" step="300"></label>
       <label class="chip"><span>Ends</span><input type="time" data-tt="end" value="${h(x.end)}" step="300"></label>
@@ -2000,9 +2003,11 @@ function openClass(id) {
 }
 function saveClass() {
   const v = {}; $$('[data-tt]').forEach(i => { v[i.dataset.tt] = i.value.trim(); });
+  const nmEl = $('[data-tt="name"]'), newName = v.name; delete v.name; // subject name belongs to the course, not the class
   if (!v.courseId) { toast('Add a course first.'); return; }
   if (!v.start || !v.end || toMin(v.end) <= toMin(v.start)) { toast('End time must be after start time.'); $('[data-tt="end"]').focus(); return; }
   v.day = +v.day;
+  if (newName && newName !== nmEl.dataset.orig) { const c = course(v.courseId); if (c) c.name = newName; }
   const old = S.timetable.find(k => k.id === ui.quick.cls);
   if (old) Object.assign(old, v); else S.timetable.push({ id: uid(), ...v });
   save(); closeQuick(); renderMain(); toast(old ? 'Class updated.' : 'Class added.');
@@ -2080,7 +2085,7 @@ function scanTimetable(files) {
         c = { id: uid(), code: code || nm.slice(0, 8).toUpperCase(), name: nm || code, colour, instructor: '', weightings: [{ id: uid(), label: 'Coursework', pct: 50 }, { id: uid(), label: 'Final exam', pct: 50 }] };
         S.courses.push(c);
       }
-      if (nm && (GENERIC_NAME.test(c.name) || c.name === 'Untitled course')) c.name = nm;
+      if (nm) c.name = nm;
       else if (GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name);
       if (S.timetable.some(k => k.courseId === c.id && k.day === +r.day && k.start === r.start)) { dup++; return; }
       S.timetable.push({ id: uid(), courseId: c.id, type: TT_TYPES[r.type] ? r.type : 'L', day: +r.day, start: r.start, end: r.end, room: r.room || '', group: r.group || '', lecturer: r.lecturer || '' });
@@ -2134,6 +2139,15 @@ async function openPuter() {
     </div>`;
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
   q.tabIndex = -1; q.focus({ preventScroll: true });
+}
+function confirmPop(title, text, yes, label) {
+  const q = $('#quick');
+  if (q.querySelector('.q-confirm')) return;
+  if (!q.classList.contains('open')) { clearTimeout(ui.quickClear); q.innerHTML = ''; ui.quick = { solo: true }; q.classList.add('open'); $('#quick-scrim').classList.add('open'); }
+  const el = document.createElement('div'); el.className = 'q-confirm'; el.setAttribute('role', 'alertdialog');
+  el.innerHTML = `<div><h3>${h(title)}</h3><p>${h(text)}</p>
+    <span class="acts"><button class="btn quiet" data-action="confirm-no">Cancel</button><button class="btn primary" data-action="${yes}">${h(label)}</button></span></div>`;
+  q.appendChild(el); el.querySelector('[data-action="confirm-no"]').focus();
 }
 function puterLogout() {
   const q = $('#quick');
@@ -2455,7 +2469,9 @@ document.addEventListener('click', e => {
     case 'puter-keep': $('.q-confirm')?.remove(); break;
     case 'puter-logout-yes': puter.auth.signOut(); toast('Logged out of Puter.'); openPuter(); break;
     case 'as-scan': $('#as-scan-file').click(); break;
-    case 'tt-delete': if (!confirm('Delete this class from your timetable?')) break; S.timetable = S.timetable.filter(k => k.id !== ui.quick.cls); save(); closeQuick(); renderMain(); toast('Class deleted.'); break;
+    case 'confirm-no': $('.q-confirm')?.remove(); if (ui.quick?.solo) closeQuick(); break;
+    case 'tt-delete': confirmPop('Delete this class?', 'It will be removed from your timetable.', 'tt-delete-yes', 'Yes, delete'); break;
+    case 'tt-delete-yes': S.timetable = S.timetable.filter(k => k.id !== ui.quick.cls); save(); closeQuick(); renderMain(); toast('Class deleted.'); break;
     case 'quick-ask-cancel': askCancelQuick(); break;
     case 'quick-keep': $('.q-confirm')?.remove(); $('#q-in')?.focus(); break;
     case 'quick-cancel': closeQuick(); break;
@@ -2487,7 +2503,10 @@ document.addEventListener('click', e => {
     }
     case 'delete-course': {
       const c = course(ui.courseId); const n = S.assignments.filter(a => a.courseId === c.id).length;
-      if (!confirm(`Delete ${c.code} and its ${n} ${n === 1 ? 'assignment' : 'assignments'}? This cannot be undone.`)) break;
+      confirmPop(`Delete ${c.name || c.code}?`, `${c.code}, its ${n} ${n === 1 ? 'assignment' : 'assignments'} and its classes will be removed. This cannot be undone.`, 'delete-course-yes', 'Yes, delete'); break;
+    }
+    case 'delete-course-yes': {
+      const c = course(ui.courseId); closeQuick();
       S.courses = S.courses.filter(x => x.id !== c.id); S.assignments = S.assignments.filter(a => a.courseId !== c.id); S.timetable = S.timetable.filter(x => x.courseId !== c.id); save(); go('today'); break;
     }
     case 'delete-asg': {
