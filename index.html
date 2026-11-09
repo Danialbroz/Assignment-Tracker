@@ -2551,6 +2551,7 @@ document.addEventListener('click', e => {
     }
     case 'sort': { const k = t.dataset.key; ui.sort = { key: k, dir: ui.sort.key === k ? -ui.sort.dir : 1 }; renderMain(); $(`[data-action="sort"][data-key="${k}"]`)?.focus(); break; }
     case 'colour': course(ui.courseId).colour = t.dataset.colour; save(); renderRail(); renderMain(); break;
+    case 'colour-custom': { const cc = course(ui.courseId).colour; colourPop(t, cc[0] === '#' ? cc : getComputedStyle(document.documentElement).getPropertyValue('--c-' + cc).trim(), hx => { course(ui.courseId).colour = hx; save(); renderRail(); renderMain(); }); break; }
     case 'w-add': course(ui.courseId).weightings.push({ id: uid(), label: 'New component', pct: 0 }); save(); renderMain(); break;
     case 'w-remove': course(ui.courseId).weightings.splice(+t.dataset.i, 1); save(); renderMain(); break;
     case 'add-course': {
