@@ -283,7 +283,8 @@ th[aria-sort] .sort-btn { color: var(--ink); }
 .tt-cls { display: grid; align-content: start; gap: 2px; margin: 0 3px; padding: 8px 10px; border: 0; border-radius: 10px; text-align: left; cursor: pointer; overflow: hidden;
   background: var(--c); color: #fff; font: 500 12px/1.35 var(--sans); box-shadow: 0 4px 14px color-mix(in srgb, var(--c) 30%, transparent); transition: transform .2s ease, box-shadow .2s ease; }
 .tt-cls:hover, .tt-cls:focus-visible { transform: translateY(-2px); box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 45%, transparent); }
-.tt-cls b { font: 600 12.5px var(--mono); }
+.tt-cls b { font: 600 12.5px var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-type { font-weight: 600; }
 .tt-cls em { font-style: normal; opacity: .85; }
 .tt-cls span { opacity: .92; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) { .tt-cls { transition: none; } .tt-cls:hover { transform: none; } }
@@ -1608,9 +1609,10 @@ function viewWeek() {
       <div class="tt-lane" data-day="${d}">${tt.filter(x => +x.day === d).sort((a, b) => toMin(a.start) - toMin(b.start)).map(x => {
         const c = course(x.courseId);
         return `<button class="tt-cls" data-action="tt-edit" data-id="${h(x.id)}" style="--c:${col(c?.colour)};grid-column:${colOf(toMin(x.start))} / ${colOf(toMin(x.end))}">
-          <b>${h(c?.code || '?')} <em>(${h(x.type || 'L')})</em></b>
+          <b>${h(c?.name || c?.code || '?')}</b>
+          <span class="mono">${h(c?.code || '')}</span>
           <span>${h(x.start)}–${h(x.end)}</span>
-          ${x.room ? `<span>Room: ${h(x.room)}</span>` : ''}${x.group ? `<span>Group: ${h(x.group)}</span>` : ''}${x.lecturer ? `<span>${h(x.lecturer)}</span>` : ''}
+          ${x.room ? `<span>Room: ${h(x.room)}</span>` : ''}<span class="tt-type">${h(TT_TYPES[x.type] || 'Lecture')}</span>${x.group ? `<span>Group: ${h(x.group)}</span>` : ''}${x.lecturer ? `<span>${h(x.lecturer)}</span>` : ''}
         </button>`; }).join('')}</div>
     </div>`).join('')}
   </div></div>
@@ -2055,7 +2057,9 @@ const SCAN_ERR = {
   pages: `That PDF has more than ${SCAN_MAX_PAGES} pages.`,
   pdfs: `You can upload at most ${SCAN_MAX_PDFS} PDF files at once.`,
   images: `You can upload at most ${SCAN_MAX_IMAGES} images at once.`,
-  pdfjs: 'Could not load the PDF reader. Check your connection.'
+  pdfjs: 'Could not load the PDF reader. Check your connection.',
+  dup: 'Those classes are already in your timetable.',
+  none: 'No classes found in that file. Try a clearer or larger picture.'
 };
 async function runScan(btn, label, work) {
   btn.disabled = true; btn.textContent = 'Scanning…';
@@ -2064,18 +2068,25 @@ async function runScan(btn, label, work) {
 }
 function scanTimetable(files) {
   runScan($('#tt-scan-btn'), '✨ AI timetable scanner', async () => {
-    const codes = S.courses.map(c => c.code).join(', ');
-    const rows = await aiRows(files, `These images are a university class timetable. Courses I take: ${codes}. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": course code from my list (match it even if the image shows extra text), "type": "L" lecture, "T" tutorial, "B" lab, or "W" workshop, "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. Skip slots whose course is not in my list. Use "" for unknown text fields.`);
-    let added = 0;
+    const rows = await aiRows(files, `These images are a class timetable from any school, college or university, in any layout (grid, list, per-day columns, 12h or 24h clock, merged cells). Read every class slot. Return ONLY a JSON array, no prose, no code fences. One object per class slot: {"code": subject code exactly as printed (e.g. "INB23304"), "name": subject name if printed, else "", "type": "L" lecture, "T" tutorial, "B" lab/practical, or "W" workshop (use the marker or word printed next to the subject; default "L"), "day": 0=Mon..6=Sun, "start": "HH:MM" 24h, "end": "HH:MM" 24h, "room": string, "group": string, "lecturer": string}. A slot spanning several time columns is ONE object from its first start to its last end. Use "" for unknown text fields.`);
+    const norm = x => String(x || '').toLowerCase().replace(/\s+/g, '');
+    let added = 0, dup = 0, bad = 0;
     rows.forEach(r => {
-      const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim());
-      if (c && GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name);
-      if (!c || !/^\d\d:\d\d$/.test(r.start) || !/^\d\d:\d\d$/.test(r.end) || toMin(r.end) <= toMin(r.start) || !(r.day >= 0 && r.day <= 6)) return;
-      if (S.timetable.some(k => k.courseId === c.id && k.day === +r.day && k.start === r.start)) return; // already there
+      const code = String(r.code || '').trim().toUpperCase(), nm = String(r.name || '').trim();
+      if ((!code && !nm) || !/^\d\d:\d\d$/.test(r.start) || !/^\d\d:\d\d$/.test(r.end) || toMin(r.end) <= toMin(r.start) || !(r.day >= 0 && r.day <= 6)) { bad++; return; }
+      let c = S.courses.find(x => (code && norm(x.code) === norm(code)) || (!code && nm && norm(x.name) === norm(nm)));
+      if (!c) { // unknown subject: make a course for it
+        const used = S.courses.map(x => x.colour), colour = (COLOURS.find(k => !used.includes(k.key)) || COLOURS[S.courses.length % 6]).key;
+        c = { id: uid(), code: code || nm.slice(0, 8).toUpperCase(), name: nm || code, colour, instructor: '', weightings: [{ id: uid(), label: 'Coursework', pct: 50 }, { id: uid(), label: 'Final exam', pct: 50 }] };
+        S.courses.push(c);
+      }
+      if (nm && (GENERIC_NAME.test(c.name) || c.name === 'Untitled course')) c.name = nm;
+      else if (GENERIC_NAME.test(c.name)) c.name = subjectName(c.code, c.name);
+      if (S.timetable.some(k => k.courseId === c.id && k.day === +r.day && k.start === r.start)) { dup++; return; }
       S.timetable.push({ id: uid(), courseId: c.id, type: TT_TYPES[r.type] ? r.type : 'L', day: +r.day, start: r.start, end: r.end, room: r.room || '', group: r.group || '', lecturer: r.lecturer || '' });
       added++;
     });
-    if (!added) throw new Error('none');
+    if (!added) throw new Error(dup ? 'dup' : 'none');
     save(); closeQuick(); renderMain(); toast(`Scanned ${added} ${added === 1 ? 'class' : 'classes'} from your timetable.`);
   });
 }
