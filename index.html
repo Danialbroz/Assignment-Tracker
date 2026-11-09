@@ -941,10 +941,7 @@ main { padding-bottom: 130px; }
   .rail, .drawer, .quick { display: none !important; }
   .app { grid-template-columns: 1fr; }
 }
-.pf-edit-course { display: none; }
-.pf-pick { display: grid; gap: 8px; margin-top: 18px; }
-.pf-pick .btn { justify-content: flex-start; text-align: left; }
-@media (max-width: 760px), (hover: none) and (pointer: coarse) { .pf-edit-course { display: block; } .pf-course { cursor: pointer; } }
+@media (max-width: 760px), (hover: none) and (pointer: coarse) { .pf-course { cursor: pointer; } }
 /* every popup: soft purple outline */
 .q-confirm > div, .col-pop, .dtp, .cal-pop-sheet, .drawer {
   border-color: color-mix(in srgb, var(--accent) 45%, var(--glass-edge));
@@ -1839,9 +1836,8 @@ function viewProfile() {
     <h2 class="pf-h">Progress by course</h2>
     <div class="pf-list">
       ${S.courses.map(c => { const a = all.filter(x => x.courseId === c.id); const d = a.filter(isDone).length; const pct = a.length ? Math.round(d / a.length * 100) : 0;
-        return `<div class="pf-course" data-action="pf-course" data-id="${h(c.id)}"><i style="background:${col(c.colour)}"></i><div><b class="mono">${h(c.code)}</b><div class="pf-bar"><u style="width:${pct}%"></u></div></div><span class="mono muted">${d}/${a.length}</span></div>`; }).join('') || '<p class="muted" style="padding:14px 2px;margin:0">No courses yet.</p>'}
+        return `<div class="pf-course" data-action="pf-course" data-id="${h(c.id)}"><i style="background:${col(c.colour)}"></i><div><b class="mono pf-code">${h(c.code)}</b><b class="pf-name-m">${h(c.name || c.code)}</b><div class="pf-bar"><u style="width:${pct}%"></u></div></div><span class="mono muted">${d}/${a.length}</span></div>`; }).join('') || '<p class="muted" style="padding:14px 2px;margin:0">No courses yet.</p>'}
     </div>
-    ${S.courses.length ? '<button class="btn primary pf-edit pf-edit-course" data-action="pf-courses">Edit course</button>' : ''}
   </aside></div>`;
 }
 
@@ -2045,15 +2041,6 @@ function courseDetails(id) {
     </div>
     <div class="quick-foot"><span class="acts"><button class="btn quiet" data-action="quick-cancel">Done</button><button class="btn primary" data-action="pf-course-edit" data-id="${h(id)}">Edit subject</button></span></div>`);
   $('#quick').style.setProperty('--tc', col(c.colour));
-}
-function pickCourse() {
-  pfShell(`
-    <div class="tt-view">
-      <p class="quick-title">Edit course</p>
-      <h2 class="tv-name">Pick a course</h2>
-      <div class="pf-pick">${S.courses.map(c => `<button class="btn quiet" data-action="pf-course-edit" data-id="${h(c.id)}"><span class="sq" style="--c:${col(c.colour)}"></span> <span class="mono">${h(c.code)}</span> ${h(c.name)}</button>`).join('')}</div>
-    </div>
-    <div class="quick-foot"><span class="acts"><button class="btn quiet" data-action="quick-cancel">Done</button></span></div>`);
 }
 function openClass(id) {
   const x = S.timetable.find(k => k.id === id) || { courseId: S.courses[0]?.id, type: 'L', day: (new Date().getDay() + 6) % 7, start: '08:30', end: '10:30' };
@@ -2543,7 +2530,6 @@ document.addEventListener('click', e => {
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-view': viewClass(t.dataset.id); break;
     case 'pf-course': if (touchUI()) courseDetails(t.dataset.id); break;
-    case 'pf-courses': pickCourse(); break;
     case 'pf-course-edit': closeQuick(); go('course/' + t.dataset.id); break;
     case 'tt-edit': openClass(t.dataset.id); break;
     case 'tt-scan': $('#tt-scan-file').click(); break;
