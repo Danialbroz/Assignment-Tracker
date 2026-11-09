@@ -1,74 +1,121 @@
+<div align="center">
+
+<img src="logo.svg" alt="Ledger logo" width="84" height="84">
+
 # Ledger
 
-![Single file](https://img.shields.io/badge/single--file-HTML%2FCSS%2FJS-blue)
-![No build step](https://img.shields.io/badge/build-none-brightgreen)
-![Mobile friendly](https://img.shields.io/badge/mobile-friendly-orange)
+**The assignment tracker that shows you what is due, what is running, and what to start today.**
 
-An assignment tracker for students. It runs as one `index.html` file, with no build step and no backend. Your data stays in your browser, and you can sync it between phone and PC with a free Puter account.
+[![Single file](https://img.shields.io/badge/single--file-HTML%20%C2%B7%20CSS%20%C2%B7%20JS-7C4DDB?style=for-the-badge)](index.html)
+[![No build](https://img.shields.io/badge/build%20step-none-12B76A?style=for-the-badge)](#-quick-start)
+[![Mobile ready](https://img.shields.io/badge/mobile-ready-FF8A1F?style=for-the-badge)](#-features)
+[![Sync](https://img.shields.io/badge/sync-Puter-2E90FA?style=for-the-badge)](#-sync-across-devices)
 
-## Why
+[Features](#-features) · [Quick start](#-quick-start) · [Usage](#-usage) · [How it works](#-how-it-works) · [Contributing](#-contributing)
 
-Deadlines are easy to lose across courses. Ledger puts every assignment in one place and shows what is due, how heavy the week is, and how each task counts toward your grade.
+<br>
 
-## Features
+<img src="docs/calendar.png" alt="Ledger calendar with overlapping assignment bars and the Due list" width="900">
 
-- **Calendar** with a bar for each assignment, running straight from its start date to its deadline. Tap a day to list everything due or running through it. On mobile the list opens as a bottom sheet.
-- **Today, Week and Semester views**, with crunch-week warnings and a timeline that sizes each task by its share of the grade.
-- **Courses** with weightings, a grade calculator, instructor and colour. Pick one of ten preset colours or press **Custom** for a colour wheel and hex input.
-- **Timetable** with a weekly class grid. A scanner reads a timetable image and creates courses automatically.
-- **Quick add**: type an assignment in plain language and the date, course and time are parsed for you.
-- **Cross-device sync** through `puter.kv`, last write wins.
-- **Confirm before submit**, so a mis-tap does not mark a task as done.
-- **Light and dark themes**, a touch-friendly settings menu, and locked zoom on phones.
+</div>
 
-## Prerequisites
+<br>
 
-- A modern browser (Chrome, Edge, Firefox, Safari).
-- Optional: a [Puter](https://puter.com) account for sync and the AI scanners.
-- Optional: Python 3 (or any static file server) to serve the file locally.
+## ✨ Overview
 
-## Installation
+Deadlines hide in the gaps between courses. **Ledger** puts every assignment on one calendar, draws a bar from the day you start to the day it is due, and lists everything running through any day you tap.
+
+It is a single `index.html`. There is no build step, no backend and no account needed. Your data stays in your browser, and an optional free [Puter](https://puter.com) sign-in syncs it between your PC and phone.
+
+## 🚀 Features
+
+| | |
+|---|---|
+| 📅 **Smart calendar** | One bar per assignment, straight from start to deadline in its own lane. A soft glint travels along each bar. |
+| 📋 **Due list on tap** | Tap any day to see every assignment due or running through it. On phones it opens as a bottom sheet. |
+| 🎨 **Course colours** | Ten bright presets, or press **Custom** for a colour wheel and hex input. |
+| 🗓️ **Timetable** | A weekly class grid. Scan a timetable image and courses are created for you. |
+| ⚡ **Quick add** | Type "report due friday 5pm" and the date, course and time are parsed. |
+| 📊 **Grade aware** | Course weightings, a grade calculator, and crunch-week warnings. |
+| 🔄 **Cross-device sync** | PC and phone stay in step through `puter.kv`. |
+| ✅ **Safe submit** | A confirm prompt stops a mis-tap from marking a task done. |
+| 🌗 **Light and dark** | Follows your system theme. Touch-friendly settings and locked zoom on mobile. |
+
+## ⚡ Quick start
 
 ```bash
 git clone https://github.com/Danialbroz/Assignment-Tracker.git
 cd Assignment-Tracker
 ```
 
-## Usage
-
-Open `index.html` directly, or serve it:
+Open `index.html` in a browser, or serve it:
 
 ```bash
-python -m http.server 8000
-# open http://localhost:8000
+python -m http.server 8000   # then visit http://localhost:8000
 ```
 
-1. Add a course (or scan your timetable) from the left rail.
-2. Press **+ Add assignment** and set a start date and due date.
-3. Tick an assignment when done and confirm the prompt.
-4. To sync, open the settings gear, sign in to Puter on each device, and the data follows you.
+**Requirements:** a modern browser. Python 3 is optional and only used to serve the file.
 
-On a phone, use your browser's **Add to Home Screen** to install it like an app.
+## 🧭 Usage
 
-## Configuration
+1. **Add courses** from the left rail, or scan your timetable.
+2. **Add an assignment** with **+ Add assignment**. Set a start date and a due date.
+3. **Plan from the calendar.** Bars show what overlaps. Tap a day for its Due list.
+4. **Tick it off** when done and confirm the prompt.
 
-There are no environment variables. Data lives in `localStorage` under the key `ledger.v1`. The settings menu holds the semester start date, theme and Puter sign-in.
+> 📱 **On a phone:** use your browser's **Add to Home Screen** to install Ledger like an app.
 
-## Project structure
+### 🔄 Sync across devices
+
+Open the settings gear, sign in to Puter on each device, and your data follows you. The newest change wins.
+
+## 🛠️ How it works
+
+```mermaid
+flowchart LR
+    A[index.html<br/>UI + logic] --> B[(localStorage<br/>ledger.v1)]
+    A -- optional --> C[Puter kv<br/>sync]
+    A -- optional --> D[Puter AI<br/>timetable scanner]
+    C <--> E[Your other device]
+```
+
+| Piece | Detail |
+|---|---|
+| **Storage** | State lives in `localStorage` under `ledger.v1` and is saved on every change. |
+| **Sync** | Writes are debounced by 1 s and pushed with `puter.kv`. The pull on load keeps whichever side has the newer `updatedAt`. |
+| **Calendar** | Each assignment gets a stable lane, so its bar stays straight through every week. The glint phase follows the page clock, so re-renders never restart it. |
+| **Config** | There are no environment variables. Settings (semester start, theme, sign-in) live in the settings menu. |
+
+<details>
+<summary><b>📁 Project structure</b></summary>
+
+<br>
 
 | File | Purpose |
 |---|---|
 | `index.html` | The whole app: markup, styles and logic |
 | `logo.svg`, `apple-touch-icon.png` | Icons |
+| `docs/` | README screenshots |
 | `graphify-out/` | Generated code knowledge graph (optional) |
 
-## Contributing
+</details>
 
-1. Fork the repo and create a branch: `git checkout -b feature/my-change`.
+## 🤝 Contributing
+
+Contributions are welcome.
+
+1. Fork the repo and branch: `git checkout -b feature/my-change`.
 2. Keep the app in a single file with no build tooling.
 3. Test on desktop and a phone-sized viewport, in light and dark themes.
-4. Open a pull request that describes what changed and why.
+4. Open a pull request that says what changed and why.
 
-## License
+## 📄 License
 
 No license has been chosen yet. Add a `LICENSE` file (for example MIT) before others reuse the code.
+
+<div align="center">
+<br>
+
+Built for students who would rather see the deadline coming. ⭐ Star the repo if it helps you.
+
+</div>
