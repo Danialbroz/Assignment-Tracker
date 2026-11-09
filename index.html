@@ -913,7 +913,14 @@ main { padding-bottom: 130px; }
   .btn { padding: 8px 14px; } .icon-btn { min-width: 44px; }
   input[type="checkbox"] { width: 22px; height: 22px; }
   .ledger td.cb { width: 40px; }
-  .ledger tr.row td { padding-top: 12px; padding-bottom: 12px; }
+  /* phone: title on its own line on top; box, colour, due and mark underneath */
+  .ledger:has(tr.row) thead { display: none; }
+  .ledger tr.row { display: grid; grid-template-columns: 40px auto 1fr auto; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .ledger tr.row td { padding: 0; border: 0; display: block; }
+  .ledger tr.row td:nth-child(3) { grid-column: 1 / -1; grid-row: 1; margin-bottom: 8px; }
+  .ledger tr.row td.cb { grid-row: 2; } .ledger tr.row td.course-cell { grid-row: 2; width: auto; }
+  .ledger tr.row td.due { grid-row: 2; text-align: right; padding-right: 12px; } .ledger tr.row td.num { grid-row: 2; }
+  .ledger tr.row .title-link { text-align: left; }
   .rail { position: static; max-height: none; padding-top: env(safe-area-inset-top); }
   .menu-btn, kbd, .nav a .mono { display: none; }
   .rail.open { position: fixed; inset: 0; overflow-y: auto; z-index: 50; padding-bottom: 80px; }
