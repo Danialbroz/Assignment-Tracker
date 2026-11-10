@@ -1512,6 +1512,8 @@ function viewToday() {
 }
 
 /* ---------- CALENDAR (Today page) ---------- */
+// start defaults to creation day; never after the due date
+const stA = a => { const s = a.startAt || a.createdAt; return s && s <= a.dueAt ? s : a.dueAt; };
 function calendarHTML(now) {
   const base = new Date(now.getFullYear(), now.getMonth() + ui.calMonth, 1);
   const start = startOfWeek(base);
@@ -1524,29 +1526,29 @@ function calendarHTML(now) {
   const STEP = 0.5, kf = [], kfIdx = new Map(), T = performance.now() / 1000; // T: page clock, so a re-render resumes the glint mid-sweep instead of restarting it
   const glint = a => {
     if (kfIdx.has(a.id)) return kfIdx.get(a.id);
-    const n = Math.round((sod(new Date(a.dueAt)) - sod(new Date(a.startAt))) / 864e5) + 1, per = (n + 0.6) * STEP + 2, g = 'g' + kfIdx.size;
+    const n = Math.round((sod(new Date(a.dueAt)) - sod(new Date(stA(a)))) / 864e5) + 1, per = (n + 0.6) * STEP + 2, g = 'g' + kfIdx.size;
     kf.push(`@keyframes ${g}{0%{transform:translateX(-80%)}${(1.6 * STEP / per * 100).toFixed(2)}%,100%{transform:translateX(80%)}}`);
     const r = { g, per }; kfIdx.set(a.id, r); return r;
   };
   // Lanes: each assignment keeps ONE row for its whole span, so its bar runs straight to the deadline. Oldest gets lane 0 = the very bottom row.
-  const kS = a => toDateInput(new Date(a.startAt)), kE = a => toDateInput(new Date(a.dueAt));
+  const kS = a => toDateInput(new Date(stA(a))), kE = a => toDateInput(new Date(a.dueAt));
   const lane = new Map(), placed = [];
-  S.assignments.filter(a => a.startAt).sort((x, y) => (new Date(x.startAt) - new Date(y.startAt)) || (new Date(x.createdAt || x.startAt) - new Date(y.createdAt || y.startAt))).forEach(a => {
+  [...S.assignments].sort((x, y) => (new Date(stA(x)) - new Date(stA(y))) || (new Date(x.createdAt || x.dueAt) - new Date(y.createdAt || y.dueAt))).forEach(a => {
     let l = 0; while (placed.some(p => p.l === l && kS(p.a) <= kE(a) && kS(a) <= kE(p.a))) l++;
     lane.set(a.id, l); placed.push({ a, l });
   });
   // every day in a week renders the same number of rows, so lanes line up across the week
   const weekRows = Array.from({ length: 6 }, (_, w) => {
     const w0 = toDateInput(addDays(start, w * 7)), w1 = toDateInput(addDays(start, w * 7 + 6));
-    return Math.max(-1, ...S.assignments.filter(a => a.startAt && kS(a) <= w1 && kE(a) >= w0).map(a => lane.get(a.id)));
+    return Math.max(-1, ...S.assignments.filter(a => kS(a) <= w1 && kE(a) >= w0).map(a => lane.get(a.id)));
   });
   const cells = Array.from({ length: 42 }, (_, i) => {
     const d = addDays(start, i), k = toDateInput(d), items = (byDay[k] || []).sort(byDue);
-    const byLane = new Map(S.assignments.filter(a => a.startAt && kS(a) <= k && k <= kE(a)).map(a => [lane.get(a.id), a]));
+    const byLane = new Map(S.assignments.filter(a => kS(a) <= k && k <= kE(a)).map(a => [lane.get(a.id), a]));
     const spans = Array.from({ length: weekRows[Math.floor(i / 7)] + 1 }, (_, l) => byLane.get(l)).reverse().map(a => {
       if (!a) return '<span class="cal-span gap" aria-hidden="true"></span>';
       const first = k === kS(a), last = k === kE(a);
-      const gl = glint(a), idx = Math.max(0, Math.round((d - sod(new Date(a.startAt))) / 864e5));
+      const gl = glint(a), idx = Math.max(0, Math.round((d - sod(new Date(stA(a)))) / 864e5));
       return `<span class="cal-span${first ? ' first' : ''}${last ? ' last' : ''}${isDone(a) ? ' done' : ''}" style="--c:${col(course(a.courseId)?.colour)};--g:${gl.g};--per:${gl.per}s;--del:${(idx * STEP - T).toFixed(3)}s">${first || d.getDay() === 1 ? h(a.title) : ''}</span>`;
     }).join('');
     const cls = [d.getMonth() !== base.getMonth() && 'out', +d === +sod(now) && 'today', +d === +sel && 'sel', items.some(isLate) && 'late', items.length && 'has'].filter(Boolean).join(' ');
@@ -1558,7 +1560,7 @@ function calendarHTML(now) {
     </button>`;
   }).join('');
   const selK = toDateInput(sel);
-  const list = S.assignments.filter(a => toDateInput(new Date(a.dueAt)) === selK || (a.startAt && toDateInput(new Date(a.startAt)) <= selK && selK <= toDateInput(new Date(a.dueAt)))).sort(byDue); // due that day, or running through it
+  const list = S.assignments.filter(a => toDateInput(new Date(a.dueAt)) === selK || (toDateInput(new Date(stA(a))) <= selK && selK <= toDateInput(new Date(a.dueAt)))).sort(byDue); // due that day, or running through it
   const monthCount = S.assignments.filter(a => { const d = new Date(a.dueAt); return d.getMonth() === base.getMonth() && d.getFullYear() === base.getFullYear() && !isDone(a); }).length;
   return `
   <section class="cal" id="cal" aria-label="Calendar">
@@ -2187,6 +2189,7 @@ function scanAssignment(files) {
       if (S.assignments.some(x => x.courseId === c.id && x.title === r.title && x.dueAt === dueAt)) return; // already there
       let startAt = dt.test(r.start) ? fromInput(r.start).toISOString() : null;
       if (startAt && startAt > dueAt) startAt = null;
+      startAt ||= new Date().toISOString();
       S.assignments.push({ id: uid(), courseId: c.id, title: String(r.title).trim(), dueAt, startAt, weightPct: num(r.weight, 0), estimateHrs: 1, status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() });
       added++; last = c;
     });
@@ -2304,7 +2307,7 @@ function saveQuick() {
   ui.quick.saving = true;
   const a = {
     id: uid(), courseId: v('courseId') || S.courses[0].id, title,
-    dueAt: (v('due') ? fromInput(v('due')) : addDays(new Date(), 7)).toISOString(),
+    dueAt: (v('due') ? fromInput(v('due')) : addDays(new Date(), 7)).toISOString(), startAt: new Date().toISOString(),
     weightPct: num(v('weight'), 0), estimateHrs: 1, status: 'Not started',
     score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString()
   };
@@ -2540,7 +2543,7 @@ document.addEventListener('click', e => {
     case 'imp-parse': ui.importText = $('#imp-text').value; ui.importCourse = $('#imp-course').value; ui.importRows = rowsFromText(ui.importText); renderImport(); break;
     case 'imp-commit': {
       const rows = ui.importRows.filter(r => r.accept && r.title.trim() && r.due);
-      rows.forEach(r => S.assignments.push({ id: uid(), courseId: r.courseId, title: r.title.trim(), dueAt: fromInput(r.due).toISOString(), weightPct: num(r.weight, 0), estimateHrs: num(r.estimate, 3), status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() }));
+      rows.forEach(r => S.assignments.push({ id: uid(), courseId: r.courseId, title: r.title.trim(), dueAt: fromInput(r.due).toISOString(), startAt: new Date().toISOString(), weightPct: num(r.weight, 0), estimateHrs: num(r.estimate, 3), status: 'Not started', score: null, maxScore: null, subtasks: [], notes: '', links: [], createdAt: new Date().toISOString() }));
       save(); $('#dlg-import').close(); renderRail(); renderMain(); toast(`Imported ${rows.length} ${rows.length === 1 ? 'item' : 'items'}.`); break;
     }
     case 'profile-edit': openProfile(); break;
