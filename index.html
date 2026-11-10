@@ -2241,6 +2241,15 @@ async function puterLogin(switching) {
 }
 $('#tt-scan-file').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) scanTimetable(f); });
 $('#as-scan-file').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) scanAssignment(f); });
+/* Desktop only: Ctrl+V a screenshot while a scanner button is showing */
+document.addEventListener('paste', e => {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const f = [...(e.clipboardData?.files || [])].filter(x => x.type.startsWith('image/'));
+  const btn = f.length && ($('#as-scan-btn') || $('#tt-scan-btn'));
+  if (!btn || btn.disabled) return;
+  e.preventDefault();
+  (btn.id === 'as-scan-btn' ? scanAssignment : scanTimetable)(f);
+});
 
 function closeQuick() {
   const q = $('#quick'); q.classList.remove('open'); $('#quick-scrim').classList.remove('open'); ui.quick = null;
