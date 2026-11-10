@@ -2172,6 +2172,12 @@ function scanAssignment(files) {
     const dt = /^\d{4}-\d\d-\d\dT\d\d:\d\d$/;
     let added = 0, last;
     rows.forEach(r => {
+      const n = +r.days;
+      if (!dt.test(r.due) && n > 0) { // only a duration shown: starts today, due today + n days
+        const t = new Date(), p = x => String(x).padStart(2, '0');
+        r.start = `${toDateInput(t)}T${p(t.getHours())}:${p(t.getMinutes())}`;
+        r.due = `${toDateInput(addDays(t, n))}T23:59`;
+      }
       if (!r.title || !dt.test(r.due)) return;
       const c = S.courses.find(x => x.code.toLowerCase() === String(r.code).toLowerCase().trim()) || S.courses.find(x => x.id === picked);
       if (!c) return;
