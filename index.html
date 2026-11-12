@@ -2585,7 +2585,7 @@ document.addEventListener('click', e => {
     }
     case 'profile-edit': openProfile(); break;
     case 'pf-photo': $('#pf-photo-file').click(); break;
-    case 'pf-photo-rm': delete (S.profile ||= {}).photo; save(); renderMain(); break;
+    case 'pf-photo-rm': ui.quick.photo = null; pfPrev(); break;
     case 'quick-save': saveQuick(); break;
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-view': viewClass(t.dataset.id); break;
