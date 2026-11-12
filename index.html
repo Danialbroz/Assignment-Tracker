@@ -2663,7 +2663,7 @@ async function setPhoto(f) {
     const bmp = await createImageBitmap(f), n = 256, s = Math.min(bmp.width, bmp.height);
     const c = document.createElement('canvas'); c.width = c.height = n;
     c.getContext('2d').drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, n, n);
-    (S.profile ||= {}).photo = c.toDataURL('image/jpeg', 0.85); save(); renderMain();
+    ui.quick.photo = c.toDataURL('image/jpeg', 0.85); err.textContent = ''; pfPrev();
   } catch (e) { bad('Could not read that image.'); }
 }
 document.addEventListener('change', e => {
