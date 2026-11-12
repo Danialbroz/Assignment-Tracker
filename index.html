@@ -2577,6 +2577,8 @@ document.addEventListener('click', e => {
       save(); $('#dlg-import').close(); renderRail(); renderMain(); toast(`Imported ${rows.length} ${rows.length === 1 ? 'item' : 'items'}.`); break;
     }
     case 'profile-edit': openProfile(); break;
+    case 'pf-photo': $('#pf-photo-file').click(); break;
+    case 'pf-photo-rm': delete (S.profile ||= {}).photo; save(); renderMain(); break;
     case 'quick-save': saveQuick(); break;
     case 'tt-add': if (!S.courses.length) { toast('Add a course first.'); break; } openClass(); break;
     case 'tt-view': viewClass(t.dataset.id); break;
