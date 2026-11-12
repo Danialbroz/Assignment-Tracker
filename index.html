@@ -2647,8 +2647,21 @@ document.addEventListener('click', e => {
 });
 
 /* ---------- change / input delegation ---------- */
+/* Profile photo: PNG/JPG/WebP/GIF, max 10 MB. Resized to 256px JPEG so it fits localStorage and Puter KV. */
+async function setPhoto(f) {
+  const err = $('#pf-err'), bad = m => { err.textContent = m; };
+  if (!/^image\/(png|jpe?g|webp|gif)$/.test(f.type) || !/\.(png|jpe?g|webp|gif)$/i.test(f.name)) return bad('Use a PNG, JPG, WebP or GIF image.');
+  if (f.size > 10 * 1024 * 1024) return bad('Image is over 10 MB. Pick a smaller one.');
+  try {
+    const bmp = await createImageBitmap(f), n = 256, s = Math.min(bmp.width, bmp.height);
+    const c = document.createElement('canvas'); c.width = c.height = n;
+    c.getContext('2d').drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, n, n);
+    (S.profile ||= {}).photo = c.toDataURL('image/jpeg', 0.85); save(); renderMain();
+  } catch (e) { bad('Could not read that image.'); }
+}
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.id === 'pf-photo-file') { const f = t.files[0]; t.value = ''; if (f) setPhoto(f); return; }
   if (t.matches('[data-action="toggle"]')) { const a = asg(t.dataset.id); if (a && !isDone(a)) { t.checked = false; askSubmit(a, t); } else toggleSubmitted(t.dataset.id, t); return; } // ticking asks first; un-ticking undoes directly
   if (t.id === 'cap') { S.settings.dailyCapacityHrs = Math.max(0.5, num(t.value, 4)); save(); renderMain(); return; }
   if (t.id === 'sem-start' || t.id === 'sem-end') {
