@@ -1411,6 +1411,7 @@ function renderMain(opts = {}) {
   else if (ui.route === 'course' && course(ui.courseId)) html = viewCourse();
   else html = viewToday();
   main.innerHTML = `<div class="page">${html}</div>`;
+  if (ui.route === 'profile' && $('#pf-user')) puterUser().then(u => { const el = $('#pf-user'); if (el) el.textContent = u ? '@' + u : 'Not signed in to Puter'; });
   if (opts.focusIndex != null) {
     const rows = $$('[data-row]', main);
     if (rows.length) rows[Math.min(opts.focusIndex, rows.length - 1)].focus();
