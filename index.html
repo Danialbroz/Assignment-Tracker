@@ -2557,7 +2557,7 @@ document.addEventListener('click', e => {
     case 'puter-login': puterLogin(t.textContent.trim() === 'Switch account'); break;
     case 'puter-logout': puterLogout(); break;
     case 'puter-keep': $('.q-confirm')?.remove(); break;
-    case 'puter-logout-yes': puter.auth.signOut(); toast('Logged out of Puter.'); openPuter(); break;
+    case 'puter-logout-yes': $('.q-confirm')?.remove(); puter.auth.signOut(); toast('Logged out of Puter.'); openPuter(); break;
     case 'as-scan': $('#as-scan-file').click(); break;
     case 'confirm-no': $('.q-confirm')?.remove(); break;
     case 'tt-delete': confirmPop('Delete this class?', 'It will be removed from your timetable.', 'tt-delete-yes', 'Yes, delete'); break;
