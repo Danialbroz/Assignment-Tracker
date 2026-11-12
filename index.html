@@ -2210,6 +2210,8 @@ async function openPuter() {
   q.innerHTML = `
     <h2 class="quick-title">Puter account</h2>
     <p class="quick-tip" style="margin:14px 0 4px">${user ? `Signed in as <b>${h(user)}</b>. The AI scanners use this account, and your data syncs to it.` : 'Not signed in. Log in to use the AI scanners.'}</p>
+    ${user ? `<div style="margin:10px 0 4px"><div id="puter-usage-txt" style="font-size:13px">Loading credits used…</div>
+      <div role="progressbar" aria-label="Credits used" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="0" id="puter-usage-bar" style="height:10px;border-radius:5px;background:rgba(128,128,128,.25);overflow:hidden;margin-top:6px"><div id="puter-usage-fill" style="height:100%;width:0;background:var(--accent,#4f8cff);transition:width .3s"></div></div></div>` : ''}
     <div class="quick-foot">
       <span class="acts">
         <button class="btn quiet small" data-action="quick-ask-cancel">Close</button>
