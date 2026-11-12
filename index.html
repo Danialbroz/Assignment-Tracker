@@ -2006,10 +2006,18 @@ function openProfile() {
       <span class="acts"><button class="btn quiet small" data-action="quick-ask-cancel">Cancel</button><button class="btn primary small" data-action="quick-save">Save</button></span>
     </div>`;
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
+  pfPrev();
   q.querySelector('[data-pm="name"]').focus({ preventScroll: true });
+}
+/* Photo is staged in ui.quick.photo (undefined = unchanged, null = removed) and applied on Save. */
+function pfPrev() {
+  const ph = ui.quick.photo === undefined ? S.profile?.photo : ui.quick.photo;
+  const ini = ($('[data-pm="name"]')?.value || S.profile?.name || '').trim().charAt(0).toUpperCase();
+  $('#pf-prev').innerHTML = pfAv(ph, ini); $('#pf-rm').hidden = !ph;
 }
 function saveProfile() {
   const pr = S.profile ||= {};
+  if (ui.quick.photo !== undefined) { if (ui.quick.photo) pr.photo = ui.quick.photo; else delete pr.photo; }
   $$('[data-pm]').forEach(i => { pr[i.dataset.pm] = i.value.trim(); });
   save(); closeQuick(); renderMain(); toast('Details saved.');
 }
