@@ -2221,6 +2221,19 @@ async function openPuter() {
     </div>`;
   q.classList.add('open'); $('#quick-scrim').classList.add('open');
   q.tabIndex = -1; q.focus({ preventScroll: true });
+  if (user) puterUsage();
+}
+/* Credits used = monthly allowance - remaining, bar capped at 1000. shortcut: assumes Puter's allowance units are credits. */
+async function puterUsage() {
+  const txt = $('#puter-usage-txt');
+  try {
+    const a = (await puter.auth.getMonthlyUsage()).allowanceInfo;
+    const used = Math.max(0, Math.round(a.monthUsageAllowance - a.remaining));
+    if (!txt) return;
+    txt.textContent = `${used} / 1000 credits used`;
+    $('#puter-usage-fill').style.width = Math.min(100, used / 10) + '%';
+    $('#puter-usage-bar').setAttribute('aria-valuenow', Math.min(used, 1000));
+  } catch (e) { if (txt) txt.textContent = 'Could not load credit usage.'; }
 }
 function confirmPop(title, text, yes, label) {
   const q = $('#quick'), inQuick = q.classList.contains('open');
