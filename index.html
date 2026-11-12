@@ -2233,7 +2233,7 @@ function puterLogout() {
   const el = document.createElement('div'); el.className = 'q-confirm fx'; el.setAttribute('role', 'alertdialog');
   el.innerHTML = `<div><h3>Log out of Puter?</h3><p>The AI scanners won’t work until you log in again.</p>
     <span class="acts"><button class="btn quiet" data-action="puter-keep">Cancel</button><button class="btn primary" data-action="puter-logout-yes">Yes, log out</button></span></div>`;
-  q.appendChild(el); el.querySelector('[data-action="puter-keep"]').focus();
+  document.body.appendChild(el); el.querySelector('[data-action="puter-keep"]').focus();
 }
 async function puterLogin(switching) {
   try {
