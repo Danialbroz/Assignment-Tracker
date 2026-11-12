@@ -1837,8 +1837,7 @@ function viewProfile() {
     <div class="pf-avatar" aria-hidden="true">${pfAv(p.photo, ini)}</div>
     <div class="pf-info"><div class="pf-name">${h(p.name || 'Your name')}</div><div class="pf-sub">${h(p.programme || p.studentId || 'Add your details below')}</div>
       <div class="pf-user" id="pf-user">Checking Puter…</div>
-      <div class="pf-photo-acts"><button type="button" class="link-btn" data-action="pf-photo">${p.photo ? 'Change photo' : 'Upload photo'}</button>${p.photo ? '<button type="button" class="link-btn" data-action="pf-photo-rm">Remove</button>' : ''}</div>
-      <div class="pf-err" id="pf-err" role="alert"></div></div>
+    </div>
   </div>
   <section class="profile" aria-label="Your details">
     <h2 class="pf-h">Details</h2>
