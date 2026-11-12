@@ -1995,6 +1995,12 @@ function openProfile() {
   q.innerHTML = `
     <h2 class="quick-title">Your details</h2>
     <p class="quick-tip" style="margin:0 0 4px">Shown on your profile. Stays on this device.</p>
+    <div class="pf-up">
+      <div class="pf-avatar sm" id="pf-prev" aria-hidden="true"></div>
+      <div><button type="button" class="btn quiet small" data-action="pf-photo">Upload photo</button> <button type="button" class="btn quiet small" id="pf-rm" data-action="pf-photo-rm">Remove</button>
+        <div class="pf-err" id="pf-err" role="alert"></div></div>
+      <input type="file" id="pf-photo-file" accept=".png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif" hidden>
+    </div>
     <div class="chips pf-modal">
       ${PF.map(([k, l, ph]) => `<label class="chip"${k === 'name' || k === 'programme' ? ' style="grid-column:1/-1"' : ''}><span>${l}</span><input type="text" data-pm="${k}" value="${h(p[k] || '')}" placeholder="${ph}" autocomplete="off"></label>`).join('')}
     </div>
